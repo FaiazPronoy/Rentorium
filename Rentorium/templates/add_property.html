@@ -1,0 +1,36 @@
+{%extends "base.html"%}
+{%load static %}
+{% load crispy_forms_tags %}
+
+{%block title%}
+<title>Select Property Type</title>
+{%endblock%}
+
+{% block content %}
+<style>
+    .custom-form {
+        max-width: 600px; /* Adjust the width as needed */
+        margin: 0 auto; /* Center the form horizontally */
+    }
+</style>
+
+
+<style>
+    /* Center the heading horizontally */
+    h1 {
+        text-align: center;
+    }
+</style>
+<br>
+<h1>Select Property Type</h1>
+<form method="post">
+    {% csrf_token %}
+    <div class="custom-form">
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Next</button>
+    </div>
+</form>
+{% endblock %}
+
+
+

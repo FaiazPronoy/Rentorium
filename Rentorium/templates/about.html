@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{%load static%}
+
+{%block title%} <title>About Us</title>{% endblock %}
+{%block content%}
+       <!-- About Start -->
+        <div class="container-xxl py-5">
+            <div class="container">
+                <div class="row g-5 align-items-center">
+                    <div class="col-lg-6 wow fadeIn" data-wow-delay="0.1s">
+                        <div class="about-img position-relative overflow-hidden p-5 pe-0">
+                            <img class="img-fluid w-100" src="{% static 'img/about.jpg' %}" alt="">
+                        </div>
+                    </div>
+                    <div class="col-lg-6 wow fadeIn" data-wow-delay="0.5s">
+                        <h1 class="mb-4">#1 Place To Find The Perfect Property</h1>
+                        <p class="mb-4">Welcome to Rentorium, your trusted partner in hunting down your dream property</p>
+                        <p><i class="fa fa-check text-primary me-3"></i>Years of experience in the real estate industry</p>
+                        <p><i class="fa fa-check text-primary me-3"></i>Committed to Excellence and Integrity</p>
+                        <p><i class="fa fa-check text-primary me-3"></i>Wide Range of Properties for Sale and Rent</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- About End -->
+
+        
+{%endblock%}

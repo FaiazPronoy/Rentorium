@@ -1,4 +1,4 @@
-from user_authentication.models import UserProfile
+from authentication.models import UserProfile
 
 def get_user_name(request):
     name = ""

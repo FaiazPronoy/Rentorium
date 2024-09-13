@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    <title>Agent Dashboard</title>
+{% endblock %}
+
+
+
+{% block content %}
+
+
+
+
+    <style>
+        /* Custom styles specific to this page */
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: 0.3s;
+            border-radius: 10px;
+        }
+        .card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        .badge-pending {
+            background-color: #ffc107;
+        }
+    </style>
+
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-12 text-center">
+        <h2 class="mb-4">Welcome to Your Dashboard</h2>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title text-center">Pending Properties</h2>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Property Name</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if pending_properties %}
+                                {% for property in pending_properties %}
+                                    <tr>
+                                        <td><a href="{% url 'property_detail' property.pk %}">{{ property.Property_Name }}</a></td>
+                                        <td><span class="badge badge-pill badge-pending">Pending</span></td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="2">No pending properties found.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

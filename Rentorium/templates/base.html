@@ -5,7 +5,6 @@
 <head>
     <meta charset="utf-8">
     {% block title %} {% endblock %}
-    {% comment %} <title>Rentorium - Hunting Down Your Perfect Home</title> {% endcomment %}
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="" name="keywords">
     <meta content="" name="description">
@@ -45,6 +44,7 @@
         </div>        
         <!-- Spinner End -->
 
+
         <!-- Navbar Start -->
 
         <div class="container-fluid nav-bar bg-transparent">
@@ -60,13 +60,42 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <div class="navbar-nav ms-auto">
-                        <!-- other nav items -->
-                        {% if user.is_authenticated %}
-                            <a href="/" class="nav-item nav-link">Profile</a>
-                            <a href="{% url 'signout' %}" class="nav-item nav-link">Logout</a>
-                        {% endif %}
+                        <a href="/" class="nav-item nav-link active">Home</a>
+                        <div class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Property</a>
+                            <div class="dropdown-menu rounded-0 m-0">
+                                <a href="{% url 'property_list' %}" class="dropdown-item">Property List</a>
+                                <a href="{% url 'property_type' %}" class="dropdown-item">Property Type</a>
+
+                        
+                                <a href="{% url 'posted_properties' %}" class="dropdown-item">View Posted Properties</a>
+
+        
+                            </div>
+                        </div>
+                        <div class="nav-item dropdown">
+                            {% if request.user.is_authenticated %}
+                                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">{{ name }}</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                <a href="{%url 'profile'%}" class="dropdown-item"> Profile </a>
+                                <a href = "{%url 'signout'%}?next={{request.path}}" class = "dropdown-item"> Sign Out </a>
+                                </div>
+                            {% else %}
+                                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Sign in/Sign Up</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                <a href="{%url 'signin'%}?next={{request.path}}" class="dropdown-item">Sign In</a>
+                                <a href="{%url 'signup'%}" class="dropdown-item">Sign Up</a>
+                                </div>
+                            {% endif %}
+                        </div>
+
                     </div>
-                </div>
+
+                    {% if request.user.UserProfile.is_agent %}
+                    <a href="{% url 'agent_dashboard'%}" class="btn btn-primary px-3 d-none d-lg-flex">Dashboard</a>
+                    {% else %}
+                    <a href="{% url 'add_property'%}" class="btn btn-primary px-3 d-none d-lg-flex">Add Property</a>
+                    {% endif %}
                 </div>
             </nav>
         </div>
@@ -104,9 +133,22 @@
         {%endblock%}
 
 
+        {%block category%}
+        <!--property type-->
+        {%endblock%}
+
+        {%block property_list%}
+        <!--property list-->
+        {%endblock%}
+
+        {%block contact_agent%}
+        <!--agent contact-->
+        {%endblock%}
+
         {%block testimonial%}
         {%endblock%}
  
+        
         <!-- Footer Start -->
         <div class="container-fluid bg-dark text-white-50 footer pt-5 mt-5 wow fadeIn" data-wow-delay="0.1s">
             <div class="container py-2">
@@ -123,14 +165,14 @@
                             <a class="btn btn-outline-light btn-social" href="https://www.linkedin.com/school/brac-university/"><i class="fab fa-linkedin-in"></i></a>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-6 offset-lg-1">
+                    <div class="col-lg-3 col-md-6">
                         <h5 class="text-white mb-4">Quick Links</h5>
-                        <a class="btn btn-link text-white-50" href=#>About Us</a>
-                        <a class="btn btn-link text-white-50" href=#>Contact Us</a>
-                        <a class="btn btn-link text-white-50" href=#>License</a>
-                        <a class="btn btn-link text-white-50" href=#>FAQs</a>
-                        <a class="btn btn-link text-white-50" href=#>Terms & Condition</a>
-                    </div> 
+                        <a class="btn btn-link text-white-50" href="{%url 'about'%}">About Us</a>
+                        <a class="btn btn-link text-white-50" href="{%url 'contact'%}">Contact Us</a>
+                        <a class="btn btn-link text-white-50" href="{%url 'license'%}">License</a>
+                        <a class="btn btn-link text-white-50" href="{%url 'faqs'%}">FAQs</a>
+                        <a class="btn btn-link text-white-50" href="{%url 'terms'%}">Terms & Condition</a>
+                    </div>
                         </div>
                     </div>
                 </div>
