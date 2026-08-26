@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Saved searches &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <div class="between" style="margin-bottom:1rem">
+    <div>
+      <h1 class="mb0">Saved searches</h1>
+      <p class="muted mb0">Come straight back to a set of filters you use often.</p>
+    </div>
+    <a class="btn btn-primary btn-sm" href="{% url 'property_list' %}">New search</a>
+  </div>
+
+  <div class="card">
+    {% for r in rows %}
+      <div class="entry">
+        <span class="ico">&#128269;</span>
+        <span class="body">
+          <a class="t" href="{% url 'property_list' %}?{{ r.search.query_string }}"
+             style="color:inherit">{{ r.search.label }}</a>
+          <span class="s">
+            {% for k, v in r.params.items %}{{ k }}: {{ v }}{% if not forloop.last %} &middot; {% endif %}{% empty %}All properties{% endfor %}
+          </span>
+          <span class="tiny">
+            <strong>{{ r.matches }}</strong> propert{{ r.matches|pluralize:"y,ies" }} match right now
+          </span>
+          <span class="tiny muted">Saved {{ r.search.created_at|timesince }} ago
+            {% if r.search.alert_enabled %}&middot; alerts on{% endif %}</span>
+        </span>
+        <a class="btn btn-ghost btn-sm"
+           href="{% url 'property_list' %}?{{ r.search.query_string }}">Run it</a>
+        <form method="post" action="{% url 'delete_saved_search' r.search.pk %}"
+              class="inline-form" data-confirm="Delete this saved search?">
+          {% csrf_token %}
+          <button class="btn btn-ghost btn-sm" type="submit">&#10005;</button>
+        </form>
+      </div>
+    {% empty %}
+      <div class="empty">
+        <div class="big">&#128269;</div>
+        <h3>No saved searches yet</h3>
+        <p class="muted">Set some filters on the browse page and hit "Save this search".</p>
+        <a class="btn btn-primary" href="{% url 'property_list' %}">Browse properties</a>
+      </div>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

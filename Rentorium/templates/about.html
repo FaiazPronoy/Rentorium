@@ -1,28 +1,60 @@
-{% extends "base.html" %}
-{%load static%}
+{% extends 'base.html' %}
+{% block title %}About &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <section class="hero" style="margin-bottom:1.6rem">
+    <h1>About {{ SITE_NAME }}</h1>
+    <p>Renting a place in Dhaka usually means a dozen phone calls, a middleman and no
+       way to tell a real listing from a fake one. We wanted something better.</p>
+  </section>
 
-{%block title%} <title>About Us</title>{% endblock %}
-{%block content%}
-       <!-- About Start -->
-        <div class="container-xxl py-5">
-            <div class="container">
-                <div class="row g-5 align-items-center">
-                    <div class="col-lg-6 wow fadeIn" data-wow-delay="0.1s">
-                        <div class="about-img position-relative overflow-hidden p-5 pe-0">
-                            <img class="img-fluid w-100" src="{% static 'img/about.jpg' %}" alt="">
-                        </div>
-                    </div>
-                    <div class="col-lg-6 wow fadeIn" data-wow-delay="0.5s">
-                        <h1 class="mb-4">#1 Place To Find The Perfect Property</h1>
-                        <p class="mb-4">Welcome to Rentorium, your trusted partner in hunting down your dream property</p>
-                        <p><i class="fa fa-check text-primary me-3"></i>Years of experience in the real estate industry</p>
-                        <p><i class="fa fa-check text-primary me-3"></i>Committed to Excellence and Integrity</p>
-                        <p><i class="fa fa-check text-primary me-3"></i>Wide Range of Properties for Sale and Rent</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- About End -->
+  <div class="grid grid-4" style="margin-bottom:2rem">
+    <div class="stat"><div class="k">Live listings</div><div class="v">{{ stats.listings }}</div></div>
+    <div class="stat"><div class="k">Areas covered</div><div class="v">{{ stats.areas }}</div></div>
+    <div class="stat"><div class="k">Owners listing</div><div class="v">{{ stats.owners }}</div></div>
+    <div class="stat"><div class="k">Reviews</div><div class="v">{{ stats.reviews }}</div></div>
+  </div>
 
-        
-{%endblock%}
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <h2>What we do differently</h2>
+        <div class="entry"><span class="ico">&#9989;</span>
+          <span class="body"><span class="t">Every listing is checked</span>
+            <span class="s" style="white-space:normal">An agent reads the details and
+              looks at the ownership paper before anything goes live.</span></span></div>
+        <div class="entry"><span class="ico">&#128197;</span>
+          <span class="body"><span class="t">Visits are booked, not negotiated</span>
+            <span class="s" style="white-space:normal">Pick a slot, the owner confirms,
+              and the system makes double booking impossible.</span></span></div>
+        <div class="entry"><span class="ico">&#128274;</span>
+          <span class="body"><span class="t">Private papers stay private</span>
+            <span class="s" style="white-space:normal">Ownership documents are visible
+              only to the owner and a verified agent. Never on the public page.</span></span></div>
+        <div class="entry"><span class="ico">&#11088;</span>
+          <span class="body"><span class="t">Real reviews</span>
+            <span class="s" style="white-space:normal">One review per person per property,
+              and an owner cannot review their own listing.</span></span></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card" style="margin-bottom:1.2rem">
+        <h2>Who this is for</h2>
+        <p class="small muted">Renters who want to see a real price and a real photo.
+          Owners who want their place in front of people who are actually looking.
+          Agents who need one screen to keep the whole thing honest.</p>
+      </div>
+      <div class="card">
+        <h2>About the project</h2>
+        <p class="small muted mb0">
+          {{ SITE_NAME }} was built as the CSE471 System Analysis and Design project at
+          BRAC University. Version two rebuilt the data model, closed three access
+          control holes, and added bookings, messaging, reviews, favourites and
+          analytics on top of the original two modules.
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

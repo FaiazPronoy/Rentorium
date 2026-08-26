@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load property_filters %}
+{% block title %}Compare properties &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <div class="between" style="margin-bottom:1.2rem">
+    <div>
+      <h1 class="mb0">Side by side</h1>
+      <p class="muted mb0">Up to four at a time.</p>
+    </div>
+    {% if listings %}
+      <form method="post" action="{% url 'clear_compare' %}">
+        {% csrf_token %}
+        <button class="btn btn-ghost btn-sm" type="submit">Clear all</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if listings %}
+    <div class="card">
+      <div class="table-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th></th>
+              {% for p in listings %}
+                <th style="min-width:200px;text-align:center">
+                  <div style="aspect-ratio:16/10;border-radius:10px;overflow:hidden;
+                       background:var(--surface-2);margin-bottom:.5rem">
+                    {% if p.cover_image %}
+                      <img src="{{ p.cover_image.url }}" alt=""
+                           style="width:100%;height:100%;object-fit:cover">
+                    {% endif %}
+                  </div>
+                  <a href="{% url 'property_detail' p.pk %}"
+                     style="font-weight:800;white-space:normal;display:block">
+                    {{ p.Property_Name|truncatechars:38 }}</a>
+                  <form method="post" action="{% url 'toggle_compare' p.pk %}" class="inline-form">
+                    {% csrf_token %}
+                    <button class="chip" type="submit">Remove</button>
+                  </form>
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <td>{{ row.label }}</td>
+                {% for v in row.values %}<td>{{ v }}</td>{% endfor %}
+              </tr>
+            {% endfor %}
+            <tr>
+              <td></td>
+              {% for p in listings %}
+                <td><a class="btn btn-primary btn-sm"
+                       href="{% url 'property_detail' p.pk %}">Open</a></td>
+              {% endfor %}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="card empty">
+      <div class="big">&#9878;</div>
+      <h3>Nothing to compare yet</h3>
+      <p class="muted">Hit "Compare" on a couple of listings and they will line up here.</p>
+      <a class="btn btn-primary" href="{% url 'property_list' %}">Browse properties</a>
+    </div>
+  {% endif %}
+</main>
+{% endblock %}

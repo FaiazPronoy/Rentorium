@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Users &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <div class="between" style="margin-bottom:1rem">
+    <h1 class="mb0">Users</h1>
+    <a class="btn btn-ghost btn-sm" href="{% url 'agent_dashboard' %}">Back to the queue</a>
+  </div>
+
+  <form method="get" class="card" style="margin-bottom:1.2rem">
+    <div class="row" style="align-items:flex-end">
+      <div class="col field mb0" style="flex:2 1 240px">
+        <label for="q">Search</label>
+        <input id="q" name="q" value="{{ search }}" placeholder="Name, email or phone">
+      </div>
+      <div class="col field mb0">
+        <label for="role">Role</label>
+        <select id="role" name="role">
+          <option value="">Any role</option>
+          {% for value, label in roles %}
+            <option value="{{ value }}" {% if role == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col" style="flex:0 1 auto">
+        <button class="btn btn-primary" type="submit">Search</button>
+        <a class="btn btn-ghost" href="{% url 'agent_users' %}">Clear</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Person</th><th>Contact</th><th>Role</th>
+          <th class="num">Listings</th><th class="num">Visits</th><th>Joined</th></tr></thead>
+        <tbody>
+        {% for u in rows %}
+          <tr>
+            <td>
+              <div style="display:flex;gap:.6rem;align-items:center">
+                <span class="avatar avatar-sm" style="background:{{ u.avatar_color }}">
+                  {{ u.initials }}</span>
+                <div>
+                  <a href="{% url 'public_profile' u.pk %}" style="font-weight:800">{{ u.name }}</a>
+                  {% if u.is_verified %}<span class="badge badge-ok">verified</span>{% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="tiny">{{ u.email }}<br>
+              <span class="muted">{{ u.contact_no|default:"no phone" }}</span></td>
+            <td><span class="badge">{{ u.get_role_display }}</span></td>
+            <td class="num">{{ u.listings }}</td>
+            <td class="num">{{ u.bookings }}</td>
+            <td class="tiny">{{ u.created_at|date:"d M Y" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="center muted" style="padding:2rem">No users match.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+{% endblock %}

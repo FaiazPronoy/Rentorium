@@ -1,93 +1,172 @@
-{% extends "base.html" %}
-{%load static%}
+{% extends 'base.html' %}
+{% load static property_filters %}
+{% block title %}{{ SITE_NAME }} &middot; homes to rent and buy in Bangladesh{% endblock %}
 
+{% block body %}
+<main class="wrap section">
 
-{%block title%} <title>Rentorium - Hunting Down Your Perfect Property</title>{% endblock %}
+  <!-- hero -->
+  <section class="hero">
+    <span class="badge">{{ counts.total }} live listing{{ counts.total|pluralize }}</span>
+    <h1>Find a place you actually want to live in.</h1>
+    <p>Search verified flats, offices and plots across Bangladesh. Book a visit,
+       talk to the owner and keep everything in one place.</p>
 
-
-{%block getStarted%}
-{%include "partials/_getStarted.html"%}
-{%endblock%}
-
-{%block search%}
-{%include "partials/_search.html"%}
-{%endblock%}
-
-
-
-
-{%block category%}
-{%include "partials/_category.html"%} 
-{%endblock%}
-
-
-
-{%block testimonial%}
- <!-- Testimonial Start -->
- <div class="container-xxl py-5">
-    <div class="container">
-        <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
-            <h1 class="mb-3">Our Clients Say!</h1>
-
+    <form class="searchbar" method="get" action="{% url 'property_list' %}"
+          style="margin-top:1.4rem">
+      <div class="row" style="align-items:flex-end">
+        <div class="col field" style="flex:2 1 240px">
+          <label for="q">What are you looking for?</label>
+          <input id="q" name="q" placeholder="Area, landmark or keyword">
         </div>
-        <div class="owl-carousel testimonial-carousel wow fadeInUp" data-wow-delay="0.1s">
-            {% for review in top_review %}
-            <div class="testimonial-item bg-light rounded p-3">
-                <div class="bg-white border rounded p-4">                    
-                    <div class="d-flex align-items-center">
-                        {%if review.user.profile_picture%}
-                            <img class="img-fluid flex-shrink-0 rounded-circle" src="{{ review.user.profile_picture.url }}" style="width: 45px; height: 45px;">
-                        {%else%}
-                            <i class="bi bi-person-circle" style="font-size: 30px;"></i>
-                        {%endif%}
-                        <div class="ps-3">
-                            <h6 class="fw-bold mb-1">{{ review.user.name }}</h6>
-                            <small>
-                                {% if review.rating == 5 %}
-                                <i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i>
-                                {% elif review.rating == 4 %}
-                                    <i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star"></i>
-                                {% elif review.rating == 3 %}
-                                    <i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                                {% elif review.rating == 2 %}
-                                    <i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                                {% elif review.rating == 1 %}
-                                    <i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                                {% endif %}
-                            </small>
-                        </div>
-                    </div>
-                    <p class="testimonial-comment-toggle" style="cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ review.comment }}</p>
-                    <p class="testimonial-comment-expanded" style="display: none;">{{ review.comment }}</p>
-                </div>
-            </div>
-            {% endfor %}
+        <div class="col field">
+          <label for="hero_type">Type</label>
+          <select id="hero_type" name="property_type">
+            <option value="">Any type</option>
+            <option value="residential">Residential</option>
+            <option value="commercial">Commercial</option>
+            <option value="land">Land</option>
+          </select>
         </div>
+        <div class="col field">
+          <label for="hero_on">Rent or buy</label>
+          <select id="hero_on" name="property_on">
+            <option value="">Either</option>
+            <option value="rent">To rent</option>
+            <option value="sale">To buy</option>
+          </select>
+        </div>
+        <div class="col field">
+          <label for="hero_max">Budget up to</label>
+          <input id="hero_max" name="max_price" type="number" min="0" placeholder="{{ CURRENCY_SIGN }}">
+        </div>
+        <div class="col" style="flex:0 1 auto">
+          <button class="btn btn-primary btn-lg" type="submit">Search</button>
+        </div>
+      </div>
+    </form>
+  </section>
 
-<br>
-        <!-- Button "Your feedback" -->
-        <div class="row justify-content-center">
-            <div class="col-md-6 text-center">
-                <a href="{% url 'testimonial' %}" class="btn btn-primary btn-bg">See All</a>
-            </div>
-        </div>
+  <!-- quick counts -->
+  <section class="grid grid-4" style="margin-top:1.4rem">
+    <a class="stat" href="{% url 'property_list' %}?property_on=rent" style="color:inherit">
+      <div class="k">To rent</div><div class="v">{{ counts.rent }}</div></a>
+    <a class="stat" href="{% url 'property_list' %}?property_on=sale" style="color:inherit">
+      <div class="k">To buy</div><div class="v">{{ counts.sale }}</div></a>
+    <a class="stat" href="{% url 'property_list' %}?property_type=residential" style="color:inherit">
+      <div class="k">Residential</div><div class="v">{{ counts.residential }}</div></a>
+    <a class="stat" href="{% url 'property_list' %}?property_type=commercial" style="color:inherit">
+      <div class="k">Commercial</div><div class="v">{{ counts.commercial }}</div></a>
+  </section>
+
+  <!-- featured -->
+  <section style="margin-top:2rem">
+    <div class="between" style="margin-bottom:1rem">
+      <h2 class="mb0">Featured places</h2>
+      <a href="{% url 'property_list' %}">See everything &rarr;</a>
     </div>
-</div>
-<!-- Testimonial End -->
+    {% if featured %}
+      <div class="plist">
+        {% for p in featured %}{% include 'partials/_property_card.html' %}{% endfor %}
+      </div>
+    {% else %}
+      <div class="card empty">
+        <div class="big">&#127968;</div>
+        <h3>No listings yet</h3>
+        <p class="muted">Be the first to put a property on Rentorium.</p>
+        <a class="btn btn-primary" href="{% url 'add_property' %}">List a property</a>
+      </div>
+    {% endif %}
+  </section>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        let testimonials = document.querySelectorAll('.testimonial-item');
+  <!-- areas -->
+  {% if areas %}
+    <section style="margin-top:2rem">
+      <h2>Popular areas</h2>
+      <div class="chips">
+        {% for a in areas %}
+          <a class="chip" href="{% url 'property_list' %}?area={{ a.Area|urlencode }}">
+            {{ a.Area }} <span class="muted">{{ a.n }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
 
-        testimonials.forEach(function(testimonial) {
-            let commentToggle = testimonial.querySelector('.testimonial-comment-toggle');
-            let commentExpanded = testimonial.querySelector('.testimonial-comment-expanded');
+  <!-- how it works -->
+  <section style="margin-top:2.2rem">
+    <h2>How it works</h2>
+    <div class="grid grid-3">
+      <div class="card">
+        <div style="font-size:1.8rem">&#128269;</div>
+        <h3>Search with real filters</h3>
+        <p class="muted small mb0">Price, size, bedrooms, furnishing, amenities and area.
+          Save a search and come back to it.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:1.8rem">&#128197;</div>
+        <h3>Book a visit</h3>
+        <p class="muted small mb0">Pick a slot and the owner confirms it. Two people can
+          never be booked into the same slot.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:1.8rem">&#9989;</div>
+        <h3>Every listing is checked</h3>
+        <p class="muted small mb0">An agent reviews the details and the ownership papers
+          before a listing goes live.</p>
+      </div>
+    </div>
+  </section>
 
-            commentToggle.addEventListener('click', function() {
-                commentToggle.style.display = 'none';
-                commentExpanded.style.display = 'block';
-            });
-        });
-    });
-</script>
-{%endblock%}
+  <!-- newest -->
+  {% if newest %}
+    <section style="margin-top:2.2rem">
+      <div class="between" style="margin-bottom:1rem">
+        <h2 class="mb0">Just listed</h2>
+        <a href="{% url 'property_list' %}?ordering=newest">More new listings &rarr;</a>
+      </div>
+      <div class="plist">
+        {% for p in newest %}{% include 'partials/_property_card.html' %}{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- reviews -->
+  {% if top_review %}
+    <section style="margin-top:2.2rem">
+      <div class="between" style="margin-bottom:1rem">
+        <h2 class="mb0">What people say</h2>
+        <a href="{% url 'testimonial' %}">All reviews &rarr;</a>
+      </div>
+      <div class="grid grid-3">
+        {% for r in top_review %}
+          <div class="card">
+            {{ r.rating|stars }}
+            <p style="margin-top:.6rem">{{ r.comment|truncatewords:34 }}</p>
+            <div style="display:flex;align-items:center;gap:.6rem;margin-top:.8rem">
+              <span class="avatar avatar-sm" style="background:{{ r.user.avatar_color }}">
+                {{ r.user.initials }}</span>
+              <div>
+                <div style="font-weight:800;font-size:.9rem">{{ r.user.name }}</div>
+                <div class="tiny muted">{{ r.date|date:"d M Y" }}</div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- CTA -->
+  <section class="card" style="margin-top:2.2rem;background:var(--brand-deep);color:#fff;
+           border:0;text-align:center;padding:2.4rem 1.4rem">
+    <h2 style="color:#fff">Have a place to let?</h2>
+    <p style="color:rgba(255,255,255,.85);max-width:52ch;margin:0 auto 1.2rem">
+      Put it in front of people who are actually looking. Listing is free, and an
+      agent checks it before it goes live.
+    </p>
+    <a class="btn btn-primary btn-lg" href="{% url 'add_property' %}">List your property</a>
+  </section>
+
+</main>
+{% endblock %}

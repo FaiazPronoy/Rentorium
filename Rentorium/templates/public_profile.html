@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load property_filters %}
+{% block title %}{{ person.name }} &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <div class="card" style="margin-bottom:1.4rem">
+    <div style="display:flex;gap:1.1rem;align-items:center;flex-wrap:wrap">
+      <span class="avatar avatar-lg" style="background:{{ person.avatar_color }}">
+        {% if person.profile_picture %}<img src="{{ person.profile_picture.url }}" alt="">
+        {% else %}{{ person.initials }}{% endif %}
+      </span>
+      <div style="flex:1;min-width:200px">
+        <h1 class="mb0">{{ person.name }}
+          {% if person.is_verified %}<span class="badge badge-ok">Verified</span>{% endif %}</h1>
+        <div class="muted small">{{ person.display_role }} &middot;
+          member since {{ person.created_at|date:"M Y" }}</div>
+        {% if person.bio %}<p class="small" style="margin-top:.5rem">{{ person.bio }}</p>{% endif %}
+      </div>
+      <div style="text-align:right">
+        <div class="stat"><div class="k">Listings</div><div class="v">{{ listing_count }}</div></div>
+      </div>
+      {% if rating %}
+        <div style="text-align:right">
+          <div class="stat"><div class="k">Rating</div>
+            <div class="v">{{ rating }} <span class="tiny muted">/ 5</span></div></div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <h2>Places listed by {{ person.first_name }}</h2>
+  {% if listings %}
+    <div class="plist">
+      {% for p in listings %}{% include 'partials/_property_card.html' %}{% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty"><p class="mb0">Nothing live at the moment.</p></div>
+  {% endif %}
+</main>
+{% endblock %}

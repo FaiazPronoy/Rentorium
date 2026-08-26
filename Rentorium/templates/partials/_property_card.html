@@ -1,0 +1,64 @@
+{% load property_filters %}
+{% comment %}
+One property card. Expects `p`. Optional: `compare_ids`.
+{% endcomment %}
+<article class="pcard">
+  <div class="pcard-media">
+    <a href="{% url 'property_detail' p.pk %}">
+      {% if p.cover_image %}
+        <img src="{{ p.cover_image.url }}" alt="{{ p.Property_Name }}" loading="lazy">
+      {% else %}
+        <div class="placeholder">&#127968;</div>
+      {% endif %}
+    </a>
+    <div class="pcard-tags">
+      <span class="badge {% if p.Property_on == 'rent' %}badge-rent{% else %}badge-sale{% endif %}">
+        For {{ p.get_Property_on_display|lower }}
+      </span>
+      {% if p.is_featured %}<span class="badge badge-featured">Featured</span>{% endif %}
+      {% if p.user.is_verified %}<span class="badge badge-ok">Verified owner</span>{% endif %}
+      {% if p.status == 'rented' %}<span class="badge badge-fail">Taken</span>{% endif %}
+    </div>
+    {% if is_logged_in %}
+      <form method="post" action="{% url 'toggle_favourite' p.pk %}" data-fav>
+        {% csrf_token %}
+        <button class="pcard-fav" type="submit"
+                title="{% if p.is_saved %}Saved{% else %}Save this property{% endif %}"
+                style="{% if p.is_saved %}color:#E03131{% endif %}">
+          {% if p.is_saved %}&#9829;{% else %}&#9825;{% endif %}
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="pcard-body">
+    <div class="between" style="gap:.5rem">
+      <div class="pcard-price">
+        {{ CURRENCY_SIGN }} {{ p.Price|money }}
+        <small>{{ p.price_label }}</small>
+      </div>
+      {% if p.rating %}
+        <span class="rating-pill">&#9733; {{ p.rating }}</span>
+      {% endif %}
+    </div>
+
+    <a class="pcard-title" href="{% url 'property_detail' p.pk %}">{{ p.Property_Name }}</a>
+    <div class="pcard-loc">&#128205; {{ p.Area }}, {{ p.City }}{% if p.landmark %} &middot; {{ p.landmark }}{% endif %}</div>
+
+    <div class="pcard-facts">
+      {% for value, label in p.headline_facts %}
+        <span><b>{{ value }}</b> {{ label }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="between tiny muted" style="padding-top:.5rem">
+      <span>{{ p.view_count }} view{{ p.view_count|pluralize }}</span>
+      <form method="post" action="{% url 'toggle_compare' p.pk %}" class="inline-form">
+        {% csrf_token %}
+        <button class="chip" type="submit">
+          {% if p.pk in compare_ids %}&#10003; Comparing{% else %}Compare{% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+</article>

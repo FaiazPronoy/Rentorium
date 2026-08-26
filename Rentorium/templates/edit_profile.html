@@ -1,26 +1,31 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load crispy_forms_tags %}
+{% block title %}Edit profile &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <div class="between" style="margin-bottom:1rem">
+    <h1 class="mb0">Edit profile</h1>
+    <a class="btn btn-ghost btn-sm" href="{% url 'profile' %}">Back</a>
+  </div>
 
-{% block title %}
-<title>Edit Profile</title>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-    <div class="row justify-content-center align-items-center min-vh-100">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h2 class="text-center">Profile Update</h2>
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        {{ form|crispy }}
-                        <button type="submit" class="btn btn-primary">Save</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+  <form class="card" method="post" enctype="multipart/form-data" data-once>
+    {% csrf_token %}
+    <div class="row">
+      <div class="col">{% include 'partials/_field.html' with field=form.name %}</div>
+      <div class="col">{% include 'partials/_field.html' with field=form.email %}</div>
     </div>
-</div>
+    <div class="row">
+      <div class="col">{% include 'partials/_field.html' with field=form.contact_no %}</div>
+      <div class="col">{% include 'partials/_field.html' with field=form.gender %}</div>
+    </div>
+    <div class="row">
+      <div class="col">{% include 'partials/_field.html' with field=form.nid %}</div>
+      <div class="col">{% include 'partials/_field.html' with field=form.dob %}</div>
+    </div>
+    {% include 'partials/_field.html' with field=form.role %}
+    {% include 'partials/_field.html' with field=form.address %}
+    {% include 'partials/_field.html' with field=form.bio %}
+    {% include 'partials/_field.html' with field=form.profile_picture %}
+    <button class="btn btn-primary btn-block" type="submit">Save changes</button>
+  </form>
+</main>
 {% endblock %}

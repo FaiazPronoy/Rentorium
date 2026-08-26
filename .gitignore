@@ -1,0 +1,18 @@
+# virtualenv - 70MB, rebuild it from requirements.txt
+.venv/
+
+__pycache__/
+*.py[cod]
+
+# local settings and the dev database
+.env
+Rentorium/db.sqlite3
+
+# uploads made while running locally
+Rentorium/media/
+Rentorium/private_media/
+Rentorium/static_root/
+
+.vscode/
+.idea/
+*.log

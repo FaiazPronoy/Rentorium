@@ -1,129 +1,365 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load property_filters %}
+{% load property_filters humanize %}
+{% block title %}{{ listing.Property_Name }} &middot; {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ listing.Property_Description|truncatewords:28 }}{% endblock %}
 
-{% block title %}
-<title>Property Details</title>
-{% endblock %}
+{% block body %}
+<main class="wrap section">
 
-{% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <!-- Property Image Section -->
-        <div class="col-md-6">
-            <div class="card shadow-lg">
-                <img class="card-img-top img-fluid rounded-top" src="{{ property_fields.Property_Pictures.url }}" alt="{{ property_fields.Property_Name }}">
-            </div>
-        </div>
-
-        <!-- Property Details Section -->
-        <div class="col-md-6">
-            <div class="card shadow-lg">
-                <div class="card-body">
-                    <h1 class="card-title text-center mb-4">{{ property_fields.Property_Name }}</h1>
-                    <div class="table-responsive">
-                        <table class="table table-borderless">
-                            <tbody>
-                                {% for field, value in property_fields.items %}
-                                    {%if value %}
-                                        {% if field != 'Property_Pictures' and field != '_state' and field != 'id' and field != 'user_id' and field != 'allproperty_ptr_id' and field != 'Property_Name' and field != 'Property_Description' and field != 'Property_Documents' %}
-                                            <tr>
-                                                <th class="text-muted">{{ field|format_field_name }}</th>
-                                                <td>
-                                                    {% if value|get_type == 'bool' %}
-                                                        {% if value == True %}
-                                                            <span class="text-success">&#10004;</span> <!-- Green tick -->
-                                                        {% else %}
-                                                            <span class="text-danger">&#10006;</span> <!-- Red cross -->
-                                                        {% endif %}
-                                                    {% else %}
-                                                        {{ value|title }}
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                        {% endif %}
-                                    {%endif%}
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% if request.user.UserProfile.is_agent or request.user.UserProfile.id == property_fields.user_id%}
-                        <a href="{% url 'view_property_documents' property_id=property_fields.id %}" class="btn btn-primary">View Property Documents</a>
-                        {%endif%}
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- status banner -->
+  {% if not listing.is_live %}
+    <div class="alert {% if listing.status == 'rejected' %}alert-error{% else %}alert-warn{% endif %}"
+         style="margin-bottom:1rem">
+      <span>
+        <strong>{{ listing.get_status_display }}.</strong>
+        {% if listing.rejection_reason %} {{ listing.rejection_reason }}{% endif %}
+        Only you and an agent can see this page.
+      </span>
     </div>
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card shadow-lg">
-                <div class="card-body">
-                    <h5 class="card-title">Property Description</h5>
-                    <p>{{ property_fields.Property_Description }}</p>
-                </div>
-            </div>
-        </div>
-    </div>             
-  
+  {% endif %}
 
-  {% if request.user.UserProfile.id == property_fields.user_id %}
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="text-center">
-                <a href="{% url 'update_property' property_fields.id %}" class="btn btn-primary">Update Property</a>
-                <button class="btn btn-danger" id="delete-property-btn">Delete Property</button>
-            </div>
-        </div>
+  <div class="between" style="margin-bottom:1rem">
+    <div>
+      <div class="chips" style="margin-bottom:.4rem">
+        <span class="badge {% if listing.Property_on == 'rent' %}badge-rent{% else %}badge-sale{% endif %}">
+          For {{ listing.get_Property_on_display|lower }}</span>
+        <span class="badge">{{ listing.get_Property_type_display }}</span>
+        {% if listing.is_featured %}<span class="badge badge-featured">Featured</span>{% endif %}
+        {% if listing.negotiable %}<span class="badge badge-info">Negotiable</span>{% endif %}
+      </div>
+      <h1 class="mb0">{{ listing.Property_Name }}</h1>
+      <p class="muted mb0">&#128205; {{ listing.full_address }}
+        {% if listing.landmark %} &middot; near {{ listing.landmark }}{% endif %}</p>
     </div>
-  
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Property Deletion</h5>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to delete this property? This action cannot be undone.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id = "cancel-delete-btn" data-dismiss="modal">No</button>
-                    <button type="submit" class="btn btn-danger" id = "confirm-delete-btn">Yes</button>
-                </div>
-            </div>
-        </div>
+    <div style="text-align:right">
+      <div style="font-size:1.9rem;font-weight:900;color:var(--brand-dark);letter-spacing:-.02em">
+        {{ CURRENCY_SIGN }} {{ listing.Price|money }}
+      </div>
+      <div class="tiny muted">{{ listing.price_label }}
+        {% if listing.service_charge %} &middot; plus {{ CURRENCY_SIGN }} {{ listing.service_charge|money }} service{% endif %}
+      </div>
     </div>
-    {%endif%}
-</div>
+  </div>
 
-<script>
-  // Show delete confirmation modal when delete button is clicked
-  document.getElementById('delete-property-btn').addEventListener('click', function() {
-      $('#deleteConfirmationModal').modal('show');
-  });
+  <!-- gallery -->
+  <div class="gallery" style="margin-bottom:1.4rem">
+    <div class="main">
+      {% if listing.cover_image %}
+        <img id="galleryMain" src="{{ listing.cover_image.url }}" alt="{{ listing.Property_Name }}">
+      {% else %}
+        <div class="pcard-media"><div class="placeholder">&#127968;</div></div>
+      {% endif %}
+    </div>
+    {% for img in listing.images.all|slice:"1:5" %}
+      <div class="thumb" onclick="swapImage('{{ img.image.url }}', this)">
+        <img src="{{ img.image.url }}" alt="{{ img.caption|default:listing.Property_Name }}">
+        {% if forloop.last and listing.images.count > 5 %}
+          <div class="more">+{{ listing.images.count|add:-5 }} more</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
 
-  // Close the delete confirmation modal when cancel button is clicked
-  document.getElementById('cancel-delete-btn').addEventListener('click', function() {
-      $('#deleteConfirmationModal').modal('hide');
-  });
+  <div class="row" style="align-items:flex-start">
 
-  // Submit the delete form when confirm button is clicked
-  document.getElementById('confirm-delete-btn').addEventListener('click', function() {
-      // Create a form element
-      var form = document.createElement('form');
-      form.method = 'POST';
-      form.action = "{% url 'delete_property' property_fields.id %}";  // URL for the delete_account view
+    <!-- left column -->
+    <div class="col" style="flex:1 1 520px">
 
-      // Create a hidden input field for CSRF token
-      var csrfInput = document.createElement('input');
-      csrfInput.type = 'hidden';
-      csrfInput.name = 'csrfmiddlewaretoken';
-      csrfInput.value = '{{ csrf_token }}';  // Use Django template tag to get CSRF token
-      form.appendChild(csrfInput);
+      <!-- key facts -->
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="card-title">Key facts</div>
+        <div class="spec-grid">
+          {% for label, value in facts %}
+            <div class="spec"><div class="k">{{ label }}</div><div class="v">{{ value }}</div></div>
+          {% endfor %}
+        </div>
+      </div>
 
-      // Append the form to the document body and submit it
-      document.body.appendChild(form);
-      form.submit();
-  });
-</script>
+      <!-- description -->
+      {% if listing.Property_Description %}
+        <div class="card" style="margin-bottom:1.2rem">
+          <div class="card-title">About this place</div>
+          <p style="white-space:pre-line;margin-bottom:0">{{ listing.Property_Description }}</p>
+        </div>
+      {% endif %}
 
+      <!-- amenities -->
+      {% if listing.amenities.exists %}
+        <div class="card" style="margin-bottom:1.2rem">
+          <div class="card-title">What is included</div>
+          <div class="amenity-list">
+            {% for a in listing.amenities.all %}
+              <span class="amenity">{{ a.icon }} {{ a.name }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- money breakdown for rentals -->
+      {% if listing.Property_on == 'rent' %}
+        <div class="card" style="margin-bottom:1.2rem">
+          <div class="card-title">What you would pay</div>
+          <div class="table-wrap">
+            <table>
+              <tbody>
+                <tr><td>Monthly rent</td>
+                  <td class="num">{{ CURRENCY_SIGN }} {{ listing.Price|floatformat:0|intcomma }}</td></tr>
+                <tr><td>Service charge</td>
+                  <td class="num">{{ CURRENCY_SIGN }} {{ listing.service_charge|floatformat:0|intcomma }}</td></tr>
+                <tr style="font-weight:800"><td>Every month</td>
+                  <td class="num">{{ CURRENCY_SIGN }} {{ listing.monthly_total|floatformat:0|intcomma }}</td></tr>
+                {% if listing.security_deposit_months %}
+                  <tr><td>Security deposit</td>
+                    <td class="num">{{ listing.security_deposit_months }} month{{ listing.security_deposit_months|pluralize }}
+                      of rent</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- reviews -->
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="between">
+          <div class="card-title mb0">
+            Reviews {% if listing.rating %}&middot; {{ listing.rating }} out of 5
+              from {{ listing.rating_count }}{% endif %}
+          </div>
+          {% if can_review %}
+            <button class="btn btn-primary btn-sm" onclick="openModal('reviewModal')">Write a review</button>
+          {% elif my_review %}
+            <button class="btn btn-ghost btn-sm" onclick="openModal('reviewModal')">Edit my review</button>
+          {% endif %}
+        </div>
+
+        {% if reviews %}
+          {% for r in reviews %}
+            <div class="entry" style="align-items:flex-start">
+              <span class="avatar avatar-sm" style="background:{{ r.author.avatar_color }}">
+                {{ r.author.initials }}</span>
+              <span class="body">
+                <span class="t">{{ r.author.name }}
+                  {{ r.rating|stars }}
+                  {% if r.title %}&middot; {{ r.title }}{% endif %}</span>
+                <span class="s" style="white-space:normal;color:var(--text)">{{ r.comment }}</span>
+                <span class="tiny muted">{{ r.created_at|date:"d M Y" }}</span>
+              </span>
+              {% if r.author == profile or is_agent %}
+                <form method="post" action="{% url 'delete_review' r.pk %}"
+                      data-confirm="Delete this review?">
+                  {% csrf_token %}
+                  <button class="btn btn-ghost btn-sm" type="submit">&#10005;</button>
+                </form>
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty" style="padding:1.6rem">
+            <p class="mb0">No reviews yet.
+              {% if can_review %}Be the first to leave one.{% endif %}</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- similar -->
+      {% if similar %}
+        <h2>Similar places</h2>
+        <div class="plist">
+          {% for p in similar %}{% include 'partials/_property_card.html' %}{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- right column -->
+    <aside class="col" style="flex:0 0 320px;max-width:100%">
+
+      <!-- owner -->
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-title">Listed by</div>
+        <div style="display:flex;gap:.8rem;align-items:center">
+          <span class="avatar" style="background:{{ listing.user.avatar_color|default:'#009C6B' }}">
+            {% if listing.user.profile_picture %}
+              <img src="{{ listing.user.profile_picture.url }}" alt="">
+            {% else %}{{ listing.user.initials }}{% endif %}
+          </span>
+          <div style="min-width:0">
+            <div style="font-weight:800">
+              {{ listing.user.name|default:"Owner" }}
+              {% if listing.user.is_verified %}<span class="badge badge-ok">Verified</span>{% endif %}
+            </div>
+            <div class="tiny muted">{{ listing.user.display_role }} &middot;
+              {{ listing.user.listing_count }} listing{{ listing.user.listing_count|pluralize }}</div>
+          </div>
+        </div>
+        {% if listing.user %}
+          <a class="btn btn-ghost btn-block btn-sm" style="margin-top:.8rem"
+             href="{% url 'public_profile' listing.user.pk %}">See their other places</a>
+        {% endif %}
+      </div>
+
+      <!-- actions -->
+      <div class="card" style="margin-bottom:1rem">
+        {% if is_owner or is_agent %}
+          <div class="card-title">
+            {% if is_owner %}This is your listing{% else %}Agent tools{% endif %}</div>
+          <div class="btn-group">
+            <a class="btn btn-primary btn-block btn-sm"
+               href="{% url 'update_property' listing.pk %}">Edit details</a>
+            <a class="btn btn-ghost btn-block btn-sm"
+               href="{% url 'manage_images' listing.pk %}">Photos ({{ listing.images.count }})</a>
+            <a class="btn btn-ghost btn-block btn-sm"
+               href="{% url 'property_analytics' listing.pk %}">How it is doing</a>
+          </div>
+        {% elif is_logged_in %}
+          <div class="card-title">Interested?</div>
+          <button class="btn btn-primary btn-block" onclick="openModal('bookModal')">
+            &#128197; Book a visit
+          </button>
+          <button class="btn btn-ghost btn-block" style="margin-top:.5rem"
+                  onclick="openModal('askModal')">&#9993; Message the owner</button>
+          <div class="btn-group" style="margin-top:.5rem">
+            <form method="post" action="{% url 'toggle_favourite' listing.pk %}" style="flex:1">
+              {% csrf_token %}
+              <button class="btn btn-ghost btn-block btn-sm" type="submit">
+                {% if is_saved %}&#9829; Saved{% else %}&#9825; Save{% endif %}
+              </button>
+            </form>
+            <form method="post" action="{% url 'toggle_compare' listing.pk %}" style="flex:1">
+              {% csrf_token %}
+              <button class="btn btn-ghost btn-block btn-sm" type="submit">
+                {% if in_compare %}&#10003; Comparing{% else %}Compare{% endif %}</button>
+            </form>
+          </div>
+        {% else %}
+          <div class="card-title">Interested?</div>
+          <p class="tiny muted">Sign in to book a visit, message the owner or save this place.</p>
+          <a class="btn btn-primary btn-block"
+             href="{% url 'signin' %}?next={{ request.path|urlencode }}">Sign in</a>
+        {% endif %}
+
+        {% if can_see_documents and listing.Property_Documents %}
+          <a class="btn btn-ghost btn-block btn-sm" style="margin-top:.5rem"
+             href="{% url 'view_property_documents' listing.pk %}">&#128196; Ownership papers</a>
+        {% endif %}
+      </div>
+
+      <!-- at a glance -->
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-title">At a glance</div>
+        <div class="entry" style="padding:.45rem 0">
+          <span class="body"><span class="s">Views</span></span>
+          <span class="amt">{{ listing.view_count }}</span>
+        </div>
+        <div class="entry" style="padding:.45rem 0">
+          <span class="body"><span class="s">Saved by</span></span>
+          <span class="amt" id="favCount">{{ listing.favourited_by.count }}</span>
+        </div>
+        <div class="entry" style="padding:.45rem 0">
+          <span class="body"><span class="s">Listed</span></span>
+          <span class="amt">{{ listing.created_at|timesince }} ago</span>
+        </div>
+        {% if listing.available_from %}
+          <div class="entry" style="padding:.45rem 0">
+            <span class="body"><span class="s">Available from</span></span>
+            <span class="amt">{{ listing.available_from|date:"d M Y" }}</span>
+          </div>
+        {% endif %}
+        <button class="btn btn-ghost btn-block btn-sm" style="margin-top:.6rem"
+                onclick="copyText(location.href, this)">Copy the link</button>
+      </div>
+
+      {% if is_agent and listing.status == 'pending' %}
+        <div class="card" style="border-left:4px solid var(--warn)">
+          <div class="card-title">Agent decision</div>
+          <form method="post" action="{% url 'approve_property' listing.pk %}" style="margin-bottom:.5rem">
+            {% csrf_token %}
+            <button class="btn btn-success btn-block btn-sm" type="submit">Approve and publish</button>
+          </form>
+          <form method="post" action="{% url 'reject_property' listing.pk %}">
+            {% csrf_token %}
+            <input name="reason" placeholder="What needs fixing?" required
+                   style="margin-bottom:.4rem">
+            <button class="btn btn-danger btn-block btn-sm" type="submit">Send back</button>
+          </form>
+        </div>
+      {% endif %}
+    </aside>
+  </div>
+</main>
+
+<!-- booking modal -->
+{% if is_logged_in and not is_owner %}
+  <div class="modal" id="bookModal">
+    <div class="modal-box">
+      <h2>Book a visit</h2>
+      <p class="muted tiny">{{ listing.Property_Name }} &middot; {{ listing.Area }}</p>
+      {% if booked_slots %}
+        <div class="alert alert-info" style="margin-bottom:1rem">
+          <span>Already taken:
+            {% for d, t in booked_slots|slice:":4" %}{{ d|date:"d M" }} {{ t|time:"H:i" }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          </span>
+        </div>
+      {% endif %}
+      <form method="post" action="{% url 'book_property' listing.pk %}" data-once>
+        {% csrf_token %}
+        <div class="row" style="gap:.6rem">
+          <div class="col">{% include 'partials/_field.html' with field=booking_form.visit_date %}</div>
+          <div class="col">{% include 'partials/_field.html' with field=booking_form.visit_time %}</div>
+        </div>
+        {% include 'partials/_field.html' with field=booking_form.message %}
+        <div class="btn-group">
+          <button class="btn btn-ghost btn-block" type="button"
+                  onclick="closeModal('bookModal')">Cancel</button>
+          <button class="btn btn-primary btn-block" type="submit">Request this slot</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="askModal">
+    <div class="modal-box">
+      <h2>Message the owner</h2>
+      <p class="muted tiny">About {{ listing.Property_Name }}</p>
+      <form method="post" action="{% url 'start_conversation' listing.pk %}" data-once>
+        {% csrf_token %}
+        {% include 'partials/_field.html' with field=message_form.body %}
+        <div class="btn-group">
+          <button class="btn btn-ghost btn-block" type="button"
+                  onclick="closeModal('askModal')">Cancel</button>
+          <button class="btn btn-primary btn-block" type="submit">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if can_review or my_review %}
+    <div class="modal" id="reviewModal">
+      <div class="modal-box">
+        <h2>{% if my_review %}Edit your review{% else %}Write a review{% endif %}</h2>
+        <form method="post" action="{% url 'write_review' listing.pk %}" data-once>
+          {% csrf_token %}
+          <div class="field">
+            <label>Your rating</label>
+            <div class="star-input">
+              {% for radio in review_form.rating reversed %}
+                <input type="radio" name="rating" id="star{{ radio.data.value }}"
+                       value="{{ radio.data.value }}" {% if radio.data.selected %}checked{% endif %}>
+                <label for="star{{ radio.data.value }}">&#9733;</label>
+              {% endfor %}
+            </div>
+          </div>
+          {% include 'partials/_field.html' with field=review_form.title %}
+          {% include 'partials/_field.html' with field=review_form.comment %}
+          <div class="btn-group">
+            <button class="btn btn-ghost btn-block" type="button"
+                    onclick="closeModal('reviewModal')">Cancel</button>
+            <button class="btn btn-primary btn-block" type="submit">
+              {% if my_review %}Update{% else %}Post review{% endif %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
 {% endblock %}
