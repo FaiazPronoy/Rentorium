@@ -465,3 +465,59 @@ tbody tr:last-child td{border-bottom:0}
 }
 
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+
+/* ------------------------------------------------------------------------
+   The page behind everything.
+
+   A plan drawing: a fine grid with a heavier line every fifth square, the
+   way a floor plan is set out, and a jade wash so it is not just paper.
+   The corners are squared off everywhere else in this stylesheet for the
+   same reason.
+   ------------------------------------------------------------------------ */
+
+:root{
+  --plan-fine:rgba(0,156,107,.045);
+  --plan-major:rgba(0,156,107,.08);
+  --wash-1:rgba(0,156,107,.11);
+  --wash-2:rgba(15,181,174,.11);
+  --wash-3:rgba(0,156,107,.075);
+}
+
+html[data-theme="dark"]{
+  --plan-fine:rgba(52,211,153,.045);
+  --plan-major:rgba(52,211,153,.075);
+  --wash-1:rgba(52,211,153,.12);
+  --wash-2:rgba(45,212,207,.11);
+  --wash-3:rgba(52,211,153,.075);
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  pointer-events:none;
+  background:
+    radial-gradient(56rem 36rem at 0% 4%, var(--wash-1), transparent 70%),
+    radial-gradient(48rem 30rem at 100% 0%, var(--wash-2), transparent 66%),
+    radial-gradient(60rem 40rem at 56% 106%, var(--wash-1), transparent 72%),
+    radial-gradient(74rem 48rem at 50% 46%, var(--wash-3), transparent 76%);
+}
+
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background-image:
+    /* the heavier line every fifth square */
+    linear-gradient(var(--plan-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--plan-major) 1px, transparent 1px),
+    /* and the fine grid inside it */
+    linear-gradient(var(--plan-fine) 1px, transparent 1px),
+    linear-gradient(90deg, var(--plan-fine) 1px, transparent 1px);
+  background-size:
+    140px 140px, 140px 140px,
+    28px 28px, 28px 28px;
+}
