@@ -109,7 +109,7 @@
       <a class="cat" href="{% url 'property_list' %}?property_type=residential">
         <span class="ico">{% icon "building" %}</span>
         <span><span class="nm">Residential</span>
-          <span class="ct">{{ counts.residential }} flat{{ counts.residential|pluralize }} and house{{ counts.residential|pluralize:"es" }}</span></span>
+          <span class="ct">{{ counts.residential }} flat{{ counts.residential|pluralize }} and house{{ counts.residential|pluralize }}</span></span>
         <span class="go">{% icon "arrow-right" %}</span>
       </a>
       <a class="cat" href="{% url 'property_list' %}?property_type=commercial">

@@ -2,16 +2,14 @@
 
 **A Property Rental & Sales Platform** · Django 5, SQLite
 
-🔗 **Live demo:** _coming soon_ · 📦 **[All versions](../../releases)**
+🔗 **Live demo:** https://faiazpronoy.pythonanywhere.com · 📦 **[All versions](../../releases)**
 
 | | |
 |---|---|
-| **v2.0** — current | Rebuilt solo after graduating: new interface, agent console, private ownership documents, 177 tests. |
+| **v2.0** — current | Rebuilt solo: new interface, agent console, private ownership documents, 177 tests. |
 | **v1.0** — [see release](../../releases/tag/v1.0) | The original CSE471 group submission at BRAC University, built on a Bootstrap template. |
 
-Sign in to the demo with `rafid@rentorium.test` / `Rentorium@2026` (renter),
-`faiaz@rentorium.test` / `Rentorium@2026` (owner), or
-`agent@rentorium.test` / `Agent@2026` (agent).
+**Try it:** sign in as a renter with `rafid@rentorium.test` / `Rentorium@2026`, or as the agent with `agent@rentorium.test` / `Agent@2026`.
 
 ---
 
