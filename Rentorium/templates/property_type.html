@@ -1,6 +1,49 @@
-{%extends 'base.html'%}
-{%load static%}
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Browse by category &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <nav class="breadcrumb"><a href="{% url 'home' %}">Home</a>
+    <span class="sep">/</span><span>Categories</span></nav>
+  <h1>Browse by category</h1>
+  <p class="muted">Pick a type of property, or jump straight to an area.</p>
 
-{%block category%}
-{%include "partials/_category.html"%} 
-{%endblock%}
+  <div class="cat-grid" style="margin:1.6rem 0 2rem">
+    {% for g in groups %}
+      <a class="cat-tile" style="min-height:300px"
+         href="{% url 'property_list' %}?property_type={{ g.key }}">
+        {% if g.key == 'residential' %}
+          <img src="{% static 'img/carousel-1.jpg' %}" alt="" loading="lazy">
+        {% elif g.key == 'commercial' %}
+          <img src="{% static 'img/carousel-2.jpg' %}" alt="" loading="lazy">
+        {% else %}
+          <img src="{% static 'img/about.jpg' %}" alt="" loading="lazy">
+        {% endif %}
+        <div class="feature-ico">{{ g.key|type_icon }}</div>
+        <div>
+          <h3>{{ g.label }}</h3>
+          <div class="sub">{{ g.count }} listing{{ g.count|pluralize }} available</div>
+          <div class="chips" style="margin-top:.7rem">
+            <span class="badge">{{ g.rent }} to rent</span>
+            <span class="badge">{{ g.sale }} to buy</span>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="section-head" style="margin-top:2.6rem"><div><div class="eyebrow">By neighbourhood</div><h2 class="mb0">Where the listings are</h2></div></div>
+  {% if areas %}
+    <div class="grid grid-4">
+      {% for a in areas %}
+        <a class="stat" href="{% url 'property_list' %}?area={{ a.Area|urlencode }}">
+          <div class="k">{{ a.Area }}</div>
+          <div class="v">{{ a.n }}</div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty"><p class="mb0">No live listings yet.</p></div>
+  {% endif %}
+</main>
+{% endblock %}

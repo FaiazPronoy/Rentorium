@@ -1,92 +1,50 @@
-{% extends "base.html" %}
-{% block title %}
-<title>Contact Us</title>
-{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Contact us &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <nav class="breadcrumb"><a href="{% url 'home' %}">Home</a>
+    <span class="sep">/</span><span>Contact</span></nav>
+  <h1>Get in touch</h1>
+  <p class="muted">A question the common questions page does not answer, or something
+     that looks wrong? Write to us and a person will read it.</p>
 
-{% block content %}
-<!-- Contact Start -->
-<div class="container-xxl py-5">
-    <div class="container">
-        <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
-            <h1 class="mb-3">Contact Us</h1>
+  <div class="row" style="margin-top:1.2rem;align-items:flex-start">
+    <div class="col" style="flex:1.4 1 380px">
+      <form class="card" method="post" data-once>
+        {% csrf_token %}
+        {{ form.website }}
+        <div class="row">
+          <div class="col">{% include 'partials/_field.html' with field=form.name %}</div>
+          <div class="col">{% include 'partials/_field.html' with field=form.email %}</div>
         </div>
-        <div class="row g-4">
-            <div class="col-12">
-                <div class="row gy-4">
-                    <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.1s">
-                        <div class="bg-light rounded p-3">
-                            <div class="d-flex align-items-center bg-white rounded p-3" style="border: 1px dashed rgba(0, 185, 142, .3)">
-                                <div class="icon me-3" style="width: 45px; height: 45px;">
-                                    <i class="fa fa-map-marker-alt text-primary"></i>
-                                </div>
-                                <span>Dhaka, Bangladesh</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.3s">
-                        <div class="bg-light rounded p-3">
-                            <div class="d-flex align-items-center bg-white rounded p-3" style="border: 1px dashed rgba(0, 185, 142, .3)">
-                                <div class="icon me-3" style="width: 45px; height: 45px;">
-                                    <i class="fa fa-envelope-open text-primary"></i>
-                                </div>
-                                <span>info@rentorium.com</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.5s">
-                        <div class="bg-light rounded p-3">
-                            <div class="d-flex align-items-center bg-white rounded p-3" style="border: 1px dashed rgba(0, 185, 142, .3)">
-                                <div class="icon me-3" style="width: 45px; height: 45px;">
-                                    <i class="fa fa-phone-alt text-primary"></i>
-                                </div>
-                                <span>+8801620840333</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 mx-auto">
-                <div class="wow fadeInUp" data-wow-delay="0.5s">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" name="name" class="form-control" id="name"
-                                        placeholder="Your Name">
-                                    <label for="name">Your Name</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="email" name="email" class="form-control" id="email"
-                                        placeholder="Your Email">
-                                    <label for="email">Your Email</label>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-floating">
-                                    <input type="text" name="subject" class="form-control" id="subject"
-                                        placeholder="Subject">
-                                    <label for="subject">Subject</label>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-floating">
-                                    <textarea name="message" class="form-control" placeholder="Leave a message here"
-                                        id="message" style="height: 150px"></textarea>
-                                    <label for="message">Message</label>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <button class="btn btn-primary w-100 py-3" type="submit">Send Message</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        {% include 'partials/_field.html' with field=form.subject %}
+        {% include 'partials/_field.html' with field=form.message %}
+        <button class="btn btn-primary btn-block" type="submit">Send message</button>
+      </form>
     </div>
-</div>
-<!-- Contact End -->
+
+    <div class="col" style="flex:1 1 260px">
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="card-title">Other ways to reach us</div>
+        <div class="entry"><span class="ico">{% icon "mail" %}</span>
+          <span class="body"><span class="t">{{ SITE_EMAIL }}</span>
+            <span class="s">We reply within one working day</span></span></div>
+        <div class="entry"><span class="ico">{% icon "phone" %}</span>
+          <span class="body"><span class="t">{{ SITE_PHONE }}</span>
+            <span class="s">{{ SITE_HOURS }}</span></span></div>
+        <div class="entry"><span class="ico">{% icon "building" %}</span>
+          <span class="body"><span class="t">{{ SITE_ADDRESS }}</span>
+            <span class="s">Bangladesh</span></span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Faster answers</div>
+        <div class="links small">
+          <a href="{% url 'faqs' %}">Read the common questions</a><br>
+          <a href="{% url 'terms' %}">Terms of use</a><br>
+          <a href="{% url 'add_property' %}">How to list a property</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
 {% endblock %}

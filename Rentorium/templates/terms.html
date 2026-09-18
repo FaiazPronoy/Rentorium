@@ -1,35 +1,46 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
+{% block title %}Terms of use &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <nav class="breadcrumb"><a href="{% url 'home' %}">Home</a>
+    <span class="sep">/</span><span>Terms of use</span></nav>
 
-{% block title %}
-<title>Terms & Conditions</title>
-{% endblock %}
+  <h1>Terms of use</h1>
+  <p class="muted">Last updated {% now "d F Y" %}. These terms cover how you may use
+     {{ SITE_NAME }}. They are written plainly on purpose; they are not legal advice.</p>
 
-{% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h1 class="mb-4">Terms and Conditions</h1>
-                    <p class="lead">Welcome to Rentorium. By accessing or using our website, you agree to comply with and be bound by the following terms and conditions:</p>
+  <div class="card" style="margin-top:1.6rem">
+    <h3>1. Using the site</h3>
+    <p class="small muted">You need an account to list a property, book a viewing or
+      message an owner. Keep your password to yourself and tell us straight away if you
+      think somebody else has it.</p>
 
-                    <h3 class="mt-5">1. Use of Website</h3>
-                    <p>Your use of the website is subject to the terms and conditions outlined in this agreement...</p>
+    <h3>2. Listing a property</h3>
+    <p class="small muted">List only what you own or are authorised to let. The details
+      and the photographs must be the real ones. Our team reviews every listing and can
+      send it back for changes or take it down.</p>
 
-                    <h3 class="mt-5">2. Intellectual Property</h3>
-                    <p>The content, trademarks, logos, and other intellectual property displayed on the website are owned by us...</p>
+    <h3>3. Viewings</h3>
+    <p class="small muted">A booking is a request until the owner accepts it. Turning up
+      without an accepted booking is a matter between you and the owner.</p>
 
-                    <h3 class="mt-5">3. Privacy Policy</h3>
-                    <p>Our Privacy Policy details how we collect, use, and protect your personal information...</p>
+    <h3>4. Reviews</h3>
+    <p class="small muted">One review per person per property. Write about the place and
+      the experience, not about the person. Abusive reviews are removed.</p>
 
-                    <!-- More terms and conditions here -->
+    <h3>5. Your data</h3>
+    <p class="small muted">We keep what you give us so the service can work. Ownership
+      documents are shown only to you and to a verified member of our team. Delete your
+      account and everything attached to it goes with it.</p>
 
-                    <h3 class="mt-5">Contact Us</h3>
-                    <p>If you have any questions about these terms and conditions, please <a href="contact" class="text-decoration-none">contact us</a>.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    <h3>6. What we do not do</h3>
+    <p class="small muted">We do not hold deposits, act as a broker, or guarantee any
+      listing. Inspect the property and the paperwork yourself before money changes
+      hands.</p>
+
+    <h3>7. Changes</h3>
+    <p class="small muted mb0">If these terms change in a way that affects you, we will
+      say so on this page and date the change at the top.</p>
+  </div>
+</main>
 {% endblock %}

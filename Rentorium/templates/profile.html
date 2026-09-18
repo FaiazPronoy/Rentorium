@@ -1,141 +1,102 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load custom_filters %}
+{% block title %}My profile &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
 
-{%block title%}
-<title> Profile </title>
-{%endblock%}
-{% block content %}
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card shadow-lg">
-        <div class="card-body">
-          {% if profile_fields %}
-            <div class="text-center mb-4">
-              {% if profile_fields.profile_picture %}
-                <img src="{{ profile_fields.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded-circle" width="200" height="200">
-              {% else %}
-                <div class="text-muted">
-                  <i class="bi bi-person-circle" style="font-size: 150px;"></i>
-                </div>
-              {% endif %}
-            </div>
-            
-            <div class="table-responsive">
-              <table class="table table-borderless">
-                <tbody>
-                  {% for field, value in profile_fields.items %}
-                    {% if field != 'profile_picture' and field != 'is_agent' %}
-                      <tr>
-                        <th>{{ field|format_field_name }}</th>
-                        <td>
-                          {% if field == 'gender' %}
-                            {% if value == 1 %}
-                              Male
-                            {% elif value == 2 %}
-                              Female
-                            {% elif value == 3 %}
-                              Other
-                            {% else %}
-                              None
-                            {% endif %}
-                          {% else %}
-                            {{ value }}
-                          {% endif %}
-                        </td>
-                      </tr>
-                    {% endif %}
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            
-          <div class="text-center mt-4">
-            <a href="{% url 'edit_profile' %}" class="btn btn-primary">Edit Profile</a>
-            <button class="btn btn-danger" id="delete-account-btn">Delete Account</button>
-          </div>
-          <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Account Deletion</h5>
-                    </div>
-                    <div class="modal-body">
-                      <p>Are you sure you want to delete your account? This action cannot be undone.</p>
-                      <!-- Error message for invalid password -->
-                      <div id="password-error-msg" class="alert alert-danger d-none" role="alert"></div>
-                      <!-- Password input -->
-                      <input type="password" id="delete-account-password" class="form-control mt-3" placeholder="Enter your password">
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-primary" id="cancel-delete-btn" data-dismiss="modal">Cancel</button>
-                      <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+  <div class="between" style="margin-bottom:1.2rem">
+    <h1 class="mb0">My profile</h1>
+    <div class="btn-group">
+      <a class="btn btn-ghost btn-sm" href="{% url 'change_password' %}">Change password</a>
+      <a class="btn btn-primary btn-sm" href="{% url 'edit_profile' %}">Edit profile</a>
+    </div>
+  </div>
 
-          {% else %}
-            <p class="text-muted text-center">No profile found</p>
-          {% endif %}
-          
-        </div>        
+  <div class="card" style="margin-bottom:1.2rem">
+    <div style="display:flex;gap:1.1rem;align-items:center;flex-wrap:wrap">
+      <span class="avatar avatar-lg" style="background:{{ me.avatar_color }}">
+        {% if me.profile_picture %}<img src="{{ me.profile_picture.url }}" alt="">
+        {% else %}{{ me.initials }}{% endif %}
+      </span>
+      <div style="flex:1;min-width:220px">
+        <h2 class="mb0">{{ me.name }}
+          {% if me.is_verified %}<span class="badge badge-ok">Verified</span>{% endif %}
+          <span class="badge">{{ me.display_role }}</span>
+        </h2>
+        <div class="muted small">{{ me.email }}{% if me.contact_no %} &middot; {{ me.contact_no }}{% endif %}</div>
+        <div class="tiny muted">Member since {{ me.created_at|date:"d M Y" }}</div>
+        {% if me.bio %}<p class="small" style="margin-top:.5rem">{{ me.bio }}</p>{% endif %}
       </div>
-    </div>    
-  </div>  
-</div>
+      <a class="btn btn-ghost btn-sm" href="{% url 'public_profile' me.pk %}">See public view</a>
+    </div>
+  </div>
 
-<script>
-  // Show delete confirmation modal when delete button is clicked
-  document.getElementById('delete-account-btn').addEventListener('click', function() {
-    $('#deleteConfirmationModal').modal('show');
-  });
+  <div class="grid grid-4" style="margin-bottom:1.2rem">
+    <div class="stat"><div class="k">Listings</div><div class="v">{{ stats.listings }}</div></div>
+    <div class="stat"><div class="k">Live now</div><div class="v pos">{{ stats.live }}</div></div>
+    <div class="stat"><div class="k">Total views</div><div class="v">{{ stats.views }}</div></div>
+    <div class="stat"><div class="k">Saved places</div><div class="v">{{ stats.favourites }}</div></div>
+  </div>
 
-  // Submit the delete form when confirm button is clicked
-  document.getElementById('confirm-delete-btn').addEventListener('click', function() {
-    // Validate password
-    var password = document.getElementById('delete-account-password').value;
-    if (!password) {
-      // Show error message if password is empty
-      document.getElementById('password-error-msg').innerText = 'Password is required.';
-      document.getElementById('password-error-msg').classList.remove('d-none');
-      return;
-    }
-    // Create a form element
-    var form = document.createElement('form');
-    form.method = 'POST';
-    form.action = "{% url 'delete_account' %}";  // URL for the delete_account view
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <div class="card-title">Your details</div>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr><td>Full name</td><td><strong>{{ me.name }}</strong></td></tr>
+              <tr><td>Email</td><td><strong>{{ me.email }}</strong></td></tr>
+              <tr><td>Phone</td><td><strong>{{ me.contact_no|default:"Not set" }}</strong></td></tr>
+              <tr><td>Gender</td><td><strong>{{ me.get_gender_display|default:"Not set" }}</strong></td></tr>
+              <tr><td>NID</td><td><strong>{{ me.masked_nid|default:"Not set" }}</strong></td></tr>
+              <tr><td>Date of birth</td><td><strong>{{ me.dob|date:"d M Y"|default:"Not set" }}</strong></td></tr>
+              <tr><td>Address</td><td><strong>{{ me.address|default:"Not set" }}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-    // Create a hidden input field for CSRF token
-    var csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = 'csrfmiddlewaretoken';
-    csrfInput.value = '{{ csrf_token }}';  // Use Django template tag to get CSRF token
-    form.appendChild(csrfInput);
+    <div class="col">
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="card-title">Recent sign in attempts</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>When</th><th>From</th><th>Result</th></tr></thead>
+            <tbody>
+            {% for l in recent_logins %}
+              <tr>
+                <td class="tiny">{{ l.attempted_at|date:"d M Y, H:i" }}</td>
+                <td class="tiny mono">{{ l.ip|default:"-" }}</td>
+                <td><span class="badge {% if l.successful %}badge-ok{% else %}badge-fail{% endif %}">
+                  {% if l.successful %}success{% else %}failed{% endif %}</span></td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" class="muted center">Nothing recorded.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-    // Append the password to the form data
-    var passwordInput = document.createElement('input');
-    passwordInput.type = 'hidden';
-    passwordInput.name = 'password';
-    passwordInput.value = password;
-    form.appendChild(passwordInput);
-
-    // Append the form to the document body and submit it
-    document.body.appendChild(form);
-    form.submit();
-  });
-
-  // Close the delete confirmation modal when cancel button is clicked
-  document.getElementById('cancel-delete-btn').addEventListener('click', function() {
-    $('#deleteConfirmationModal').modal('hide');
-  });
-
-  // Reset error message when password input is focused
-  document.getElementById('delete-account-password').addEventListener('focus', function() {
-    document.getElementById('password-error-msg').innerText = '';
-    document.getElementById('password-error-msg').classList.add('d-none');
-  });
-</script>
-
+      <div class="card" style="border-left:4px solid var(--danger)">
+        <div class="card-title">Delete this account</div>
+        <p class="tiny muted">
+          Everything goes: your listings, photos, messages, bookings and reviews.
+          This cannot be undone.
+        </p>
+        <form method="post" action="{% url 'delete_account' %}"
+              data-confirm="Delete your account and everything on it? This cannot be undone.">
+          {% csrf_token %}
+          <div class="field">
+            <label for="password">Type your password to confirm</label>
+            <input type="password" name="password" id="password" required
+                   autocomplete="current-password">
+          </div>
+          <button class="btn btn-danger btn-block btn-sm" type="submit">Delete my account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
 {% endblock %}

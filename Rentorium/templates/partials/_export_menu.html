@@ -1,0 +1,25 @@
+{% comment %}
+A download menu for the agent console. Each link is a plain GET, so it works
+with the keyboard and can be bookmarked.
+{% endcomment %}
+<div class="menu">
+  <button type="button" class="btn btn-ghost btn-sm"
+          aria-haspopup="true" aria-expanded="false">
+    {% icon "download" %} Export {% icon "chevron-down" %}
+  </button>
+  <div class="menu-panel export-list" role="menu">
+    <a href="{% url 'agent_export' 'listings' %}" role="menuitem">
+      {% icon "building" %} All listings</a>
+    <a href="{% url 'agent_export' 'listings' %}?status=pending" role="menuitem">
+      {% icon "clock" %} Listings waiting</a>
+    <a href="{% url 'agent_export' 'users' %}" role="menuitem">
+      {% icon "users" %} Users</a>
+    <a href="{% url 'agent_export' 'enquiries' %}" role="menuitem">
+      {% icon "mail" %} Contact enquiries</a>
+    <a href="{% url 'agent_export' 'reports' %}" role="menuitem">
+      {% icon "flag" %} Reported listings</a>
+    <hr>
+    <a href="{% url 'agent_export' 'log' %}" role="menuitem">
+      {% icon "table" %} Moderation log</a>
+  </div>
+</div>

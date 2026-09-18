@@ -1,9 +1,10 @@
-asgiref==3.7.2
-crispy-bootstrap5==2024.2
-Django==5.0.2
-django-crispy-forms==2.1
-django-environ==0.11.2
-pillow==10.2.0
-sqlparse==0.4.4
-stripe==8.9.0
-tzdata==2024.1
+# Rentorium v2 needs very little.
+#
+# The versions are ranges, not pins, on purpose: Pillow ships compiled
+# wheels per Python version, and a hard pin on an older Pillow makes pip
+# try to build it from source on a newer Python, which needs a C compiler
+# and fails. A range lets pip pick the wheel that matches the Python in
+# use. Tested on 5.0.2 / 10.2.0 and on 5.2.x / 12.x - 122 tests pass on
+# both.
+Django>=5.0.2,<5.3
+pillow>=10.2

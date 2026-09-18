@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Stats &middot; {{ listing.Property_Name }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <nav class="breadcrumb">
+    <a href="{% url 'posted_properties' %}">My listings</a>
+    <span class="sep">/</span>
+    <a href="{{ listing.get_absolute_url }}">{{ listing.Property_Name|truncatechars:36 }}</a>
+    <span class="sep">/</span><span>Insights</span>
+  </nav>
+  <div class="section-head">
+    <div>
+      <h1 class="mb0">How this listing is doing</h1>
+      <p class="muted mb0">{{ listing.Property_Name }}</p>
+    </div>
+    <div class="btn-group">
+      <a class="btn btn-ghost btn-sm" href="{% url 'update_property' listing.pk %}">
+        {% icon "edit" %} Edit</a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'manage_images' listing.pk %}">
+        {% icon "camera" %} Photos</a>
+      <a class="btn btn-ghost btn-sm" href="{{ listing.get_absolute_url }}">
+        {% icon "eye" %} View</a>
+    </div>
+  </div>
+
+  <div class="grid grid-4" style="margin-bottom:1.4rem">
+    <div class="stat"><div class="k">Views, all time</div><div class="v">{{ listing.view_count }}</div></div>
+    <div class="stat"><div class="k">Views, 30 days</div><div class="v">{{ views_30d }}</div></div>
+    <div class="stat"><div class="k">Saved by</div><div class="v pos">{{ saves }}</div></div>
+    <div class="stat"><div class="k">Enquiries</div><div class="v">{{ enquiries }}</div></div>
+    <div class="stat"><div class="k">Visit requests</div><div class="v">{{ visits }}</div></div>
+    <div class="stat"><div class="k">Visits accepted</div><div class="v">{{ accepted_visits }}</div></div>
+    <div class="stat"><div class="k">Reviews</div><div class="v">{{ reviews }}</div></div>
+    <div class="stat"><div class="k">Rating</div>
+      <div class="v">{% if listing.rating %}{{ listing.rating }}{% else %}-{% endif %}</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.2rem">
+    <div class="card-title">Views, last 30 days</div>
+    <div class="bars" style="height:170px">
+      {% for c in chart %}
+        <div class="b" title="{{ c.label }}: {{ c.value }}">
+          <em>{{ c.value }}</em>
+              <i style="height:{% widthratio c.value chart_max 100 %}%"></i>
+          {% if forloop.counter0|divisibleby:5 %}<small>{{ c.label }}</small>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">People who saved this</div>
+    {% for f in recent_savers %}
+      <div class="entry" style="padding:.5rem 0">
+        <span class="avatar avatar-sm" style="background:{{ f.profile.avatar_color }}">
+          {{ f.profile.initials }}</span>
+        <span class="body">
+          <span class="t">{{ f.profile.name }}</span>
+          <span class="s">{{ f.created_at|since }}</span>
+        </span>
+      </div>
+    {% empty %}
+      <p class="muted tiny mb0">Nobody has saved it yet. Better photos and a fuller
+        description usually help.</p>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

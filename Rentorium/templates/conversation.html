@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load property_filters %}
+{% block title %}{{ other.name }} &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <div class="between" style="margin-bottom:1rem">
+    <div style="display:flex;gap:.8rem;align-items:center">
+      <span class="avatar" style="background:{{ other.avatar_color }}">{{ other.initials }}</span>
+      <div>
+        <h1 class="mb0" style="font-size:1.2rem">{{ other.name }}</h1>
+        <div class="tiny muted">{{ other.display_role }}</div>
+      </div>
+    </div>
+    <a class="btn btn-ghost btn-sm" href="{% url 'inbox' %}">All conversations</a>
+  </div>
+
+  <div class="card" style="margin-bottom:1rem">
+    <div style="display:flex;gap:.8rem;align-items:center">
+      <div style="width:72px;height:54px;border-radius:8px;overflow:hidden;
+           background:var(--surface-2);flex:none">
+        {% if thread.property.cover_image %}
+          <img src="{{ thread.property.cover_image.url }}" alt=""
+               style="width:100%;height:100%;object-fit:cover">
+        {% endif %}
+      </div>
+      <div style="flex:1;min-width:0">
+        <a href="{{ thread.property.get_absolute_url }}" style="font-weight:800">
+          {{ thread.property.Property_Name }}</a>
+        <div class="tiny muted">{{ thread.property.Area }} &middot;
+          {{ CURRENCY_SIGN }} {{ thread.property.Price|money }} {{ thread.property.price_label }}</div>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="{{ thread.property.get_absolute_url }}">Open</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="thread" id="thread">
+      {% for m in chat %}
+        <div class="bubble {% if m.sender == me %}mine{% endif %}">
+          {{ m.body|linebreaksbr }}
+          <span class="when">{{ m.created_at|date:"d M, H:i" }}</span>
+        </div>
+      {% empty %}
+        <p class="muted center tiny">No messages yet. Say hello.</p>
+      {% endfor %}
+    </div>
+
+    <form method="post" style="margin-top:1rem">
+      {% csrf_token %}
+      {{ form.body }}
+      {% for e in form.body.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      <button class="btn btn-primary btn-block" style="margin-top:.6rem" type="submit">Send</button>
+    </form>
+  </div>
+</main>
+{% endblock %}

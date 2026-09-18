@@ -1,36 +1,50 @@
-{%extends "base.html"%}
-{%load static %}
-{% load crispy_forms_tags %}
+{% extends 'base.html' %}
+{% block title %}List a property &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <h1>What are you listing?</h1>
+  <p class="muted">Pick a type and we will ask only for the details that matter to it.</p>
 
-{%block title%}
-<title>Select Property Type</title>
-{%endblock%}
-
-{% block content %}
-<style>
-    .custom-form {
-        max-width: 600px; /* Adjust the width as needed */
-        margin: 0 auto; /* Center the form horizontally */
-    }
-</style>
-
-
-<style>
-    /* Center the heading horizontally */
-    h1 {
-        text-align: center;
-    }
-</style>
-<br>
-<h1>Select Property Type</h1>
-<form method="post">
+  <form method="post" class="card" data-once>
     {% csrf_token %}
-    <div class="custom-form">
-        {{ form|crispy }}
-        <button type="submit" class="btn btn-primary">Next</button>
+    <div class="grid grid-3">
+      {% for radio in form.Type %}
+        <label class="card" style="cursor:pointer;text-align:center;margin:0;
+               border:2px solid var(--border)">
+          {{ radio.tag }}
+          <div style="font-size:2.2rem;margin:.3rem 0">
+            {% if radio.data.value == 'residential' %}{% icon "building" %}
+            {% elif radio.data.value == 'commercial' %}{% icon "building" %}
+            {% else %}{% icon "land" %}{% endif %}
+          </div>
+          <div style="font-weight:800">{{ radio.choice_label }}</div>
+          <div class="tiny muted">
+            {% if radio.data.value == 'residential' %}Flats, houses, duplexes
+            {% elif radio.data.value == 'commercial' %}Offices, shops, warehouses
+            {% else %}Plots and farmland{% endif %}
+          </div>
+        </label>
+      {% endfor %}
     </div>
-</form>
+    {% for e in form.Type.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    <button class="btn btn-primary btn-block" style="margin-top:1.2rem" type="submit">
+      Continue
+    </button>
+  </form>
+
+  <div class="card" style="margin-top:1.2rem">
+    <div class="card-title">Before you start</div>
+    <ul class="small muted" style="margin:0;padding-left:1.2rem">
+      <li>Have a few clear photos ready. Listings with photos get far more views.</li>
+      <li>Upload the ownership paper if you have it. Verified owners rank higher.</li>
+      <li>An agent checks every listing before it goes live, usually within a day.</li>
+    </ul>
+    {% if my_count %}
+      <p class="tiny muted" style="margin:.8rem 0 0">
+        You already have {{ my_count }} listing{{ my_count|pluralize }}.
+        <a href="{% url 'posted_properties' %}">Manage them</a>.
+      </p>
+    {% endif %}
+  </div>
+</main>
 {% endblock %}
-
-
-

@@ -1,36 +1,115 @@
-{%extends "base.html" %}
-{%load static %}
-{%load crispy_forms_tags%}
+{% extends 'base.html' %}
+{% block title %}Add a {{ type_label|lower }} property &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <div class="between" style="margin-bottom:1rem">
+    <div>
+      <h1 class="mb0">New {{ type_label|lower }} listing</h1>
+      <p class="muted mb0">Fields marked * are required.</p>
+    </div>
+    <a class="btn btn-ghost btn-sm" href="{% url 'add_property' %}">Change type</a>
+  </div>
 
-{%block title%}
-<title>Input {{ property_type | title }} Property Info</title>
-{%endblock%}
+  {% if form.errors %}
+    <div class="alert alert-error" style="margin-bottom:1rem">
+      <span>Please fix the highlighted fields below.</span>
+    </div>
+  {% endif %}
 
-{%block content%}
-<style>
-.custom-form {
-    max-width: 600px; /* Adjust the width as needed */
-    margin: 0 auto; /* Center the form horizontally */
-}
-</style>
+  <form method="post" enctype="multipart/form-data" data-once>
+    {% csrf_token %}
 
+    <div class="card" style="margin-bottom:1.2rem">
+      <div class="card-title">The basics</div>
+      {% include 'partials/_field.html' with field=form.Property_Name %}
+      {% include 'partials/_field.html' with field=form.Property_Description %}
+      <div class="row">
+        <div class="col">{% include 'partials/_field.html' with field=form.Property_on %}</div>
+        <div class="col">{% include 'partials/_field.html' with field=form.Total_area_in_sqft %}</div>
+      </div>
+    </div>
 
-<style>
-    /* Center the heading */
-    h3 {
-        text-align: center;
-    }
-</style>
-<br>
-<h3>Input {{ property_type | title }} Property Info</h3>
-
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="custom-form">
-            {{ form|crispy }}
-            <button type="submit" class="btn btn-primary">Submit</button>
+    <div class="card" style="margin-bottom:1.2rem">
+      <div class="card-title">Money</div>
+      <div class="row">
+        <div class="col">{% include 'partials/_field.html' with field=form.Price %}</div>
+        {% if form.service_charge %}
+          <div class="col">{% include 'partials/_field.html' with field=form.service_charge %}</div>
+        {% endif %}
+      </div>
+      <div class="hint" id="priceHint"></div>
+      <div class="row" style="margin-top:.6rem">
+        {% if form.security_deposit_months %}
+          <div class="col">{% include 'partials/_field.html' with field=form.security_deposit_months %}</div>
+        {% endif %}
+        <div class="col">
+          <label style="display:flex;gap:.5rem;align-items:center;font-weight:600;margin-top:1.6rem">
+            {{ form.negotiable }} Price is negotiable
+          </label>
         </div>
-        
-    </form>
+      </div>
+    </div>
 
-{%endblock%}
+    <div class="card" style="margin-bottom:1.2rem">
+      <div class="card-title">Where it is</div>
+      <div class="row">
+        <div class="col">{% include 'partials/_field.html' with field=form.City %}</div>
+        <div class="col">{% include 'partials/_field.html' with field=form.Area %}</div>
+      </div>
+      <div class="row">
+        {% if form.House_No %}
+          <div class="col">{% include 'partials/_field.html' with field=form.House_No %}</div>
+        {% endif %}
+        <div class="col">{% include 'partials/_field.html' with field=form.Road_No %}</div>
+        <div class="col">{% include 'partials/_field.html' with field=form.Block %}</div>
+        <div class="col">{% include 'partials/_field.html' with field=form.Postal_code %}</div>
+      </div>
+      {% include 'partials/_field.html' with field=form.landmark %}
+    </div>
+
+    <div class="card" style="margin-bottom:1.2rem">
+      <div class="card-title">About the {{ type_label|lower }}</div>
+      <div class="row">
+        {% for field in form %}
+          {% if field.name not in "Property_Name,Property_Description,Property_on,Price,service_charge,security_deposit_months,negotiable,Total_area_in_sqft,City,Area,Road_No,Block,Postal_code,landmark,House_No,Property_Pictures,Property_Documents,amenities" %}
+            <div class="col">{% include 'partials/_field.html' %}</div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if form.amenities %}
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="card-title">What is included</div>
+        <div class="check-row">
+          {% for box in form.amenities %}
+            <label>{{ box.tag }} {{ box.choice_label }}</label>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="card" style="margin-bottom:1.2rem">
+      <div class="card-title">Photos and papers</div>
+      {% include 'partials/_field.html' with field=form.Property_Pictures %}
+      <div class="field">
+        <label for="id_images">More photos</label>
+        <input type="file" name="images" id="id_images" multiple accept="image/*"
+               data-preview="imgPreview">
+        <div class="hint">Up to 8 photos, 5 MB each. The first one becomes the cover.</div>
+        {% for e in image_form.images.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        <div id="imgPreview" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem"></div>
+      </div>
+      {% include 'partials/_field.html' with field=form.Property_Documents %}
+      <div class="alert alert-info">
+        <span>Only you and a verified agent can open the ownership paper.
+          It is never shown on the public page.</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-block btn-lg" type="submit">
+      Submit for approval
+    </button>
+  </form>
+</main>
+{% endblock %}

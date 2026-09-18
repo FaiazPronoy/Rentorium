@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Saved searches &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <div class="section-head">
+    <div>
+      <h1 class="mb0">Saved searches</h1>
+      <p class="muted mb0">Come straight back to a set of filters you use often.</p>
+    </div>
+    <a class="btn btn-primary btn-sm" href="{% url 'property_list' %}">
+      {% icon "search" %} New search</a>
+  </div>
+
+  {% if new_total %}
+    <div class="alert alert-ok" style="margin-bottom:1.3rem">
+      {% icon "check-circle" %}
+      <span><strong>{{ new_total }} new propert{{ new_total|pluralize:"y,ies" }}</strong>
+        matched your saved searches since you last looked.</span>
+    </div>
+  {% endif %}
+
+  {% if rows %}
+    <div class="card">
+      {% for r in rows %}
+        <div class="entry" style="align-items:flex-start;flex-wrap:wrap">
+          <span class="ico">{% icon "search" %}</span>
+          <span class="body">
+            <span class="t">{{ r.search.label }}
+              {% if r.new %}<span class="badge badge-ok">{{ r.new }} new</span>{% endif %}
+            </span>
+            <span class="s">{{ r.matches }} propert{{ r.matches|pluralize:"y,ies" }} match
+              {% if r.search.alert_enabled %} &middot; counting new matches{% endif %}</span>
+            {% if r.params %}
+              <span class="chips" style="margin-top:.45rem">
+                {% for k, v in r.params.items %}
+                  <span class="badge">{{ k|cut:"_"|capfirst }}: {{ v }}</span>
+                {% endfor %}
+              </span>
+            {% endif %}
+          </span>
+          <div class="btn-group">
+            <a class="btn btn-ghost btn-sm"
+               href="{% url 'property_list' %}?{{ r.search.query_string }}">Run it</a>
+            <form method="post" action="{% url 'delete_saved_search' r.search.pk %}"
+                  class="inline-form" data-confirm="Delete this saved search?">
+              {% csrf_token %}
+              <button class="btn btn-ghost btn-sm" type="submit"
+                      aria-label="Delete">{% icon "trash" %}</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <p class="tiny muted center" style="margin-top:1rem">
+      You can keep up to twelve saved searches.</p>
+  {% else %}
+    <div class="card empty">
+      <div class="big">{% icon "search" %}</div>
+      <h3>No saved searches yet</h3>
+      <p class="muted">Set some filters on the browse page and press
+        <strong>Save this search</strong>.</p>
+      <a class="btn btn-primary" href="{% url 'property_list' %}">Browse properties</a>
+    </div>
+  {% endif %}
+</main>
+{% endblock %}

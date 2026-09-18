@@ -1,38 +1,47 @@
-{% extends "base.html" %}
-{%load static%}
+{% extends 'base.html' %}
+{% block title %}Privacy and legal &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <nav class="breadcrumb"><a href="{% url 'home' %}">Home</a>
+    <span class="sep">/</span><span>Privacy and legal</span></nav>
 
+  <h1>Privacy and legal</h1>
+  <p class="muted">How we handle your information, and who we are.</p>
 
-{%block title%} <title>License </title>{% endblock %}
-{%block content%}
+  <div class="card" style="margin-top:1.6rem">
+    <h3>What we collect</h3>
+    <p class="small muted">Your name, email address and phone number, so owners know who
+      they are speaking to. If you list a property we also keep the details you enter,
+      the photographs you upload and, where you provide it, the ownership document.</p>
 
-        <br>
-        <div class="container">
-            <div class="license-header mb-4">
-                <strong>Rentorium License</strong>
-            </div>
-            <div class="license-details">
-                <p>This license is issued to Rentorium, hereinafter referred to as the "Licensee," by the Government of People's Republic of Bangladesh, here in after referred to as the "Licensing Authority," in accordance with the real estate regulations of The People's Republic of Bangladesh.</p>
-                <!-- Additional license details... -->
-            </div>
-            <div class="license-signatures">
-                <p>Authorized Signatures:</p>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p>For Rentorium:<br>
-                        <em>XXXX XXXX<br>
-                        Executive officer<br>
-                        {% comment %} Hunting Down Your Perfect Home<br> {% endcomment %}
-                        05.08.2024</em></p>
-                    </div>
-                    <div class="col-md-6">
-                        <p>For The People's Republic of Bangladesh:<br>
-                        <em>XXXX XXXX<br>
-                        Tax Officer, DNCC <br>
-                        </em>16.08.2024</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
+    <h3>Who can see it</h3>
+    <p class="small muted">Your name, profile photograph and the properties you have
+      listed are public. Your phone number is shared with the other party only after a
+      viewing has been accepted. Ownership documents are shown to you and to a verified
+      member of our team, and to nobody else.</p>
 
-{%endblock%}
+    <h3>Cookies</h3>
+    <p class="small muted">One cookie keeps you signed in and remembers the properties
+      you have added to a comparison. We do not run advertising or third party
+      tracking.</p>
+
+    <h3>Deleting your account</h3>
+    <p class="small muted">You can delete your account from your profile page at any
+      time. Your listings, messages, bookings and documents are removed with it.</p>
+
+    <h3>Company details</h3>
+    <div class="kv"><span class="k">Registered name</span>
+      <span class="v">{{ SITE_LEGAL_NAME }}</span></div>
+    <div class="kv"><span class="k">Registered office</span>
+      <span class="v">{{ SITE_ADDRESS }}</span></div>
+    <div class="kv"><span class="k">Email</span><span class="v">{{ SITE_EMAIL }}</span></div>
+    <div class="kv"><span class="k">Telephone</span><span class="v">{{ SITE_PHONE }}</span></div>
+
+    <h3 style="margin-top:1.4rem">Photography</h3>
+    <p class="small muted mb0">Photographs on a listing are supplied by the owner of
+      that property. If you believe an image has been used without permission,
+      <a href="{% url 'contact' %}">tell us</a> and we will take it down while we look
+      into it.</p>
+  </div>
+</main>
+{% endblock %}

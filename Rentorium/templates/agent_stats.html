@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load property_filters humanize %}
+{% block title %}Platform stats &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <div class="between" style="margin-bottom:1.2rem">
+    <h1 class="mb0">Platform stats</h1>
+    <a class="btn btn-ghost btn-sm" href="{% url 'agent_dashboard' %}">Back to the queue</a>
+  </div>
+
+  <div class="grid grid-4" style="margin-bottom:1.4rem">
+    <div class="stat"><div class="k">Listings</div><div class="v">{{ totals.listings }}</div>
+      <div class="tiny muted">{{ totals.live }} live</div></div>
+    <div class="stat"><div class="k">Users</div><div class="v">{{ totals.users }}</div>
+      <div class="tiny muted">{{ totals.owners }} listing something</div></div>
+    <div class="stat"><div class="k">Page views</div><div class="v">{{ totals.views }}</div></div>
+    <div class="stat"><div class="k">Visit requests</div><div class="v">{{ totals.bookings }}</div>
+      <div class="tiny muted">{{ totals.accepted }} accepted</div></div>
+    <div class="stat"><div class="k">Enquiries</div><div class="v">{{ totals.enquiries }}</div></div>
+    <div class="stat"><div class="k">Saves</div><div class="v pos">{{ totals.saves }}</div></div>
+    <div class="stat"><div class="k">Reviews</div><div class="v">{{ totals.reviews }}</div>
+      <div class="tiny muted">{% if totals.avg_rating %}{{ totals.avg_rating|floatformat:1 }} average{% endif %}</div></div>
+    <div class="stat"><div class="k">Open enquiries</div>
+      <div class="v">{{ totals.open_contacts }}</div>
+      <div class="tiny muted"><a href="{% url 'agent_enquiries' %}">Handle them</a></div></div>
+  </div>
+
+  <div class="row">
+    <div class="col" style="flex:2 1 420px">
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="card-title">Page views, last 14 days</div>
+        <div class="bars" style="height:170px">
+          {% for c in chart %}
+            <div class="b" title="{{ c.label }}: {{ c.value }}">
+              <em>{{ c.value }}</em>
+              <i style="height:{% widthratio c.value chart_max 100 %}%"></i>
+              <small>{{ c.label }}</small>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Busiest listings</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Property</th><th>Area</th><th class="num">Price</th>
+              <th class="num">Views</th></tr></thead>
+            <tbody>
+            {% for p in busiest %}
+              <tr>
+                <td><a href="{{ p.get_absolute_url }}">{{ p.Property_Name|truncatechars:40 }}</a></td>
+                <td class="tiny">{{ p.Area }}</td>
+                <td class="num">{{ CURRENCY_SIGN }} {{ p.Price|money }}</td>
+                <td class="num">{{ p.view_count }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="center muted" style="padding:1.6rem">Nothing yet.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <aside class="col" style="flex:1 1 280px">
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="card-title">By type</div>
+        {% for t in by_type %}
+          <div style="margin-bottom:.8rem">
+            <div class="between tiny" style="margin-bottom:.25rem">
+              <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;
+                    background:{{ t.colour }};margin-right:.4rem"></i>{{ t.label }}</span>
+              <strong>{{ t.count }}</strong>
+            </div>
+            <div class="bar"><span style="width:{% widthratio t.count totals.live 100 %}%;
+                 background:{{ t.colour }}"></span></div>
+            <div class="tiny muted" style="margin-top:.2rem">
+              average {{ CURRENCY_SIGN }} {{ t.avg_price|money }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="card-title">By area</div>
+        {% for a in by_area %}
+          <div class="entry" style="padding:.4rem 0">
+            <span class="body">
+              <span class="t" style="font-size:.86rem">{{ a.Area }}</span>
+              <span class="s">average {{ CURRENCY_SIGN }} {{ a.avg|money }}</span>
+            </span>
+            <span class="amt">{{ a.n }}</span>
+          </div>
+        {% empty %}
+          <p class="muted tiny mb0">No live listings yet.</p>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <div class="card-title">New sign ups, 6 months</div>
+        <div class="bars" style="height:120px">
+          {% for s in signups %}
+            <div class="b" title="{{ s.label }}: {{ s.value }}">
+              <em>{{ s.value }}</em>
+              <i style="height:{% widthratio s.value signup_max 100 %}%"></i>
+              <small>{{ s.label }}</small>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+{% endblock %}

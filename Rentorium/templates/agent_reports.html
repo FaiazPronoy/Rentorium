@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load property_filters %}
+{% block title %}Reported listings &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+
+  <div class="between" style="margin-bottom:1rem">
+    <div>
+      <h1 class="mb0">Reported listings</h1>
+      <p class="muted mb0">{{ counts.open }} open &middot; {{ counts.upheld }} upheld
+        &middot; {{ counts.dismissed }} dismissed.</p>
+    </div>
+    <div class="btn-group">
+      <a class="btn btn-ghost btn-sm" href="{% url 'agent_export' 'reports' %}">
+        {% icon "download" %} Export CSV</a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'agent_dashboard' %}">Back to the queue</a>
+    </div>
+  </div>
+
+  <form method="get" class="card" style="margin-bottom:1.2rem">
+    <div class="row" style="align-items:flex-end">
+      <div class="col field mb0">
+        <label for="status">Status</label>
+        <select id="status" name="status">
+          <option value="all" {% if not status %}selected{% endif %}>All</option>
+          {% for value, label in statuses %}
+            <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col field mb0">
+        <label for="reason">Reason</label>
+        <select id="reason" name="reason">
+          <option value="">Any reason</option>
+          {% for value, label in reasons %}
+            <option value="{{ value }}" {% if reason == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col" style="flex:0 1 auto">
+        <button class="btn btn-primary" type="submit">Filter</button>
+        <a class="btn btn-ghost" href="{% url 'agent_reports' %}">Clear</a>
+      </div>
+    </div>
+  </form>
+
+  {% if rows %}
+    <div class="stack">
+      {% for r in rows %}
+        <div class="card">
+          <div class="between" style="gap:1rem;align-items:flex-start">
+            <div style="min-width:0;flex:1">
+              <div class="chips" style="margin-bottom:.45rem">
+                <span class="badge {{ r.badge_class }}">{{ r.get_status_display }}</span>
+                <span class="badge">{{ r.get_reason_display }}</span>
+                {% if r.property.status != 'approved' %}
+                  <span class="badge badge-pending">Listing is
+                    {{ r.property.get_status_display|lower }}</span>
+                {% endif %}
+              </div>
+
+              <h3 class="mb0">
+                <a href="{{ r.property.get_absolute_url }}">
+                  {{ r.property.Property_Name }}</a></h3>
+              <div class="muted small">{% icon "pin" %} {{ r.property.full_address }}
+                &middot; {{ CURRENCY_SIGN }} {{ r.property.Price|money }}</div>
+
+              {% if r.detail %}
+                <blockquote class="said" style="margin:.7rem 0 .5rem">
+                  <p style="font-size:.98rem;margin:0">{{ r.detail }}</p>
+                </blockquote>
+              {% endif %}
+
+              <div class="tiny muted">
+                Reported by
+                {% if r.reporter %}
+                  <a href="{% url 'public_profile' r.reporter.pk %}">{{ r.reporter.name }}</a>
+                {% else %}a removed account{% endif %}
+                &middot; {{ r.created_at|since }}
+                &middot; owner
+                {% if r.property.user %}
+                  <a href="{% url 'public_profile' r.property.user.pk %}">
+                    {{ r.property.user.name }}</a>
+                {% else %}removed{% endif %}
+              </div>
+
+              {% if r.status != 'open' %}
+                <div class="tiny muted" style="margin-top:.4rem">
+                  {{ r.get_status_display }} by
+                  {{ r.handled_by.name|default:"a removed agent" }}
+                  &middot; {{ r.handled_at|date:"d M Y, H:i" }}
+                  {% if r.outcome %}&middot; {{ r.outcome }}{% endif %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div style="width:230px;flex:none">
+              <a class="btn btn-ghost btn-block btn-sm" style="margin-bottom:.4rem"
+                 href="{{ r.property.get_absolute_url }}">Open the listing</a>
+              {% if r.property.Property_Documents %}
+                <a class="btn btn-ghost btn-block btn-sm" style="margin-bottom:.4rem"
+                   href="{% url 'view_property_documents' r.property.pk %}">
+                  Check the papers</a>
+              {% endif %}
+              {% if r.status == 'open' %}
+                <button class="btn btn-danger btn-block btn-sm" type="button"
+                        style="margin-bottom:.4rem"
+                        onclick="resolveReport('{% url 'resolve_report' r.pk %}', 'uphold',
+                                               '{{ r.property.Property_Name|escapejs }}')">
+                  Uphold and take down</button>
+                <button class="btn btn-ghost btn-block btn-sm" type="button"
+                        onclick="resolveReport('{% url 'resolve_report' r.pk %}', 'dismiss',
+                                               '{{ r.property.Property_Name|escapejs }}')">
+                  Dismiss the report</button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty">
+      <div class="big">{% icon "check-circle" %}</div>
+      <h3>Nothing to look at</h3>
+      <p class="muted">No report matches those filters.</p>
+      <a class="btn btn-primary" href="{% url 'agent_dashboard' %}">Back to the queue</a>
+    </div>
+  {% endif %}
+</main>
+
+<div class="modal" id="resolveModal">
+  <div class="modal-box">
+    <h2 id="resolveTitle">Resolve this report</h2>
+    <p class="muted tiny" id="resolveWho"></p>
+    <div class="alert" id="resolveNote" style="margin:1.1rem 0"><span></span></div>
+    <form method="post" id="resolveForm" data-once>
+      {% csrf_token %}
+      <input type="hidden" name="decision" id="resolveDecision">
+      <div class="field">
+        <label for="outcome">Note for the log</label>
+        <textarea name="outcome" id="outcome" rows="3" maxlength="200"
+                  placeholder="Checked the deed against the listing; the address does not exist."></textarea>
+        <div class="hint">An upheld report shows this to the owner as the reason.</div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-ghost btn-block" type="button"
+                onclick="closeModal('resolveModal')">Cancel</button>
+        <button class="btn btn-primary btn-block" type="submit" id="resolveGo">Confirm</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function resolveReport(url, decision, name) {
+  var uphold = decision === 'uphold';
+  document.getElementById('resolveForm').action = url;
+  document.getElementById('resolveDecision').value = decision;
+  document.getElementById('resolveWho').textContent = name;
+  document.getElementById('resolveTitle').textContent =
+    uphold ? 'Uphold this report' : 'Dismiss this report';
+  var note = document.getElementById('resolveNote');
+  note.className = 'alert ' + (uphold ? 'alert-warn' : 'alert-info');
+  note.firstElementChild.textContent = uphold
+    ? 'The listing comes off the site and the owner is told what to fix. '
+      + 'Any other open report on it is closed at the same time.'
+    : 'The listing stays up. The person who reported it is told we looked.';
+  var go = document.getElementById('resolveGo');
+  go.textContent = uphold ? 'Uphold and take it down' : 'Dismiss the report';
+  go.className = 'btn btn-block ' + (uphold ? 'btn-danger' : 'btn-primary');
+  openModal('resolveModal');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Visits &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <div class="between" style="margin-bottom:1rem">
+    <div>
+      <h1 class="mb0">Property visits</h1>
+      <p class="muted mb0">Requests you made, and requests people made to you.</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <a href="?tab=incoming" class="{% if tab == 'incoming' %}on{% endif %}">
+      To my places
+      {% if pending_count %}<span class="badge badge-pending">{{ pending_count }}</span>{% endif %}
+    </a>
+    <a href="?tab=mine" class="{% if tab == 'mine' %}on{% endif %}">My requests</a>
+  </div>
+
+  {% if tab == 'incoming' %}
+    <div class="card">
+      {% for b in incoming %}
+        <div class="entry" style="flex-wrap:wrap;align-items:flex-start">
+          <span class="avatar avatar-sm" style="background:{{ b.renter.avatar_color }}">
+            {{ b.renter.initials }}</span>
+          <span class="body">
+            <span class="t">{{ b.renter.name }} wants to see
+              <a href="{{ b.property.get_absolute_url }}">{{ b.property.Property_Name|truncatechars:40 }}</a>
+            </span>
+            <span class="s">{{ b.visit_date|date:"l d M Y" }} at {{ b.visit_time|time:"H:i" }}
+              &middot; ref {{ b.reference }}</span>
+            {% if b.message %}<span class="s" style="white-space:normal">"{{ b.message }}"</span>{% endif %}
+            {% if b.renter.contact_no and b.status == 'accepted' %}
+              <span class="s">Phone {{ b.renter.contact_no }}</span>
+            {% endif %}
+          </span>
+          <span class="badge {{ b.badge_class }}">{{ b.get_status_display }}</span>
+
+          {% if b.status == 'pending' %}
+            <div style="width:100%;margin-top:.5rem">
+              <form method="post" action="{% url 'booking_action' b.pk 'accept' %}"
+                    class="inline-form">
+                {% csrf_token %}
+                <button class="btn btn-success btn-sm" type="submit">Accept</button>
+              </form>
+              <button class="btn btn-ghost btn-sm" type="button"
+                      onclick="declineBooking('{% url 'booking_action' b.pk 'decline' %}')">
+                Decline</button>
+            </div>
+          {% elif b.status == 'accepted' and not b.is_past %}
+            <form method="post" action="{% url 'booking_action' b.pk 'complete' %}"
+                  class="inline-form" style="width:100%;margin-top:.5rem">
+              {% csrf_token %}
+              <button class="btn btn-ghost btn-sm" type="submit">Mark as done</button>
+            </form>
+          {% endif %}
+        </div>
+      {% empty %}
+        <div class="empty"><div class="big">{% icon "calendar" %}</div>
+          <p class="mb0">Nobody has asked to visit your places yet.</p></div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card">
+      {% for b in mine %}
+        <div class="entry" style="flex-wrap:wrap;align-items:flex-start">
+          <span class="ico">{% icon "calendar" %}</span>
+          <span class="body">
+            <span class="t"><a href="{{ b.property.get_absolute_url }}"
+                 style="color:inherit">{{ b.property.Property_Name|truncatechars:44 }}</a></span>
+            <span class="s">{{ b.visit_date|date:"l d M Y" }} at {{ b.visit_time|time:"H:i" }}
+              &middot; ref {{ b.reference }}</span>
+            {% if b.owner_response %}
+              <span class="s" style="white-space:normal">Owner said: "{{ b.owner_response }}"</span>
+            {% endif %}
+            {% if b.status == 'accepted' and b.owner.contact_no %}
+              <span class="s">Owner phone {{ b.owner.contact_no }}</span>
+            {% endif %}
+          </span>
+          <span class="badge {{ b.badge_class }}">{{ b.get_status_display }}</span>
+          {% if b.status == 'pending' or b.status == 'accepted' %}
+            <form method="post" action="{% url 'booking_action' b.pk 'cancel' %}"
+                  class="inline-form" data-confirm="Cancel this visit?"
+                  style="width:100%;margin-top:.5rem">
+              {% csrf_token %}
+              <button class="btn btn-ghost btn-sm" type="submit">Cancel</button>
+            </form>
+          {% endif %}
+        </div>
+      {% empty %}
+        <div class="empty"><div class="big">{% icon "search" %}</div>
+          <p class="mb0">You have not booked any visits yet.</p>
+          <a class="btn btn-primary btn-sm" style="margin-top:.6rem"
+             href="{% url 'property_list' %}">Find a place</a></div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</main>
+
+<div class="modal" id="declineModal">
+  <div class="modal-box">
+    <h2>Decline this visit</h2>
+    <form method="post" id="declineForm" data-once>
+      {% csrf_token %}
+      <div class="field">
+        <label for="owner_response">Say why, or suggest another time</label>
+        <textarea name="owner_response" id="owner_response" rows="3"
+                  placeholder="Sorry, that morning does not work. Would Saturday suit?"></textarea>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-ghost btn-block" type="button"
+                onclick="closeModal('declineModal')">Keep it</button>
+        <button class="btn btn-danger btn-block" type="submit">Decline</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function declineBooking(url) {
+  document.getElementById('declineForm').action = url;
+  openModal('declineModal');
+}
+</script>
+{% endblock %}

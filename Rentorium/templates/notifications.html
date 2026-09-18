@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Notifications &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <div class="between" style="margin-bottom:1rem">
+    <h1 class="mb0">Notifications</h1>
+    {% if unread %}
+      <form method="post" action="{% url 'read_all_notifications' %}">
+        {% csrf_token %}
+        <button class="btn btn-ghost btn-sm" type="submit">Mark all read</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="tabs">
+    <a href="?show=all" class="{% if show == 'all' %}on{% endif %}">All</a>
+    <a href="?show=unread" class="{% if show == 'unread' %}on{% endif %}">
+      Unread {% if unread %}<span class="badge badge-pending">{{ unread }}</span>{% endif %}</a>
+  </div>
+
+  <div class="card">
+    {% for n in rows %}
+      <div class="entry" style="{% if not n.is_read %}background:var(--brand-soft);margin:0 -1.25rem;padding-left:1.25rem;padding-right:1.25rem{% endif %}">
+        <span class="ico">
+          {% if n.kind == 'booking' %}{% icon "calendar" %}{% elif n.kind == 'message' %}{% icon "mail" %}
+          {% elif n.kind == 'approval' %}{% icon "check-circle" %}{% elif n.kind == 'review' %}{% icon "star" %}
+          {% elif n.kind == 'alert' %}{% icon "bell" %}{% else %}{% icon "info" %}{% endif %}
+        </span>
+        <span class="body">
+          <span class="t">{{ n.title }}
+            {% if not n.is_read %}<span class="badge badge-pending">new</span>{% endif %}</span>
+          <span class="s" style="white-space:normal">{{ n.body }}</span>
+          <span class="tiny muted">{{ n.created_at|since }}</span>
+        </span>
+        <form method="post" action="{% url 'read_notification' n.pk %}">
+          {% csrf_token %}
+          <button class="btn btn-ghost btn-sm" type="submit"
+                  title="{% if n.link %}Open{% else %}Mark read{% endif %}">
+            {% if n.link %}Open{% else %}{% icon "check" %}{% endif %}</button>
+        </form>
+      </div>
+    {% empty %}
+      <div class="empty">
+        <div class="big">{% icon "bell" %}</div>
+        <p class="mb0">{% if show == 'unread' %}Nothing unread.{% else %}No notifications yet.{% endif %}</p>
+      </div>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

@@ -1,157 +1,170 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load property_filters %}
+{% block title %}Browse properties &middot; {{ SITE_NAME }}{% endblock %}
 
-{%block title%}
-<title> Property Listings </title>
-{%endblock%}
+{% block body %}
+<main>
 
-{% block content %}
-<br>
-<br>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-3 shadow p-3 mb-5 bg-white rounded">
-            <!-- Filtering Form as Left-side Panel -->
-            <div class="card filter-panel" style="height: 80vh; overflow-y: auto;">
-                <div class="card-body">
-                    <h5 class="card-title text-center">Filter Properties</h5>
-                    <br>
-                    <form method="get" action="" class="form-horizontal" id="filterForm">
-                        <!-- Property Type -->
-                        <div class="mb-3">
-                            <label for="property_type" class="form-label">Property Type</label>
-                            <select class="form-select" id="property_type" name="property_type">
-                                <option value="">All</option>
-                                <option value="residential" {% if request.GET.property_type == "residential" %} selected {% endif %}>Residential</option>
-                                <option value="commercial" {% if request.GET.property_type == "commercial" %} selected {% endif %}>Commercial</option>
-                                <option value="land" {% if request.GET.property_type == "land" %} selected {% endif %}>Land</option>
-                            </select>
-                        </div>
-                        <!-- Bedrooms -->
-                        <div class="mb-3" id="bedrooms_field" {% if request.GET.bedrooms %} style="display: block;" {% else %} style="display: none;" {% endif %}>
-                            <label for="bedrooms" class="form-label">Bedrooms</label>
-                            <input type="number" class="form-control" id="bedrooms" name="bedrooms" placeholder="Bedrooms" value="{{ request.GET.bedrooms }}">
-                        </div>
-                        <!-- Bathrooms -->
-                        <div class="mb-3" id="bathrooms_field" {% if request.GET.bathrooms %} style="display: block;" {% else %} style="display: none;" {% endif %}>
-                            <label for="bathrooms" class="form-label">Bathrooms</label>
-                            <input type="number" class="form-control" id="bathrooms" name="bathrooms" placeholder="Bathrooms" value="{{ request.GET.bathrooms }}">
-                        </div>
-                        <!-- Business Type -->
-                        <div class="mb-3" id="business_type_field" style="display: none;">
-                            <label for="business_type" class="form-label">Business Type</label>
-                            <select class="form-select" id="business_type" name="business_type">
-                                <option value="">All</option>
-                                <option value="office" {% if request.GET.business_type == "office" %} selected {% endif %}>Office</option>
-                                <option value="community_center" {% if request.GET.business_type == "community_center" %} selected {% endif %}>Community Center</option>
-                                <option value="shop" {% if request.GET.business_type == "shop" %} selected {% endif %}>Shop</option>
-                                <option value="other" {% if request.GET.business_type == "other" %} selected {% endif %}>Other</option>
-                            </select>
-                            <br>
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="has_conference" name="has_conference" {% if request.GET.has_conference %}checked{% endif %}>
-                                <label class="form-check-label" for="has_conference">Has Conference Room</label>
-                            </div>
-
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="has_security" name="has_security" {% if request.GET.has_security %}checked{% endif %}>
-                                <label class="form-check-label" for="has_security">Has Security System</label>
-                            </div>
-                        </div>
-                        <!-- Land Type -->
-                        <div class="mb-3" id="land_type_field" style="display: none;">
-                            <label for="land_type" class="form-label">Land Type</label>
-                            <select class="form-select" id="land_type" name="land_type">
-                                <option value="">All</option>
-                                <option value="Farmland" {% if request.GET.land_type == "Farmland" %} selected {% endif %}>Farmland</option>
-                                <option value="Playground" {% if request.GET.land_type == "Playground" %} selected {% endif %}>Playground</option>
-                                <option value="warehouse" {% if request.GET.land_type == "warehouse" %} selected {% endif %}>Warehouse</option>
-                            </select>
-                        </div>
-                        <!-- Property On -->
-                        <div class="mb-3">
-                            <label for="property_on" class="form-label">Property On</label>
-                            <select class="form-select" id="property_on" name="property_on">
-                                <option value="">All</option>
-                                <option value="sale" {% if request.GET.property_on == "sale" %} selected {% endif %}>Sale</option>
-                                <option value="rent" {% if request.GET.property_on == "rent" %} selected {% endif %}>Rent</option>
-                            </select>
-                        </div>
-                        <!-- Area -->
-                        <div class="mb-3">
-                            <label for="area" class="form-label">Area</label>
-                            <select class="form-select" id="area" name="area">
-                                <option value="">Area</option>
-                                <option value="Gulshan" {% if request.GET.area == "Gulshan" %} selected {% endif %}>Gulshan</option>
-                                <option value="Banani" {% if request.GET.area == "Banani" %} selected {% endif %}>Banani</option>
-                                <option value="Dhanmondi" {% if request.GET.area == "Dhanmondi" %} selected {% endif %}>Dhanmondi</option>
-                                <option value="Bashundhara R/A" {% if request.GET.area == "Bashundhara R/A" %} selected {% endif %}>Bashundhara R/A</option>
-                            </select>
-                        </div>
-                        <!-- Ordering -->
-                        <div class="mb-3">
-                            <label for="ordering_choices" class="form-label">Order By</label>
-                            <select class="form-select" id="ordering_choices" name="ordering_choices">
-                                <option value="">Default</option>
-                                <option value="price_asc" {% if request.GET.ordering_choices == "price_asc" %} selected {% endif %}>Price: Low to High</option>
-                                <option value="price_desc" {% if request.GET.ordering_choices == "price_desc" %} selected {% endif %}>Price: High to Low</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">Apply Filters</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-9 shadow p-3 mb-5 bg-white rounded">
-            <!-- Property List as Right-side Panel -->
-            <div class="property-list-container" style="max-height: 80vh; overflow-y: auto; overflow-x: hidden;">
-                <div class="row g-4">
-                    {%if filtered_properties%}
-                        {% for property in filtered_properties %}
-                        <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                            <div class="property-item rounded overflow-hidden">
-                                <!-- Property details -->
-                                <div class="position-relative overflow-hidden">
-                                    <a href="{% url 'property_detail' pk=property.pk %}">
-                                        <img class="img-fluid" src="{{ property.Property_Pictures.url }}" alt="{{ property.Property_Name }}" style="width: 350px; height: 250px;">
-                                    </a>
-                                    <div class="bg-primary rounded text-white position-absolute start-0 top-0 m-4 py-1 px-3">{{ property.Property_on }}</div>
-                                    <div class="bg-white rounded-top text-primary position-absolute start-0 bottom-0 mx-4 pt-1 px-3">{{ property.Property_type }}</div>
-                                </div>
-                                <div class="p-4 pb-0">
-                                    <h5 class="text-primary mb-3">${{ property.Price }}</h5>
-                                    <a class="d-block h5 mb-2" href="{% url 'property_detail' pk=property.pk %}">{{ property.Property_Name }}</a>
-                                    <p><i class="fa fa-map-marker-alt text-primary me-2"></i>{{ property.City }}, {{ property.Postal_code }}</p>
-                                </div>
-                                {% if property.Property_type == "residential"%}
-                                    <div class="d-flex border-top">
-                                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-bed text-primary me-2"></i>{{ property.residentialproperty.Bedrooms }} Bed</small>
-                                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-bath text-primary me-2"></i>{{ property.residentialproperty.Bathrooms }} Bath</small>
-                                        <small class="flex-fill text-center py-2"><i class="fa fa-home text-primary me-2"></i>{{ property.residentialproperty.Area_in_sq }}sqft</small>
-                                    </div>
-                                {%elif property.Property_type == "commercial"%}
-                                    <div class="d-flex border-top">
-                                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-home text-primary me-2"></i>{{ property.commercialproperty.Area_in_sq }}sqft</small>
-                                        <small class="flex-fill text-center py-2"><i class="fa fa-map-marker-alt text-primary me-2"></i>{{ property.Area }}</small>
-                                    </div>
-                                {%else%}
-                                    <div class="d-flex border-top">
-                                        <small class="flex-fill text-center py-2"><i class="fa fa-map-marker-alt text-primary me-2"></i>{{ property.Area }}</small>
-                                    </div>
-                                {%endif%}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {%else%}
-                        <div class="col-12 text-center">
-                            <p>No properties found matching your criteria.</p>
-                        </div>
-                    {%endif%}
-                </div>
-            </div>
-        </div>
+  <div class="page-head">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb" style="margin-bottom:.6rem">
+        <a href="{% url 'home' %}">Home</a>
+        <span class="sep">/</span>
+        <span>Browse</span>
+      </nav>
+      <div class="eyebrow">Every listing checked before it is published</div>
+      <h1 class="mb0">Browse properties</h1>
+      <p class="muted mb0">{{ total }} listing{{ total|pluralize }}
+        {% if filter_form.active_count %}match your filters{% else %}available right now{% endif %}.</p>
     </div>
-</div>
+  </div>
+
+  <div class="wrap section" style="padding-top:1.8rem">
+  <div class="section-head">
+    <div></div>
+    <div class="btn-group">
+      <button class="btn btn-ghost btn-sm filter-open-btn" type="button" onclick="openFilters()">
+        {% icon "filter" %} Filters
+        {% if filter_form.active_count %}<span class="badge badge-ok">{{ filter_form.active_count }}</span>{% endif %}
+      </button>
+      <a class="btn btn-sm {% if view_mode == 'grid' %}btn-primary{% else %}btn-ghost{% endif %}"
+         href="?{% url_replace view='' %}" aria-label="Grid view">{% icon "floors" %} Grid</a>
+      <a class="btn btn-sm {% if view_mode == 'list' %}btn-primary{% else %}btn-ghost{% endif %}"
+         href="?{% url_replace view='list' %}" aria-label="List view">{% icon "menu" %} List</a>
+    </div>
+  </div>
+
+  <div class="row" style="align-items:flex-start;gap:1.6rem">
+
+    <!-- ============ filters ============ -->
+    <aside class="col filter-panel" id="filterPanel">
+      <form class="card sticky-side" method="get" id="filterForm">
+        <div class="between" style="margin-bottom:1rem">
+          <div class="card-title mb0">Filters</div>
+          <div class="btn-group">
+            {% if filter_form.active_count %}
+              <a class="tiny" href="{% url 'property_list' %}">Clear all</a>
+            {% endif %}
+            <button class="filter-close-btn" type="button" onclick="closeFilters()"
+                    aria-label="Close the filters">{% icon "close" %}</button>
+          </div>
+        </div>
+
+        {% include 'partials/_field.html' with field=filter_form.q %}
+        {% include 'partials/_field.html' with field=filter_form.property_on %}
+        {% include 'partials/_field.html' with field=filter_form.property_type %}
+        {% include 'partials/_field.html' with field=filter_form.city %}
+        {% include 'partials/_field.html' with field=filter_form.area %}
+
+        <div class="field">
+          <label>Price range ({{ CURRENCY_SIGN }})</label>
+          <div class="row" style="gap:.55rem">
+            <div class="col">{{ filter_form.min_price }}</div>
+            <div class="col">{{ filter_form.max_price }}</div>
+          </div>
+        </div>
+
+        {% include 'partials/_field.html' with field=filter_form.min_area %}
+
+        <div data-only-for="residential,commercial">
+          {% include 'partials/_field.html' with field=filter_form.furnishing %}
+        </div>
+
+        <div data-only-for="residential">
+          <div class="row" style="gap:.55rem">
+            <div class="col">{% include 'partials/_field.html' with field=filter_form.bedrooms %}</div>
+            <div class="col">{% include 'partials/_field.html' with field=filter_form.bathrooms %}</div>
+          </div>
+        </div>
+
+        <div data-only-for="commercial">
+          {% include 'partials/_field.html' with field=filter_form.business_type %}
+          <div class="check-row" style="margin-bottom:1.05rem">
+            <label>{{ filter_form.has_conference }} <span>Conference room</span></label>
+            <label>{{ filter_form.has_security }} <span>Security</span></label>
+          </div>
+        </div>
+
+        <div data-only-for="land">
+          {% include 'partials/_field.html' with field=filter_form.land_type %}
+        </div>
+
+        {% if filter_form.amenities.field.queryset %}
+          <details class="field" {% if filter_form.amenities.value %}open{% endif %}>
+            <summary style="cursor:pointer;font-size:.885rem;font-weight:650;
+                            color:var(--text-2);margin-bottom:.5rem">
+              Amenities</summary>
+            <div class="check-row" style="flex-direction:column;align-items:flex-start;
+                        gap:.45rem;padding-top:.5rem">
+              {% for box in filter_form.amenities %}
+                <label>{{ box.tag }} <span>{{ box.choice_label }}</span></label>
+              {% endfor %}
+            </div>
+          </details>
+        {% endif %}
+
+        {% include 'partials/_field.html' with field=filter_form.ordering %}
+
+        <button class="btn btn-primary btn-block" type="submit">
+          {% icon "search" %} Apply filters</button>
+
+        {% if is_logged_in %}
+          <button class="btn btn-ghost btn-block btn-sm" type="button"
+                  style="margin-top:.55rem" onclick="openModal('saveSearch')">
+            {% icon "heart" %} Save this search
+          </button>
+        {% endif %}
+      </form>
+    </aside>
+
+    <!-- ============ results ============ -->
+    <div class="col" style="flex:1 1 520px">
+      {% if filtered_properties %}
+        <div class="plist {% if view_mode == 'list' %}as-list{% endif %}">
+          {% for p in filtered_properties %}
+            {% include 'partials/_property_card.html' %}
+          {% endfor %}
+        </div>
+        {% include 'partials/_pagination.html' with page=filtered_properties %}
+      {% else %}
+        <div class="card empty">
+          <div class="big">{% icon "search" %}</div>
+          <h3>Nothing matches those filters</h3>
+          <p class="muted">Try widening the price range, or clearing a filter or two.</p>
+          <a class="btn btn-primary" href="{% url 'property_list' %}">Clear all filters</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  </div>
+</main>
+
+{% if is_logged_in %}
+  <div class="modal" id="saveSearch">
+    <div class="modal-box">
+      <h2>Save this search</h2>
+      <p class="muted tiny">We will keep these filters, and tell you how many new
+        properties have matched since you last looked.</p>
+      <form method="post" action="{% url 'save_search' %}" data-once style="margin-top:1.2rem">
+        {% csrf_token %}
+        <input type="hidden" name="query_string" value="{{ request.GET.urlencode }}">
+        <div class="field">
+          <label for="label">Name this search</label>
+          <input id="label" name="label" maxlength="60" required
+                 placeholder="Three bed flats in Dhanmondi under 40k">
+        </div>
+        <label style="display:flex;gap:.55rem;align-items:center;margin-bottom:1.2rem;
+                      font-weight:500;color:var(--text-2)">
+          <input type="checkbox" name="alert_enabled" checked>
+          <span>Count new matches for me</span>
+        </label>
+        <div class="btn-group">
+          <button class="btn btn-ghost btn-block" type="button"
+                  onclick="closeModal('saveSearch')">Cancel</button>
+          <button class="btn btn-primary btn-block" type="submit">Save search</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endif %}
 {% endblock %}

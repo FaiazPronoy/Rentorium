@@ -1,160 +1,114 @@
-{% extends "base.html" %}
-{%load static%}
+{% extends 'base.html' %}
+{% load property_filters %}
+{% block title %}Reviews &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <nav class="breadcrumb"><a href="{% url 'home' %}">Home</a>
+    <span class="sep">/</span><span>Customer reviews</span></nav>
+  <div class="section-head">
+    <div>
+      <h1 class="mb0">What people say about {{ SITE_NAME }}</h1>
+      <p class="muted mb0">{{ review_count }} review{{ review_count|pluralize }}
+        {% if average %}&middot; {{ average }} out of 5 on average{% endif %}</p>
+    </div>
+    {% if is_logged_in %}
+      <button class="btn btn-primary btn-sm" onclick="openModal('reviewModal')">
+        {% if mine %}Edit my review{% else %}Write a review{% endif %}
+      </button>
+    {% else %}
+      <a class="btn btn-primary btn-sm"
+         href="{% url 'signin' %}?next={{ request.path|urlencode }}">Sign in to review</a>
+    {% endif %}
+  </div>
 
-
-{%block title%} <title>Testimonials</title>{% endblock %}
-
-
-{% block content %}
-<style>
-  .small-date {
-    font-size: smaller;
-}
-</style>
-
-<div class="row mt-5">
-    <div class="col-md-12">
-      <h3 style="text-align: center;">Reviews</h3>
-      <br>
-      {% if all_review %}
-        {% for review in all_review %}
-          <div class="card mb-3 border-primary rounded-3 mx-auto" style= "max-width: 1250px;">
-            <div class="card-body">
-              {%if review.user.profile_picture%}
-                <img class="img-fluid flex-shrink-0 rounded-circle" src="{{review.user.profile_picture.url}}" style="width: 45px; height: 45px;">
-              {%else%}
-                <i class="bi bi-person-circle" style="font-size: 45px;"></i>
-              {%endif%}
-              <h5 class="card-title">{{ review.user }}</h5>
-              <h6 class="card-subtitle mb-2 text-muted small-date">{{ review.date }}</h6>
-              
-              <p class="card-text">Rating:
-                {% if review.rating == 5 %}
-                  <i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i>
-                {% elif review.rating == 4 %}
-                  <i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star"></i>
-                {% elif review.rating == 3 %}
-                  <i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                {% elif review.rating == 2 %}
-                  <i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                {% elif review.rating == 1 %}
-                  <i class="fa fa-star" style="color: #FFD700;"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                {% endif %}
-              </p>
-              <p class="card-text">{{ review.comment }}</p>
-            </div>
+  {% if review_count %}
+    <div class="row" style="margin-bottom:1.4rem">
+      <div class="col" style="flex:0 0 260px">
+        <div class="card center">
+          <div class="score">{{ average }}</div>
+          {{ average|stars }}
+          <div class="tiny muted" style="margin-top:.4rem">
+            from {{ review_count }} review{{ review_count|pluralize }}</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="rating-rows">
+            {% for b in breakdown %}
+              <div class="r">
+                <span class="lbl">{{ b.star }} star</span>
+                <div class="bar"><i style="width:{{ b.pct }}%"></i></div>
+                <span class="n">{{ b.count }}</span>
+              </div>
+            {% endfor %}
           </div>
-        {% endfor %}
-      {% else %}
-        <p>No reviews yet.</p>
-      {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if all_review %}
+    <div class="grid grid-3">
+      {% for r in all_review %}
+        <div class="tile">
+          {{ r.rating|stars }}
+          <p style="margin-top:.8rem;color:var(--text)">{{ r.comment }}</p>
+          <div class="between" style="margin-top:.8rem">
+            <div style="display:flex;align-items:center;gap:.6rem">
+              <span class="avatar avatar-sm" style="background:{{ r.user.avatar_color }}">
+                {{ r.user.initials }}</span>
+              <div>
+                <div style="font-weight:650;font-size:.94rem">{{ r.user.name }}</div>
+                <div class="tiny muted">{{ r.date|date:"d M Y" }}</div>
+              </div>
+            </div>
+            {% if r.user == profile %}
+              <form method="post" action="{% url 'delete_testimonial' %}"
+                    data-confirm="Delete your review?">
+                {% csrf_token %}
+                <button class="btn btn-ghost btn-sm" type="submit">{% icon "close" %}</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    {% include 'partials/_pagination.html' with page=all_review querystring='' %}
+  {% else %}
+    <div class="card empty">
+      <div class="big">{% icon "star" %}</div>
+      <h3>No reviews yet</h3>
+      <p class="muted">Be the first to say how {{ SITE_NAME }} worked out for you.</p>
+    </div>
+  {% endif %}
+</main>
+
+{% if is_logged_in %}
+  <div class="modal" id="reviewModal">
+    <div class="modal-box">
+      <h2>{% if mine %}Edit your review{% else %}Write a review{% endif %}</h2>
+      <form method="post" data-once>
+        {% csrf_token %}
+        <div class="field">
+          <label>Your rating</label>
+          <div class="star-input">
+            {% for radio in form.rating reversed %}
+              <input type="radio" name="rating" id="s{{ radio.data.value }}"
+                     value="{{ radio.data.value }}" {% if radio.data.selected %}checked{% endif %}>
+              <label for="s{{ radio.data.value }}">&#9733;</label>
+            {% endfor %}
+          </div>
+          {% for e in form.rating.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        </div>
+        {% include 'partials/_field.html' with field=form.comment %}
+        <div class="btn-group">
+          <button class="btn btn-ghost btn-block" type="button"
+                  onclick="closeModal('reviewModal')">Cancel</button>
+          <button class="btn btn-primary btn-block" type="submit">
+            {% if mine %}Update{% else %}Post review{% endif %}</button>
+        </div>
+      </form>
     </div>
   </div>
-
-  <nav aria-label="Page navigation example">
-    <ul id="paginationLinks" class="pagination justify-content-center">
-        <!-- Previous Button -->
-        {% if all_review.has_previous %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ all_review.previous_page_number }}">Previous</a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <span class="page-link" style="color: #6c757d;">Previous</span>
-        </li>
-        {% endif %}
-        
-        <!-- First Page -->
-        <li class="page-item {% if all_review.number == 1 %}active{% endif %}">
-            <a class="page-link" href="?page=1">1</a>
-        </li>
-        
-        <!-- Ellipsis if applicable -->
-        {% if all_review.number > 3 %}
-        <li class="page-item disabled"><span class="page-link" style="color: #6c757d;">...</span></li>
-        {% endif %}
-        
-        <!-- Pages within range -->
-        {% for i in all_review.paginator.page_range %}
-            {% if i > all_review.number|add:'-2' and i < all_review.number|add:'2' %}
-                {% if i != 1 and i != all_review.paginator.num_pages %}
-                <li class="page-item {% if all_review.number == i %}active{% endif %}">
-                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
-                </li>
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-        
-        <!-- Ellipsis if applicable -->
-        {% if all_review.paginator.num_pages > all_review.number|add:'3' %}
-        <li class="page-item disabled"><span class="page-link" style="color: #6c757d;">...</span></li>
-        {% endif %}
-        
-        <!-- Last Page -->
-        {% if all_review.paginator.num_pages > 1 %}
-        <li class="page-item {% if all_review.number == all_review.paginator.num_pages %}active{% endif %}">
-            <a class="page-link" href="?page={{ all_review.paginator.num_pages }}">{{ all_review.paginator.num_pages }}</a>
-        </li>
-        {% endif %}
-        
-        <!-- Next Button -->
-        {% if all_review.has_next %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ all_review.next_page_number }}">Next</a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <span class="page-link" style="color: #6c757d;">Next</span>
-        </li>
-        {% endif %}
-    </ul>
-</nav>
-
-
-
-
-
-  <hr>
-  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css">
-<style>
-    fieldset, label { margin: 0; padding: 0; }
-    body { margin: 20px; }
-    h1 { font-size: 1.5em; margin: 10px; }
-    .rating { border: none; float: left; }
-    .rating > input { display: none; }
-    .rating > label:before { margin: 5px; font-size: 1.25em; font-family: FontAwesome; display: inline-block; content: "\f005"; }
-    .rating > .half:before { content: "\f089"; position: absolute; }
-    .rating > label { color: #ddd; float: right; }
-    .rating > input:checked ~ label,
-    .rating:not(:checked) > label:hover,
-    .rating:not(:checked) > label:hover ~ label { color: #FFD700; }
-    .rating > input:checked + label:hover,
-    .rating > input:checked ~ label:hover,
-    .rating > label:hover ~ input:checked ~ label,
-    .rating > input:checked ~ label:hover ~ label { color: #FFED85; }
-</style>
-
-<div class="container">
-  <div class="row justify-content-center">
-      <div class="col-md-8">
-          <h3 class="text-center mb-4">Your Feedback</h3>
-          <form method="post" style="max-width: 1250px;">
-              {% csrf_token %}
-              <fieldset class="rating">
-                  <input type="radio" id="star5" name="rating" value="5" /><label class="full" for="star5" title="Awesome - 5 stars"></label>
-                  <input type="radio" id="star4" name="rating" value="4" /><label class="full" for="star4" title="Pretty good - 4 stars"></label>
-                  <input type="radio" id="star3" name="rating" value="3" /><label class="full" for="star3" title="Meh - 3 stars"></label>
-                  <input type="radio" id="star2" name="rating" value="2" /><label class="full" for="star2" title="Kinda bad - 2 stars"></label>
-                  <input type="radio" id="star1" name="rating" value="1" /><label class="full" for="star1" title="Sucks big time - 1 star"></label>
-              </fieldset>
-
-              <textarea id="comment" name="comment" class="form-control mt-3" placeholder="Write your review here..." rows="4"></textarea>
-              <button id="submit-review" class="btn btn-primary mt-3" type="submit">Submit Review</button>
-          </form>
-      </div>
-  </div>
-</div>
-
-        <!-- Testimonial End -->
-
+{% endif %}
 {% endblock %}

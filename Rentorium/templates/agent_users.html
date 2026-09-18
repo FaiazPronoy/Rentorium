@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}Users &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <div class="between" style="margin-bottom:1rem">
+    <div>
+      <h1 class="mb0">Users</h1>
+      <p class="muted mb0">{{ total }} account{{ total|pluralize }}{% if counts.suspended %},
+        {{ counts.suspended }} suspended{% endif %}.</p>
+    </div>
+    <div class="btn-group">
+      <a class="btn btn-ghost btn-sm" href="{% url 'agent_export' 'users' %}">
+        {% icon "download" %} Export CSV</a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'agent_dashboard' %}">Back to the queue</a>
+    </div>
+  </div>
+
+  <form method="get" class="card" style="margin-bottom:1.2rem">
+    <div class="row" style="align-items:flex-end">
+      <div class="col field mb0" style="flex:2 1 240px">
+        <label for="q">Search</label>
+        <input id="q" name="q" value="{{ search }}" placeholder="Name, email or phone">
+      </div>
+      <div class="col field mb0">
+        <label for="role">Role</label>
+        <select id="role" name="role">
+          <option value="">Any role</option>
+          {% for value, label in roles %}
+            <option value="{{ value }}" {% if role == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col field mb0">
+        <label for="held">Standing</label>
+        <select id="held" name="held">
+          <option value="">Everyone</option>
+          <option value="active" {% if held == 'active' %}selected{% endif %}>Active only</option>
+          <option value="suspended" {% if held == 'suspended' %}selected{% endif %}>Suspended only</option>
+        </select>
+      </div>
+      <div class="col" style="flex:0 1 auto">
+        <button class="btn btn-primary" type="submit">Search</button>
+        <a class="btn btn-ghost" href="{% url 'agent_users' %}">Clear</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Person</th><th>Contact</th><th>Role</th>
+          <th class="num">Listings</th><th class="num">Visits</th><th>Joined</th>
+          <th>Standing</th></tr></thead>
+        <tbody>
+        {% for u in rows %}
+          <tr {% if u.is_suspended %}class="row-held"{% endif %}>
+            <td>
+              <div style="display:flex;gap:.6rem;align-items:center">
+                <span class="avatar avatar-sm" style="background:{{ u.avatar_color }}">
+                  {{ u.initials }}</span>
+                <div>
+                  <a href="{% url 'public_profile' u.pk %}" style="font-weight:800">{{ u.name }}</a>
+                  {% if u.is_verified %}<span class="badge badge-ok">verified</span>{% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="tiny">{{ u.email }}<br>
+              <span class="muted">{{ u.contact_no|default:"no phone" }}</span></td>
+            <td><span class="badge">{{ u.get_role_display }}</span></td>
+            <td class="num">{{ u.listings }}</td>
+            <td class="num">{{ u.bookings }}</td>
+            <td class="tiny">{{ u.created_at|date:"d M Y" }}</td>
+            <td>
+              {% if u.is_agent %}
+                <span class="tiny muted">agent</span>
+              {% elif u.is_suspended %}
+                <div class="held-note">Suspended {{ u.suspended_at|date:"d M Y" }}</div>
+                {% if u.suspended_reason %}
+                  <div class="tiny muted">{{ u.suspended_reason|truncatechars:60 }}</div>
+                {% endif %}
+                <form method="post" action="{% url 'lift_suspension' u.pk %}"
+                      style="margin-top:.35rem">
+                  {% csrf_token %}
+                  <button class="btn btn-ghost btn-sm" type="submit"
+                          data-confirm="Let {{ u.name|escapejs }} back in? Their listings go live again.">
+                    {% icon "undo" %} Reinstate</button>
+                </form>
+              {% else %}
+                <button class="btn btn-ghost btn-sm" type="button"
+                        onclick="suspendUser('{% url 'suspend_user' u.pk %}',
+                                             '{{ u.name|escapejs }}', {{ u.listings }})">
+                  {% icon "ban" %} Suspend</button>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="center muted" style="padding:2rem">No users match.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div class="modal" id="suspendModal">
+  <div class="modal-box">
+    <h2>Suspend this account</h2>
+    <p class="muted tiny" id="suspendWho"></p>
+    <div class="alert alert-warn" style="margin:1.1rem 0">
+      {% icon "alert" %}
+      <span id="suspendWhat">They will not be able to sign in, and anything they
+        have listed comes off the site until the suspension is lifted. Nothing
+        is deleted.</span>
+    </div>
+    <form method="post" id="suspendForm" data-once>
+      {% csrf_token %}
+      <div class="field">
+        <label for="suspendReason">Why? <span class="muted">*</span></label>
+        <textarea name="reason" id="suspendReason" rows="3" required maxlength="200"
+                  placeholder="Three fake listings for flats that do not exist, after a warning."></textarea>
+        <div class="hint">The person is shown this when they try to sign in.</div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-ghost btn-block" type="button"
+                onclick="closeModal('suspendModal')">Cancel</button>
+        <button class="btn btn-danger btn-block" type="submit">Suspend the account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function suspendUser(url, name, listings) {
+  document.getElementById('suspendForm').action = url;
+  document.getElementById('suspendWho').textContent = name;
+  document.getElementById('suspendWhat').textContent =
+    'They will not be able to sign in'
+    + (listings ? ', and ' + listings + ' listing' + (listings === 1 ? '' : 's')
+                  + ' come off the site' : '')
+    + ' until the suspension is lifted. Nothing is deleted.';
+  openModal('suspendModal');
+}
+</script>
+{% endblock %}

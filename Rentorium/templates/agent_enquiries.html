@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Enquiries &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <div class="between" style="margin-bottom:1rem">
+    <div>
+      <h1 class="mb0">Contact form enquiries</h1>
+      <p class="muted mb0">{{ counts.new }} new &middot; {{ counts.answered }} answered</p>
+    </div>
+    <a class="btn btn-ghost btn-sm" href="{% url 'agent_dashboard' %}">Back to the queue</a>
+  </div>
+
+  <div class="tabs">
+    {% for value, label in statuses %}
+      <a href="?status={{ value }}" class="{% if status == value %}on{% endif %}">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  {% if rows %}
+    <div class="grid grid-2">
+      {% for c in rows %}
+        <div class="card">
+          <div class="between" style="align-items:flex-start">
+            <div>
+              <strong>{{ c.subject }}</strong>
+              <div class="tiny muted">{{ c.name }} &middot; {{ c.email }}</div>
+              <div class="tiny muted">{{ c.created_at|date:"d M Y, H:i" }}</div>
+            </div>
+            <span class="badge {% if c.status == 'new' %}badge-pending{% else %}badge-ok{% endif %}">
+              {{ c.get_status_display }}</span>
+          </div>
+          <p style="margin:.8rem 0;white-space:pre-wrap">{{ c.message }}</p>
+          {% if c.reply %}
+            <div class="alert alert-ok"><span><strong>Replied:</strong> {{ c.reply }}</span></div>
+          {% else %}
+            <form method="post" data-once>
+              {% csrf_token %}
+              <input type="hidden" name="id" value="{{ c.pk }}">
+              <div class="field">
+                <textarea name="reply" rows="3" required
+                          placeholder="Write the reply you are sending them."></textarea>
+              </div>
+              <button class="btn btn-primary btn-block btn-sm" type="submit">
+                Save the reply and close</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty">
+      <div class="big">{% icon "check-circle" %}</div>
+      <p class="mb0">Nothing in this bucket.</p>
+    </div>
+  {% endif %}
+</main>
+{% endblock %}

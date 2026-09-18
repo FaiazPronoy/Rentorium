@@ -1,0 +1,51 @@
+<footer class="foot no-print">
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <a class="brand" href="{% url 'home' %}">
+          <span class="brand-mark">R</span>{{ SITE_NAME }}
+        </a>
+        <p class="tiny" style="max-width:34ch;color:rgba(255,255,255,.62)">
+          {{ SITE_TAGLINE }} Every listing is checked by a member of our team before
+          it goes live.
+        </p>
+        <div class="social" style="margin-top:1.1rem">
+          <a href="mailto:{{ SITE_EMAIL }}" title="Email us" aria-label="Email us">{% icon "mail" %}</a>
+          <a href="tel:{{ SITE_PHONE|cut:' ' }}" title="Call us" aria-label="Call us">{% icon "phone" %}</a>
+          <a href="{% url 'contact' %}" title="Contact" aria-label="Contact">{% icon "chat" %}</a>
+        </div>
+      </div>
+      <div>
+        <h4>Find a place</h4>
+        <div class="links">
+          <a href="{% url 'property_list' %}?property_on=rent">Properties to rent</a>
+          <a href="{% url 'property_list' %}?property_on=sale">Properties for sale</a>
+          <a href="{% url 'property_type' %}">Browse by category</a>
+          <a href="{% url 'property_list' %}?ordering=newest">Newest listings</a>
+        </div>
+      </div>
+      <div>
+        <h4>List with us</h4>
+        <div class="links">
+          <a href="{% url 'add_property' %}">Add a property</a>
+          <a href="{% url 'posted_properties' %}">Manage my listings</a>
+          <a href="{% url 'faqs' %}">How approval works</a>
+          <a href="{% url 'terms' %}">Terms of use</a>
+        </div>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <div class="links">
+          <a href="{% url 'about' %}">About us</a>
+          <a href="{% url 'testimonial' %}">Customer reviews</a>
+          <a href="{% url 'contact' %}">Contact</a>
+          <a href="{% url 'license' %}">Privacy and legal</a>
+        </div>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>&copy; {% now "Y" %} {{ SITE_LEGAL_NAME }}. All rights reserved.</span>
+      <span>{{ SITE_ADDRESS }}</span>
+    </div>
+  </div>
+</footer>

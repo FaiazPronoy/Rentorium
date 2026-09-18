@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load property_filters %}
+{% block title %}Dashboard &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+
+  <div class="section-head">
+    <div>
+      <h1 class="mb0">Hello, {{ me.first_name }}</h1>
+      <p class="muted mb0">Here is what is happening with your account.</p>
+    </div>
+    <div class="btn-group">
+      <a class="btn btn-ghost btn-sm" href="{% url 'profile' %}">My profile</a>
+      <a class="btn btn-primary btn-sm" href="{% url 'add_property' %}">List a property</a>
+    </div>
+  </div>
+
+  <div class="grid grid-4" style="margin-bottom:1.4rem">
+    <div class="stat"><div class="k">Listings</div><div class="v">{{ stats.listings }}</div>
+      <div class="tiny muted">{{ stats.live }} live, {{ stats.pending }} waiting</div></div>
+    <div class="stat"><div class="k">Total views</div><div class="v">{{ stats.views }}</div></div>
+    <div class="stat"><div class="k">Saved by others</div>
+      <div class="v pos">{{ stats.favourites_received }}</div></div>
+    <div class="stat"><div class="k">Places I saved</div><div class="v">{{ stats.saved }}</div></div>
+  </div>
+
+  <div class="row">
+    <div class="col" style="flex:2 1 420px">
+
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="card-title">Views across all your listings &middot; last 14 days</div>
+        <div class="bars">
+          {% for c in chart %}
+            <div class="b" title="{{ c.label }}: {{ c.value }}">
+              <em>{{ c.value }}</em>
+              <i style="height:{% widthratio c.value chart_max 100 %}%"></i>
+              <small>{{ c.label }}</small>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="between">
+          <div class="card-title mb0">Viewing requests for your places</div>
+          <a class="tiny" href="{% url 'bookings' %}">All visits</a>
+        </div>
+        {% for b in incoming %}
+          <div class="entry">
+            <span class="ico">{% icon "calendar" %}</span>
+            <span class="body">
+              <span class="t">{{ b.renter.name }} &middot; {{ b.property.Property_Name|truncatechars:34 }}</span>
+              <span class="s">{{ b.visit_date|date:"D d M" }} at {{ b.visit_time|time:"H:i" }}</span>
+            </span>
+            <span class="badge {{ b.badge_class }}">{{ b.get_status_display }}</span>
+          </div>
+        {% empty %}
+          <p class="muted tiny mb0">No requests yet.</p>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <div class="between">
+          <div class="card-title mb0">Your listings</div>
+          <a class="tiny" href="{% url 'posted_properties' %}">Manage all</a>
+        </div>
+        {% for p in my_properties %}
+          <div class="entry">
+            <span style="width:56px;height:42px;border-radius:9px;overflow:hidden;flex:none;
+                         background:var(--surface-2);display:block">
+              {% if p.cover_image %}
+                <img src="{{ p.cover_image.url }}" alt="" loading="lazy"
+                     style="width:100%;height:100%;object-fit:cover">
+              {% endif %}
+            </span>
+            <span class="body">
+              <a class="t" href="{{ p.get_absolute_url }}"
+                 style="color:inherit">{{ p.Property_Name|truncatechars:40 }}</a>
+              <span class="s">{{ p.Area }} &middot; {{ CURRENCY_SIGN }} {{ p.Price|money }}
+                &middot; {{ p.view_count }} view{{ p.view_count|pluralize }}</span>
+            </span>
+            <span class="badge {% if p.status == 'approved' %}badge-ok{% elif p.status == 'pending' %}badge-pending{% elif p.status == 'rejected' %}badge-fail{% endif %}">
+              {{ p.get_status_display }}</span>
+          </div>
+        {% empty %}
+          <div class="empty" style="padding:1.6rem">
+            <p class="mb0">You have not listed anything yet.</p>
+            <a class="btn btn-primary btn-sm" style="margin-top:.6rem"
+               href="{% url 'add_property' %}">List your first property</a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <aside class="col" style="flex:1 1 280px">
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="between">
+          <div class="card-title mb0">Recent notifications</div>
+          <a class="tiny" href="{% url 'notifications' %}">All</a>
+        </div>
+        {% for n in notifications %}
+          <div class="entry" style="padding:.5rem 0">
+            <span class="body">
+              <span class="t">{{ n.title }}</span>
+              <span class="s" style="white-space:normal">{{ n.body|truncatechars:70 }}</span>
+            </span>
+            <span class="when">{{ n.created_at|since }}</span>
+          </div>
+        {% empty %}
+          <p class="muted tiny mb0">Nothing yet.</p>
+        {% endfor %}
+      </div>
+
+      <div class="card" style="margin-bottom:1.2rem">
+        <div class="between">
+          <div class="card-title mb0">Conversations</div>
+          <a class="tiny" href="{% url 'inbox' %}">Inbox</a>
+        </div>
+        {% for t in threads %}
+          <a class="entry" href="{% url 'conversation' t.pk %}" style="color:inherit">
+            <span class="ico">{% icon "mail" %}</span>
+            <span class="body">
+              <span class="t">{{ t.property.Property_Name|truncatechars:32 }}</span>
+              <span class="s">{{ t.last_message_at|since }}</span>
+            </span>
+          </a>
+        {% empty %}
+          <p class="muted tiny mb0">No messages yet.</p>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <div class="card-title">My visit requests</div>
+        {% for b in outgoing %}
+          <div class="entry" style="padding:.5rem 0">
+            <span class="body">
+              <span class="t">{{ b.property.Property_Name|truncatechars:30 }}</span>
+              <span class="s">{{ b.visit_date|date:"d M" }} at {{ b.visit_time|time:"H:i" }}</span>
+            </span>
+            <span class="badge {{ b.badge_class }}">{{ b.get_status_display }}</span>
+          </div>
+        {% empty %}
+          <p class="muted tiny mb0">You have not asked to see anything yet.</p>
+        {% endfor %}
+      </div>
+    </aside>
+  </div>
+</main>
+{% endblock %}

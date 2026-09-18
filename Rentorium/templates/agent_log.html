@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Decision log &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <div class="between" style="margin-bottom:1rem">
+    <div>
+      <h1 class="mb0">Decision log</h1>
+      <p class="muted mb0">Every moderation decision, kept for good.</p>
+    </div>
+    <a class="btn btn-ghost btn-sm" href="{% url 'agent_dashboard' %}">Back to the queue</a>
+  </div>
+
+  <form method="get" class="card" style="margin-bottom:1.2rem" data-autosubmit>
+    <div class="row" style="align-items:flex-end">
+      <div class="col field mb0">
+        <label for="agent">Agent</label>
+        <select id="agent" name="agent">
+          <option value="">Everyone</option>
+          {% for a in agents %}
+            <option value="{{ a.pk }}" {% if who == a.pk|stringformat:"s" %}selected{% endif %}>
+              {{ a.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col field mb0">
+        <label for="action">Action</label>
+        <select id="action" name="action">
+          <option value="">Any action</option>
+          {% for value, label in actions %}
+            <option value="{{ value }}" {% if action == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col" style="flex:0 1 auto">
+        <a class="btn btn-ghost" href="{% url 'agent_log' %}">Clear</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>When</th><th>Agent</th><th>Action</th><th>About</th><th>Reason</th></tr></thead>
+        <tbody>
+        {% for a in rows %}
+          <tr>
+            <td class="tiny">{{ a.created_at|date:"d M Y, H:i" }}</td>
+            <td>{{ a.agent.name|default:"removed agent" }}</td>
+            <td><span class="badge {{ a.badge_class }}">{{ a.get_action_display }}</span></td>
+            <td>
+              {% if a.property %}
+                <a href="{{ a.property.get_absolute_url }}">
+                  {{ a.property.Property_Name|truncatechars:38 }}</a>
+              {% elif a.subject %}
+                <a href="{{ a.subject.get_absolute_url }}">{{ a.subject.name }}</a>
+                <span class="tiny muted">(account)</span>
+              {% else %}
+                <span class="muted">removed record</span>
+              {% endif %}
+            </td>
+            <td class="tiny muted">{{ a.reason|default:"-" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="center muted" style="padding:2rem">Nothing recorded yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+{% endblock %}

@@ -1,287 +1,104 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load property_filters %}
+{% block title %}My listings &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
 
-{%block title%}
-<title> Property Listings </title>
-{%endblock%}
-
-{% block content %}
-<br>
-<br>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-3 shadow p-3 mb-5 bg-white rounded"">
-            <!-- Filtering Form as Left-side Panel -->
-            <div class="card filter-panel" style="height: 80vh; overflow-y: auto;">
-                <div class="card-body">
-                    <h5 class="card-title text-center">Filter Properties</h5>
-                    <br>
-                    
-                    <form method="get" action="" class="form-horizontal" id="filterForm">
-                        <!-- Property Type -->
-                        <div class="mb-3">
-                            <label for="property_type" class="form-label">Property Type</label>
-                            <select class="form-select" id="property_type" name="property_type">
-                                <option value="">All</option>
-                                <option value="residential" {% if request.GET.property_type == "residential" %} selected {% endif %}>Residential</option>
-                                <option value="commercial" {% if request.GET.property_type == "commercial" %} selected {% endif %}>Commercial</option>
-                                <option value="land" {% if request.GET.property_type == "land" %} selected {% endif %}>Land</option>
-                            </select>
-                        </div>
-                        <!-- Bedrooms -->
-                        <div class="mb-3" id="bedrooms_field" {% if request.GET.bedrooms %} style="display: block;" {% else %} style="display: none;" {% endif %}>
-                            <label for="bedrooms" class="form-label">Bedrooms</label>
-                            <input type="number" class="form-control" id="bedrooms" name="bedrooms" placeholder="Bedrooms" value="{{ request.GET.bedrooms }}">
-                        </div>
-                        <!-- Bathrooms -->
-                        <div class="mb-3" id="bathrooms_field" {% if request.GET.bathrooms %} style="display: block;" {% else %} style="display: none;" {% endif %}>
-                            <label for="bathrooms" class="form-label">Bathrooms</label>
-                            <input type="number" class="form-control" id="bathrooms" name="bathrooms" placeholder="Bathrooms" value="{{ request.GET.bathrooms }}">
-                        </div>
-                        <!-- Business Type -->
-                        <div class="mb-3" id="business_type_field" style="display: none;">
-                            <label for="business_type" class="form-label">Business Type</label>
-                            <select class="form-select" id="business_type" name="business_type">
-                                <option value="">All</option>
-                                <option value="office" {% if request.GET.business_type == "office" %} selected {% endif %}>Office</option>
-                                <option value="community_center" {% if request.GET.business_type == "community_center" %} selected {% endif %}>Community Center</option>
-                                <option value="shop" {% if request.GET.business_type == "shop" %} selected {% endif %}>Shop</option>
-                                <option value="other" {% if request.GET.business_type == "other" %} selected {% endif %}>Other</option>
-                            </select>
-                            <br>
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="has_conference" name="has_conference" {% if request.GET.has_conference %}checked{% endif %}>
-                                <label class="form-check-label" for="has_conference">Has Conference Room</label>
-                            </div>
-
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="has_security" name="has_security" {% if request.GET.has_security %}checked{% endif %}>
-                                <label class="form-check-label" for="has_security">Has Security System</label>
-                            </div>
-                        </div>
-                        <!-- Land Type -->
-                        <div class="mb-3" id="land_type_field" style="display: none;">
-                            <label for="land_type" class="form-label">Land Type</label>
-                            <select class="form-select" id="land_type" name="land_type">
-                                <option value="">All</option>
-                                <option value="Farmland" {% if request.GET.land_type == "Farmland" %} selected {% endif %}>Farmland</option>
-                                <option value="Playground" {% if request.GET.land_type == "Playground" %} selected {% endif %}>Playground</option>
-                                <option value="warehouse" {% if request.GET.land_type == "warehouse" %} selected {% endif %}>Warehouse</option>
-                            </select>
-                        </div>
-                        <!-- Property On -->
-                        <div class="mb-3">
-                            <label for="property_on" class="form-label">Property On</label>
-                            <select class="form-select" id="property_on" name="property_on">
-                                <option value="">All</option>
-                                <option value="sale" {% if request.GET.property_on == "sale" %} selected {% endif %}>Sale</option>
-                                <option value="rent" {% if request.GET.property_on == "rent" %} selected {% endif %}>Rent</option>
-                            </select>
-                        </div>
-                        <!-- Area -->
-                        <div class="mb-3">
-                            <label for="area" class="form-label">Area</label>
-                            <select class="form-select" id="area" name="area">
-                                <option value="">Area</option>
-                                <option value="Gulshan" {% if request.GET.area == "Gulshan" %} selected {% endif %}>Gulshan</option>
-                                <option value="Banani" {% if request.GET.area == "Banani" %} selected {% endif %}>Banani</option>
-                                <option value="Dhanmondi" {% if request.GET.area == "Dhanmondi" %} selected {% endif %}>Dhanmondi</option>
-                                <option value="Bashundhara R/A" {% if request.GET.area == "Bashundhara R/A" %} selected {% endif %}>Bashundhara R/A</option>
-                            </select>
-                        </div>
-                        <!-- Ordering -->
-                        <div class="mb-3">
-                            <label for="ordering_choices" class="form-label">Order By</label>
-                            <select class="form-select" id="ordering_choices" name="ordering_choices">
-                                <option value="">Default</option>
-                                <option value="price_asc" {% if request.GET.ordering_choices == "price_asc" %} selected {% endif %}>Price: Low to High</option>
-                                <option value="price_desc" {% if request.GET.ordering_choices == "price_desc" %} selected {% endif %}>Price: High to Low</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">Apply Filters</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-9 shadow p-3 mb-5 bg-white rounded"">
-            <!-- Property List as Right-side Panel -->
-            <div class="property-list-container" style="max-height: 80vh; overflow-y: auto; overflow-x: hidden;">
-                <div class="row g-4">
-                    {%if filtered_properties%}
-                        {% for property in filtered_properties %}
-                        <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                            <div class="property-item rounded overflow-hidden">
-                                <!-- Property details -->
-                                <div class="position-relative overflow-hidden">
-                                    <a href="{% url 'property_detail' pk=property.pk %}">
-                                        <img class="img-fluid" src="{{ property.Property_Pictures.url }}" alt="{{ property.Property_Name }}" style="width: 350px; height: 250px;">
-                                    </a>
-                                    <div class="bg-primary rounded text-white position-absolute start-0 top-0 m-4 py-1 px-3">{{ property.Property_on }}</div>
-                                    <div class="bg-white rounded-top text-primary position-absolute start-0 bottom-0 mx-4 pt-1 px-3">{{ property.Property_type }}</div>
-                                </div>
-                                <div class="p-4 pb-0">
-                                    <h5 class="text-primary mb-3">${{ property.Price }}</h5>
-                                    <a class="d-block h5 mb-2" href="{% url 'property_detail' pk=property.pk %}">{{ property.Property_Name }}</a>
-                                    <p><i class="fa fa-map-marker-alt text-primary me-2"></i>{{ property.City }}, {{ property.Postal_code }}</p>
-                                </div>
-                                {% if property.Property_type == "residential"%}
-                                    <div class="d-flex border-top">
-                                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-bed text-primary me-2"></i>{{ property.residentialproperty.Bedrooms }} Bed</small>
-                                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-bath text-primary me-2"></i>{{ property.residentialproperty.Bathrooms }} Bath</small>    
-                                        <small class="flex-fill text-center py-2"><i class="fa fa-ruler-combined text-primary me-2"></i>{{ property.Total_area_in_sqft }} Sqft</small>
-                                    </div>
-                                {% elif property.Property_type == "commercial" %}
-                                    <div class="d-flex border-top">
-                                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-building text-primary me-2"></i>{{ property.commercialproperty.Business_type }}</small>
-                                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-car text-primary me-2"></i>{{ property.commercialproperty.Parking_spaces }} Sqft</small>    
-                                        <small class="flex-fill text-center py-2"><i class="fa fa-ruler-combined text-primary me-2"></i>{{ property.Total_area_in_sqft }} Sqft</small>
-                                    </div>
-                                {% elif property.Property_type == "land" %}
-                                    <div class="d-flex border-top">
-                                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-building text-primary me-2"></i>{{ property.landproperty.Land_type }}</small>
-                                        <small class="flex-fill text-center border-end py-2"><i class="fa fa-ruler-combined text-primary me-2"></i>{{ property.Total_area_in_sqft}} Sqft</small>    
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="col-lg-12 text-center my-5">
-                            <h2 class="text-muted">No results found.</h2>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+  <div class="between" style="margin-bottom:1.2rem">
+    <div>
+      <h1 class="mb0">My listings</h1>
+      <p class="muted mb0">{{ total_views }} view{{ total_views|pluralize }} across everything you have posted.</p>
     </div>
-</div>
+    <a class="btn btn-primary btn-sm" href="{% url 'add_property' %}">List another</a>
+  </div>
 
-<nav aria-label="Page navigation example">
-    <ul id="paginationLinks" class="pagination justify-content-center">
-        <!-- Previous Button -->
-        {% if filtered_properties.has_previous %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ filtered_properties.previous_page_number }}{% if filter_form.is_bound %}&{{ filter_form.as_url }}{% endif %}">Previous</a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <span class="page-link" style="color: #6c757d;">Previous</span>
-        </li>
-        {% endif %}
-        
-        <!-- First Page -->
-        <li class="page-item {% if filtered_properties.number == 1 %}active{% endif %}">
-            <a class="page-link" href="?page=1{% if filter_form.is_bound %}&{{ filter_form.as_url }}{% endif %}">1</a>
-        </li>
-        
-        <!-- Ellipsis if applicable -->
-        {% if filtered_properties.number > 3 %}
-        <li class="page-item disabled"><span class="page-link" style="color: #6c757d;">...</span></li>
-        {% endif %}
-        
-        <!-- Pages within range -->
-        {% for i in filtered_properties.paginator.page_range %}
-            {% if i > filtered_properties.number|add:'-2' and i < filtered_properties.number|add:'2' %}
-                {% if i != 1 and i != filtered_properties.paginator.num_pages %}
-                <li class="page-item {% if filtered_properties.number == i %}active{% endif %}">
-                    <a class="page-link" href="?page={{ i }}{% if filter_form.is_bound %}&{{ filter_form.as_url }}{% endif %}">{{ i }}</a>
-                </li>
+  <div class="tabs">
+    <a href="?" class="{% if not status %}on{% endif %}">All <span class="badge">{{ counts.all }}</span></a>
+    <a href="?status=approved" class="{% if status == 'approved' %}on{% endif %}">
+      Live <span class="badge badge-ok">{{ counts.approved }}</span></a>
+    <a href="?status=pending" class="{% if status == 'pending' %}on{% endif %}">
+      Waiting <span class="badge badge-pending">{{ counts.pending }}</span></a>
+    <a href="?status=rejected" class="{% if status == 'rejected' %}on{% endif %}">
+      Needs changes <span class="badge badge-fail">{{ counts.rejected }}</span></a>
+    <a href="?status=rented" class="{% if status == 'rented' %}on{% endif %}">
+      Taken <span class="badge">{{ counts.rented }}</span></a>
+  </div>
+
+  {% if filtered_properties %}
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Property</th><th>Price</th><th>Status</th>
+              <th class="num">Views</th><th class="num">Saves</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+          {% for p in filtered_properties %}
+            <tr>
+              <td>
+                <div style="display:flex;gap:.7rem;align-items:center">
+                  <div style="width:64px;height:48px;border-radius:8px;overflow:hidden;
+                       background:var(--surface-2);flex:none">
+                    {% if p.cover_image %}
+                      <img src="{{ p.cover_image.url }}" alt=""
+                           style="width:100%;height:100%;object-fit:cover">
+                    {% endif %}
+                  </div>
+                  <div style="min-width:0">
+                    <a href="{{ p.get_absolute_url }}" style="font-weight:800">
+                      {{ p.Property_Name|truncatechars:40 }}</a>
+                    <div class="tiny muted">{{ p.Area }} &middot; {{ p.get_Property_type_display }}
+                      &middot; {{ p.images.count }} photo{{ p.images.count|pluralize }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="nowrap">{{ CURRENCY_SIGN }} {{ p.Price|money }}</td>
+              <td>
+                <span class="badge {% if p.status == 'approved' %}badge-ok{% elif p.status == 'pending' %}badge-pending{% elif p.status == 'rejected' %}badge-fail{% endif %}">
+                  {{ p.get_status_display }}</span>
+                {% if p.is_archived %}<span class="badge">hidden</span>{% endif %}
+                {% if p.rejection_reason %}
+                  <div class="tiny muted">{{ p.rejection_reason|truncatechars:50 }}</div>
                 {% endif %}
-            {% endif %}
-        {% endfor %}
-        
-        <!-- Ellipsis if applicable -->
-        {% if filtered_properties.paginator.num_pages > filtered_properties.number|add:'3' %}
-        <li class="page-item disabled"><span class="page-link" style="color: #6c757d;">...</span></li>
-        {% endif %}
-        
-        <!-- Last Page -->
-        {% if filtered_properties.paginator.num_pages > 1 %}
-        <li class="page-item {% if filtered_properties.number == filtered_properties.paginator.num_pages %}active{% endif %}">
-            <a class="page-link" href="?page={{ filtered_properties.paginator.num_pages }}{% if filter_form.is_bound %}&{{ filter_form.as_url }}{% endif %}">{{ filtered_properties.paginator.num_pages }}</a>
-        </li>
-        {% endif %}
-        
-        <!-- Next Button -->
-        {% if filtered_properties.has_next %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ filtered_properties.next_page_number }}{% if filter_form.is_bound %}&{{ filter_form.as_url }}{% endif %}">Next</a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <span class="page-link" style="color: #6c757d;">Next</span>
-        </li>
-        {% endif %}
-    </ul>
-</nav>
-
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function() {
-        // Function to show relevant fields based on the selected property type
-        function showFieldsForPropertyType(propertyType) {
-            if (propertyType == 'residential') {
-                $('#bedrooms_field').show();
-                $('#bathrooms_field').show();
-                $('#business_type_field').hide();
-                $('#land_type_field').hide();
-            } else if (propertyType == 'commercial') {
-                $('#bedrooms_field').hide();
-                $('#bathrooms_field').hide();
-                $('#business_type_field').show();
-                $('#land_type_field').hide();
-            } else if (propertyType == 'land') {
-                $('#bedrooms_field').hide();
-                $('#bathrooms_field').hide();
-                $('#business_type_field').hide();
-                $('#land_type_field').show();
-            } else {
-                $('#bedrooms_field').hide();
-                $('#bathrooms_field').hide();
-                $('#business_type_field').hide();
-                $('#land_type_field').hide();
-            }
-        }
-        
-        // Get the initial property type from the URL query parameter
-        var initialPropertyType = getUrlParameter('property_type');
-        // Show fields based on the initial property type selection
-        showFieldsForPropertyType(initialPropertyType);
-        
-        // Change event handler for property type selection
-        $('#property_type').change(function() {
-            var propertyType = $(this).val();
-            showFieldsForPropertyType(propertyType);
-        });
-        
-        // Function to get URL query parameters
-        function getUrlParameter(name) {
-            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-            var results = regex.exec(location.search);
-            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-        };
-        // Function to append filter parameters to pagination links
-        function appendFilterParamsToPaginationLinks() {
-            var filterParams = $('#filterForm').serialize();
-            $('#paginationLinks a').each(function() {
-                var href = $(this).attr('href');
-                if (href.includes('?')) {
-                    $(this).attr('href', href + '&' + filterParams);
-                } else {
-                    $(this).attr('href', href + '?' + filterParams);
-                }
-            });
-        }
-
-        // Call the function to append filter parameters to pagination links
-        appendFilterParamsToPaginationLinks();
-    });
-
-</script>
-
+              </td>
+              <td class="num">{{ p.view_count }}</td>
+              <td class="num">{{ p.favourite_count|default:0 }}</td>
+              <td>
+                <div class="btn-group">
+                  <a class="btn btn-ghost btn-sm" href="{% url 'update_property' p.pk %}">Edit</a>
+                  <a class="btn btn-ghost btn-sm" href="{% url 'manage_images' p.pk %}">Photos</a>
+                  <a class="btn btn-ghost btn-sm" href="{% url 'property_analytics' p.pk %}">Stats</a>
+                  <form method="post" action="{% url 'change_status' p.pk %}" class="inline-form">
+                    {% csrf_token %}
+                    {% if p.status == 'rented' %}
+                      <button class="btn btn-ghost btn-sm" name="action" value="relist">Relist</button>
+                    {% elif p.is_archived %}
+                      <button class="btn btn-ghost btn-sm" name="action" value="unarchive">Unhide</button>
+                    {% else %}
+                      <button class="btn btn-ghost btn-sm" name="action" value="rented">Mark taken</button>
+                    {% endif %}
+                  </form>
+                  <form method="post" action="{% url 'delete_property' p.pk %}" class="inline-form"
+                        data-confirm="Delete this listing and all its photos?">
+                    {% csrf_token %}
+                    <button class="btn btn-danger btn-sm" type="submit">{% icon "close" %}</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% include 'partials/_pagination.html' with page=filtered_properties %}
+  {% else %}
+    <div class="card empty">
+      <div class="big">{% icon "building" %}</div>
+      <h3>Nothing here</h3>
+      <p class="muted">You have no listings in this state.</p>
+      <a class="btn btn-primary" href="{% url 'add_property' %}">List a property</a>
+    </div>
+  {% endif %}
+</main>
 {% endblock %}
-

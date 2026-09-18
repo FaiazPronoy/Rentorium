@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Inbox &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <h1>Inbox</h1>
+  <p class="muted">Every conversation is tied to one property, so nothing gets mixed up.</p>
+
+  <div class="card">
+    {% for r in rows %}
+      <a class="entry" href="{% url 'conversation' r.thread.pk %}" style="color:inherit">
+        <span class="avatar avatar-sm" style="background:{{ r.other.avatar_color }}">
+          {{ r.other.initials }}</span>
+        <span class="body">
+          <span class="t">{{ r.other.name }}
+            {% if r.unread %}<span class="badge badge-pending">{{ r.unread }} new</span>{% endif %}
+          </span>
+          <span class="s">{{ r.thread.property.Property_Name|truncatechars:44 }}</span>
+          {% if r.last %}
+            <span class="s">{{ r.last.sender.first_name }}: {{ r.last.body|truncatechars:60 }}</span>
+          {% endif %}
+        </span>
+        <span class="tiny muted">{{ r.thread.last_message_at|since }}</span>
+      </a>
+    {% empty %}
+      <div class="empty">
+        <div class="big">{% icon "mail" %}</div>
+        <h3>No conversations yet</h3>
+        <p class="muted">Message an owner from any listing and the thread appears here.</p>
+        <a class="btn btn-primary" href="{% url 'property_list' %}">Browse properties</a>
+      </div>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

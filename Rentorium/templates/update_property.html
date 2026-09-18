@@ -1,26 +1,51 @@
-
-<!-- update_property.html -->
-{% extends "base.html" %}
-{% load crispy_forms_tags %}
-
-{% block content %}
-<div class="container">
-    <div class="row justify-content-center align-items-center min-vh-100">
-        <div class="col-md-6">
-            <div class="card">
-                {% comment %} <div class="card-header">Edit Property</div> {% endcomment %}
-                <div class="card-body">
-                    <h2 class="text-center">Update Property</h2>
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %} 
-                        {% if specific_form %}
-                            {{ specific_form|crispy }}
-                        {% endif %}
-                        <button type="submit" class="btn btn-primary">Update</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+{% extends 'base.html' %}
+{% block title %}Edit {{ listing.Property_Name }} &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <div class="between" style="margin-bottom:1rem">
+    <div>
+      <h1 class="mb0">Edit listing</h1>
+      <p class="muted mb0">{{ listing.Property_Name }}</p>
     </div>
-</div>
+    <div class="btn-group">
+      <a class="btn btn-ghost btn-sm" href="{% url 'manage_images' listing.pk %}">Photos</a>
+      <a class="btn btn-ghost btn-sm" href="{{ listing.get_absolute_url }}">View</a>
+    </div>
+  </div>
+
+  {% if listing.rejection_reason %}
+    <div class="alert alert-warn" style="margin-bottom:1rem">
+      <span><strong>An agent asked for changes:</strong> {{ listing.rejection_reason }}</span>
+    </div>
+  {% endif %}
+
+  {% if form.errors %}
+    <div class="alert alert-error" style="margin-bottom:1rem">
+      <span>Please fix the highlighted fields below.</span>
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="card" data-once>
+    {% csrf_token %}
+    <div class="row">
+      {% for field in form %}
+        {% if field.name == 'Property_Description' or field.name == 'amenities' %}
+          <div class="col" style="flex:1 1 100%">{% include 'partials/_field.html' %}</div>
+        {% else %}
+          <div class="col">{% include 'partials/_field.html' %}</div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="field">
+      <label for="id_images">Add more photos</label>
+      <input type="file" name="images" id="id_images" multiple accept="image/*"
+             data-preview="imgPreview">
+      <div id="imgPreview" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem"></div>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit">Save changes</button>
+    <p class="tiny muted center" style="margin:.8rem 0 0">
+      An edit sends the listing back to the approval queue.
+    </p>
+  </form>
+</main>
 {% endblock %}

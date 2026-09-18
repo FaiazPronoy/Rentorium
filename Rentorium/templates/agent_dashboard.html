@@ -1,72 +1,203 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load property_filters %}
+{% block title %}Agent console &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
 
-{% block title %}
-    <title>Agent Dashboard</title>
-{% endblock %}
-
-
-
-{% block content %}
-
-
-
-
-    <style>
-        /* Custom styles specific to this page */
-        .card {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: 0.3s;
-            border-radius: 10px;
-        }
-        .card:hover {
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
-        .badge-pending {
-            background-color: #ffc107;
-        }
-    </style>
-
-
-<div class="container mt-5">
-  <div class="row">
-    <div class="col-md-12 text-center">
-        <h2 class="mb-4">Welcome to Your Dashboard</h2>
+  <div class="between" style="margin-bottom:1.2rem">
+    <div>
+      <h1 class="mb0">Approval queue</h1>
+      <p class="muted mb0">{{ counts.pending }} waiting &middot;
+        you have handled {{ my_actions_today }} today.{% if pending_total > 40 %}
+        Showing the 40 oldest.{% endif %}</p>
     </div>
-</div>
+    <div class="btn-group">
+      <a class="btn btn-ghost btn-sm" href="{% url 'agent_reports' %}">
+        Reports
+        {% if counts.reports %}<span class="badge badge-fail">{{ counts.reports }}</span>{% endif %}
+      </a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'agent_users' %}">Users</a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'agent_enquiries' %}">Enquiries</a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'agent_log' %}">Decision log</a>
+      {% include 'partials/_export_menu.html' %}
+      <a class="btn btn-primary btn-sm" href="{% url 'agent_stats' %}">Platform stats</a>
+    </div>
+  </div>
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h2 class="card-title text-center">Pending Properties</h2>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Property Name</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if pending_properties %}
-                                {% for property in pending_properties %}
-                                    <tr>
-                                        <td><a href="{% url 'property_detail' property.pk %}">{{ property.Property_Name }}</a></td>
-                                        <td><span class="badge badge-pill badge-pending">Pending</span></td>
-                                    </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="2">No pending properties found.</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
+  <div class="grid grid-4" style="margin-bottom:1.4rem">
+    <div class="stat"><div class="k">Waiting</div>
+      <div class="v" style="color:var(--warn)">{{ counts.pending }}</div></div>
+    <div class="stat"><div class="k">Live</div><div class="v pos">{{ counts.approved }}</div></div>
+    <div class="stat"><div class="k">Open reports</div>
+      <div class="v {% if counts.reports %}neg{% endif %}">{{ counts.reports }}</div></div>
+    <div class="stat"><div class="k">Suspended accounts</div>
+      <div class="v {% if counts.suspended %}neg{% endif %}">{{ counts.suspended }}</div></div>
+  </div>
+
+  <form method="get" class="card" style="margin-bottom:1.2rem">
+    <div class="row" style="align-items:flex-end">
+      <div class="col field mb0">
+        <label for="q">Search the queue</label>
+        <input id="q" name="q" value="{{ search }}" placeholder="Title, area or owner">
+      </div>
+      <div class="col" style="flex:0 1 auto">
+        <button class="btn btn-primary" type="submit">Search</button>
+        {% if search %}<a class="btn btn-ghost" href="{% url 'agent_dashboard' %}">Clear</a>{% endif %}
+      </div>
+    </div>
+  </form>
+
+  {% if pending_properties %}
+    <form method="post" action="{% url 'bulk_decide' %}" id="bulkForm"
+          class="bulk-bar idle no-print" data-bulk-bar>
+      {% csrf_token %}
+      <label class="pick" style="border:0;background:none;padding:.2rem 0">
+        <input type="checkbox" data-bulk-all>
+        <span>Select all</span>
+      </label>
+      <span class="n" data-bulk-count>Select listings to act on several at once</span>
+      <span class="spacer"></span>
+      <span class="act" style="display:contents">
+        <input type="text" name="bulk_reason" maxlength="200"
+               placeholder="Reason, if sending back">
+        <button class="btn btn-success btn-sm" type="submit"
+                name="bulk_action" value="approve" data-bulk-do="approve">
+          {% icon "check" %} Approve selected</button>
+        <button class="btn btn-danger btn-sm" type="submit"
+                name="bulk_action" value="reject" data-bulk-do="reject">
+          Send selected back</button>
+      </span>
+    </form>
+
+    <div class="stack">
+      {% for p in pending_properties %}
+        <div class="card" data-row>
+          <div class="row" style="align-items:flex-start">
+            <div style="width:200px;flex:none;position:relative">
+              <label class="pick-box" title="Select for a bulk decision">
+                <input type="checkbox" name="picked" value="{{ p.pk }}" form="bulkForm"
+                       aria-label="Select {{ p.Property_Name }}">
+              </label>
+              <div style="aspect-ratio:16/10;border-radius:10px;overflow:hidden;
+                   background:var(--surface-2)">
+                {% if p.cover_image %}
+                  <img src="{{ p.cover_image.url }}" alt=""
+                       style="width:100%;height:100%;object-fit:cover">
+                {% else %}
+                  <div class="placeholder" style="display:grid;place-items:center;height:100%;
+                       font-size:2rem">{% icon "building" %}</div>
+                {% endif %}
+              </div>
+              <div class="tiny muted center" style="margin-top:.3rem">
+                {{ p.images.count }} photo{{ p.images.count|pluralize }}</div>
             </div>
+
+            <div class="col" style="min-width:220px">
+              <div class="chips" style="margin-bottom:.4rem">
+                <span class="badge {% if p.Property_on == 'rent' %}badge-rent{% else %}badge-sale{% endif %}">
+                  For {{ p.get_Property_on_display|lower }}</span>
+                <span class="badge">{{ p.get_Property_type_display }}</span>
+                {% if p.Property_Documents %}
+                  <span class="badge badge-info">Has papers</span>
+                {% else %}
+                  <span class="badge badge-pending">No papers</span>
+                {% endif %}
+              </div>
+              <h3 class="mb0"><a href="{{ p.get_absolute_url }}">{{ p.Property_Name }}</a></h3>
+              <div class="muted small">{% icon "pin" %} {{ p.full_address }}</div>
+              <div style="font-weight:900;color:var(--brand-dark);margin:.3rem 0">
+                {{ CURRENCY_SIGN }} {{ p.Price|money }}
+                <span class="tiny muted">{{ p.price_label }}</span>
+              </div>
+              <p class="small muted">{{ p.Property_Description|truncatewords:26|default:"No description given." }}</p>
+              <div class="tiny muted">
+                By <a href="{% url 'public_profile' p.user.pk %}">{{ p.user.name }}</a>
+                {% if p.user.is_verified %}<span class="badge badge-ok">verified</span>{% endif %}
+                &middot; submitted {{ p.created_at|timesince }} ago
+                &middot; {{ p.user.listing_count }} listing{{ p.user.listing_count|pluralize }} total
+              </div>
+            </div>
+
+            <div style="width:230px;flex:none">
+              <a class="btn btn-ghost btn-block btn-sm" style="margin-bottom:.4rem"
+                 href="{{ p.get_absolute_url }}">Open the listing</a>
+              {% if p.Property_Documents %}
+                <a class="btn btn-ghost btn-block btn-sm" style="margin-bottom:.4rem"
+                   href="{% url 'view_property_documents' p.pk %}">Check the papers</a>
+              {% endif %}
+              <form method="post" action="{% url 'approve_property' p.pk %}"
+                    style="margin-bottom:.4rem">
+                {% csrf_token %}
+                <button class="btn btn-success btn-block btn-sm" type="submit">
+                  Approve and publish</button>
+              </form>
+              <button class="btn btn-danger btn-block btn-sm" type="button"
+                      onclick="rejectProperty('{% url 'reject_property' p.pk %}',
+                                              '{{ p.Property_Name|escapejs }}')">
+                Send back</button>
+            </div>
+          </div>
         </div>
+      {% endfor %}
     </div>
+  {% else %}
+    <div class="card empty">
+      <div class="big">{% icon "check-circle" %}</div>
+      <h3>The queue is clear</h3>
+      <p class="muted">Nothing is waiting for a decision.</p>
+      <a class="btn btn-primary" href="{% url 'agent_stats' %}">See the platform stats</a>
+    </div>
+  {% endif %}
+
+  {% if recent_actions %}
+    <div class="card" style="margin-top:1.4rem">
+      <div class="between">
+        <div class="card-title mb0">Recent decisions</div>
+        <a class="tiny" href="{% url 'agent_log' %}">Full log</a>
+      </div>
+      {% for a in recent_actions %}
+        <div class="entry" style="padding:.5rem 0">
+          <span class="body">
+            <span class="t" style="font-size:.87rem">
+              {% if a.property %}{{ a.property.Property_Name|truncatechars:44 }}
+              {% else %}{{ a.subject.name|default:"a removed record" }}{% endif %}</span>
+            <span class="s">{{ a.agent.name|default:"removed agent" }}
+              &middot; {{ a.created_at|since }}
+              {% if a.reason %}&middot; {{ a.reason|truncatechars:50 }}{% endif %}</span>
+          </span>
+          <span class="badge {{ a.badge_class }}">{{ a.get_action_display }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</main>
+
+<div class="modal" id="rejectModal">
+  <div class="modal-box">
+    <h2>Send this back</h2>
+    <p class="muted tiny" id="rejectWho"></p>
+    <form method="post" id="rejectForm" data-once>
+      {% csrf_token %}
+      <div class="field">
+        <label for="reason">What needs to change?</label>
+        <textarea name="reason" id="reason" rows="3" required
+                  placeholder="The photos do not match the description, and the ownership paper is missing."></textarea>
+        <div class="hint">The owner sees this word for word, so be specific and civil.</div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-ghost btn-block" type="button"
+                onclick="closeModal('rejectModal')">Cancel</button>
+        <button class="btn btn-danger btn-block" type="submit">Send it back</button>
+      </div>
+    </form>
+  </div>
 </div>
 
+<script>
+function rejectProperty(url, name) {
+  document.getElementById('rejectForm').action = url;
+  document.getElementById('rejectWho').textContent = name;
+  openModal('rejectModal');
+}
+</script>
 {% endblock %}

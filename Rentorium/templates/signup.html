@@ -1,25 +1,90 @@
-{% extends "base.html" %}
-{% load static %}
-{% load crispy_forms_tags %}
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create an account &middot; {{ SITE_NAME }}</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<link rel="stylesheet" href="{% static 'css/app.css' %}?v={{ ASSET_VERSION }}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230F7A57'/><text x='16' y='23' font-size='19' font-family='Georgia,serif' font-weight='bold' fill='white' text-anchor='middle'>R</text></svg>">
+<script>(function(){document.documentElement.classList.add('js');
+ try{var t=localStorage.getItem('rent-theme');
+ if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<div class="auth">
+  <a class="auth-back" href="{% url 'home' %}">{% icon "arrow-left" %} Back to {{ SITE_NAME }}</a>
 
-{% block title %}<title>Sign Up</title>{% endblock %}
+  <div class="auth-card auth-wide">
+    <div class="auth-logo">
+      <div class="brand-mark">R</div>
+      <h1>Create your account</h1>
+      <p>It takes a minute, and listing a property is free.</p>
+    </div>
 
-{% block content %}
-
-<div class="container">
-  <div class="row justify-content-center align-items-center min-vh-100">
-      <div class="col-md-6">
-          <div class="card">
-              <div class="card-body">
-                  <h2 class="text-center">Sign Up</h2>
-                  <form id="signup-form" method="post">
-                      {% csrf_token %}
-                      {{ form|crispy }}
-                      <button type="submit" class="btn btn-primary">Sign Up</button>
-                  </form>
-              </div>
-          </div>
+    {% if form.errors %}
+      <div class="alert alert-error" style="margin-bottom:1.2rem">
+        {% icon "alert" %}<span>Please fix the highlighted fields below.</span>
       </div>
+    {% endif %}
+
+    <form method="post" data-once>
+      {% csrf_token %}
+
+      <fieldset>
+        <legend>What brings you here?</legend>
+        <div class="check-row">
+          {% for radio in form.role %}
+            <label>{{ radio.tag }} <span>{{ radio.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+        {% for e in form.role.errors %}<div class="err"><span>{{ e }}</span></div>{% endfor %}
+      </fieldset>
+
+      <div class="row">
+        <div class="col">{% include 'partials/_field.html' with field=form.name %}</div>
+        <div class="col">{% include 'partials/_field.html' with field=form.email %}</div>
+      </div>
+      <div class="row">
+        <div class="col">{% include 'partials/_field.html' with field=form.contact_no %}</div>
+        <div class="col">{% include 'partials/_field.html' with field=form.nid %}</div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <div class="field {% if form.password.errors %}has-error{% endif %}">
+            <label for="{{ form.password.id_for_label }}">Password <span class="muted">*</span></label>
+            <input type="password" name="password" id="{{ form.password.id_for_label }}"
+                   data-strength="pwMeter" autocomplete="new-password" required>
+            <div class="meter" id="pwMeter"><span></span></div>
+            <div class="hint">{{ form.password.help_text }}</div>
+            {% for e in form.password.errors %}<div class="err"><span>{{ e }}</span></div>{% endfor %}
+          </div>
+        </div>
+        <div class="col">{% include 'partials/_field.html' with field=form.confirm_password %}</div>
+      </div>
+
+      <label style="display:flex;gap:.6rem;align-items:flex-start;margin-bottom:1.3rem;
+                    font-weight:500;color:var(--text-2)">
+        {{ form.agree }}
+        <span class="small">I agree to the <a href="{% url 'terms' %}">terms of use</a> and the
+          <a href="{% url 'license' %}">privacy notice</a>.</span>
+      </label>
+      {% for e in form.agree.errors %}<div class="err"><span>{{ e }}</span></div>{% endfor %}
+
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Create account</button>
+    </form>
+
+    <p class="center small muted" style="margin-top:1.2rem">
+      Already have an account? <a href="{% url 'signin' %}">Sign in</a>
+    </p>
   </div>
 </div>
-{% endblock %}
+<script src="{% static 'js/app.js' %}?v={{ ASSET_VERSION }}"></script>
+</body>
+</html>

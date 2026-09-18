@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Photos &middot; {{ listing.Property_Name }}{% endblock %}
+{% block body %}
+<main class="wrap-md section">
+  <nav class="breadcrumb">
+    <a href="{% url 'posted_properties' %}">My listings</a>
+    <span class="sep">/</span>
+    <a href="{{ listing.get_absolute_url }}">{{ listing.Property_Name|truncatechars:36 }}</a>
+    <span class="sep">/</span><span>Photos</span>
+  </nav>
+  <div class="section-head">
+    <div>
+      <h1 class="mb0">Photos</h1>
+      <p class="muted mb0">{{ listing.Property_Name }}</p>
+    </div>
+    <div class="btn-group">
+      <a class="btn btn-ghost btn-sm" href="{% url 'update_property' listing.pk %}">
+        {% icon "edit" %} Edit details</a>
+      <a class="btn btn-ghost btn-sm" href="{{ listing.get_absolute_url }}">
+        {% icon "eye" %} View listing</a>
+    </div>
+  </div>
+
+  <form class="card" method="post" enctype="multipart/form-data" style="margin-bottom:1.2rem" data-once>
+    {% csrf_token %}
+    <div class="field">
+      <label for="id_images">Add photos</label>
+      <input type="file" name="images" id="id_images" multiple accept="image/*"
+             data-preview="imgPreview" {% if room <= 0 %}disabled{% endif %}>
+      <div class="hint">
+        {% if room > 0 %}Room for {{ room }} more, 5 MB each.
+        {% else %}This listing is full. Delete one to add another.{% endif %}
+      </div>
+      <div id="imgPreview" class="upload-preview"></div>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" {% if room <= 0 %}disabled{% endif %}>
+      {% icon "camera" %} Upload photos
+    </button>
+  </form>
+
+  <div class="card">
+    <div class="card-title">Current photos ({{ images|length }})</div>
+    {% if images %}
+      <div class="photo-grid">
+        {% for img in images %}
+          <div class="photo-tile">
+            <img src="{{ img.image.url }}" alt="{{ img.caption|default:listing.Property_Name }}"
+                 loading="lazy">
+            {% if forloop.first %}<span class="cover-flag">Cover</span>{% endif %}
+            <div class="tools">
+              {% if not forloop.first %}
+                <form method="post" action="{% url 'make_cover' img.pk %}" class="inline-form">
+                  {% csrf_token %}
+                  <button class="btn btn-sm" type="submit"
+                          title="Use as the cover photo">{% icon "star" %} Cover</button>
+                </form>
+              {% endif %}
+              <form method="post" action="{% url 'delete_image' img.pk %}" class="inline-form"
+                    data-confirm="Delete this photo?">
+                {% csrf_token %}
+                <button class="btn btn-danger btn-sm" type="submit"
+                        title="Delete this photo">{% icon "trash" %}</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      <p class="tiny muted" style="margin-top:.9rem">The first photo is the one people
+        see on the search results. Hover a photo to change it.</p>
+    {% else %}
+      <div class="empty"><div class="big">{% icon "camera" %}</div>
+        <p class="mb0">No photos yet. Listings with photos get far more views.</p></div>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

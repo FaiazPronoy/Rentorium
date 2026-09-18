@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load property_filters %}
+{% block title %}Side by side &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <nav class="breadcrumb"><a href="{% url 'home' %}">Home</a>
+    <span class="sep">/</span><a href="{% url 'property_list' %}">Browse</a>
+    <span class="sep">/</span><span>Compare</span></nav>
+
+  <div class="section-head">
+    <div>
+      <h1 class="mb0">Side by side</h1>
+      <p class="muted mb0">Up to four properties at a time.</p>
+    </div>
+    {% if listings %}
+      <form method="post" action="{% url 'clear_compare' %}">
+        {% csrf_token %}
+        <button class="btn btn-ghost btn-sm" type="submit">{% icon "trash" %} Clear all</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if listings %}
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="table-wrap" style="border:0;border-radius:0">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th style="min-width:150px"></th>
+              {% for p in listings %}
+                <th>
+                  <a href="{{ p.get_absolute_url }}" style="display:block">
+                    <div style="aspect-ratio:4/3;border-radius:var(--r);overflow:hidden;
+                                background:var(--surface-2);margin-bottom:.6rem">
+                      {% if p.cover_image %}
+                        <img src="{{ p.cover_image.url }}" alt="{{ p.Property_Name }}"
+                             style="width:100%;height:100%;object-fit:cover">
+                      {% endif %}
+                    </div>
+                    <span style="display:block;font-size:.95rem;font-weight:650;
+                                 letter-spacing:0;text-transform:none;color:var(--text)">
+                      {{ p.Property_Name|truncatechars:44 }}</span>
+                  </a>
+                  <form method="post" action="{% url 'toggle_compare' p.pk %}"
+                        style="margin-top:.55rem">
+                    {% csrf_token %}
+                    <button class="btn btn-ghost btn-sm btn-block" type="submit">
+                      {% icon "close" %} Remove</button>
+                  </form>
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <th scope="row">{{ row.label }}</th>
+                {% for value in row.values %}<td>{{ value }}</td>{% endfor %}
+              </tr>
+            {% endfor %}
+            <tr>
+              <th scope="row"></th>
+              {% for p in listings %}
+                <td><a class="btn btn-primary btn-sm" href="{{ p.get_absolute_url }}">
+                  Open listing</a></td>
+              {% endfor %}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="tiny muted center" style="margin-top:1rem">
+      A listing that has since been taken down is removed from this table automatically.</p>
+  {% else %}
+    <div class="card empty">
+      <div class="big">{% icon "compare" %}</div>
+      <h3>Nothing to compare yet</h3>
+      <p class="muted">Press <strong>Compare</strong> on any listing and it will appear
+        here next to the others.</p>
+      <a class="btn btn-primary" href="{% url 'property_list' %}">Browse properties</a>
+    </div>
+  {% endif %}
+</main>
+{% endblock %}

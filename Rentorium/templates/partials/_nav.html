@@ -1,0 +1,80 @@
+<nav class="nav no-print">
+  <div class="nav-inner">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark">R</span>{{ SITE_NAME }}
+    </a>
+
+    <button class="nav-toggle" onclick="toggleNav()" aria-label="Open the menu"
+            aria-controls="navLinks">{% icon "menu" %}</button>
+
+    <div class="nav-links" id="navLinks">
+      <a href="{% url 'property_list' %}" class="{% if active == 'browse' %}active{% endif %}">Browse</a>
+      <a href="{% url 'property_type' %}" class="{% if active == 'types' %}active{% endif %}">Categories</a>
+
+      {% if is_logged_in %}
+        <a href="{% url 'favourites' %}" class="{% if active == 'favourites' %}active{% endif %}">Saved</a>
+        <a href="{% url 'bookings' %}" class="{% if active == 'bookings' %}active{% endif %}">Visits</a>
+
+        <a href="{% url 'inbox' %}" class="bell {% if active == 'inbox' %}active{% endif %}"
+           title="Messages" aria-label="Messages">
+          {% icon "mail" %}{% if unread_messages %}<span class="dot">{{ unread_messages }}</span>{% endif %}
+        </a>
+        <a href="{% url 'notifications' %}" class="bell {% if active == 'notifications' %}active{% endif %}"
+           title="Notifications" aria-label="Notifications">
+          {% icon "bell" %}{% if unread_notifications %}<span class="dot">{{ unread_notifications }}</span>{% endif %}
+        </a>
+
+        <div class="menu">
+          <button type="button" aria-haspopup="true">
+            <span class="avatar avatar-sm" style="background:{{ profile.avatar_color }}">
+              {% if profile.profile_picture %}<img src="{{ profile.profile_picture.url }}" alt="">
+              {% else %}{{ profile.initials }}{% endif %}
+            </span>
+            <span>{{ profile.first_name|default:"Account" }}</span>
+            {% icon "chevron-down" %}
+          </button>
+          <div class="menu-panel">
+            <a href="{% url 'dashboard' %}">{% icon "chart" %} Dashboard</a>
+            <a href="{% url 'profile' %}">{% icon "user" %} My profile</a>
+            <a href="{% url 'posted_properties' %}">{% icon "building" %} My listings</a>
+            <a href="{% url 'saved_searches' %}">{% icon "search" %} Saved searches</a>
+            {% if is_agent %}
+              <hr>
+              <a href="{% url 'agent_dashboard' %}">{% icon "shield-check" %} Approval queue</a>
+              <a href="{% url 'agent_reports' %}">{% icon "flag" %} Reported listings
+                {% if open_reports %}<span class="badge badge-fail">{{ open_reports }}</span>{% endif %}</a>
+              <a href="{% url 'agent_stats' %}">{% icon "trend" %} Platform stats</a>
+              <a href="{% url 'agent_users' %}">{% icon "users" %} People</a>
+            {% endif %}
+            <hr>
+            <form method="post" action="{% url 'signout' %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.path }}">
+              <button type="submit">{% icon "logout" %} Sign out</button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <a href="{% url 'about' %}" class="{% if active == 'about' %}active{% endif %}">About</a>
+        <a href="{% url 'signin' %}?next={{ request.path|urlencode }}">Sign in</a>
+      {% endif %}
+
+      <button id="themeBtn" onclick="toggleTheme()" title="Switch between light and dark"
+              aria-label="Switch between light and dark">
+        {% icon "moon" "i-moon" %}{% icon "sun" "i-sun" %}
+      </button>
+
+      {% if is_logged_in %}
+        {% if is_agent %}
+          <a class="btn btn-deep btn-sm" href="{% url 'agent_dashboard' %}">
+            {% icon "shield-check" %} Console</a>
+        {% else %}
+          <a class="btn btn-primary btn-sm" href="{% url 'add_property' %}">
+            {% icon "plus" %} List a property</a>
+        {% endif %}
+      {% else %}
+        <a class="btn btn-primary btn-sm" href="{% url 'signup' %}">Get started</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>

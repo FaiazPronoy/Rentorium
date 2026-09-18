@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Something went wrong &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap-sm section">
+  <div class="card empty" style="padding-block:4rem">
+    <div class="big">{% icon "alert" %}</div>
+    <h1>Something went wrong</h1>
+    <p class="muted">That one is on us, not on you. Try again in a moment, and
+      tell us if it keeps happening.</p>
+    <div class="btn-group" style="justify-content:center">
+      <a class="btn btn-primary" href="/">Back to home</a>
+    </div>
+  </div>
+</main>
+{% endblock %}

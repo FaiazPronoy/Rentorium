@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load property_filters %}
+{% block title %}Saved places &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main class="wrap section">
+  <div class="between" style="margin-bottom:1.2rem">
+    <div>
+      <h1 class="mb0">Saved places</h1>
+      <p class="muted mb0">{{ favourites|length }} propert{{ favourites|length|pluralize:"y,ies" }} kept for later.</p>
+    </div>
+    <a class="btn btn-primary btn-sm" href="{% url 'property_list' %}">Find more</a>
+  </div>
+
+  {% if favourites %}
+    <div class="plist">
+      {% for f in favourites %}
+        {% include 'partials/_property_card.html' with p=f.property %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty">
+      <div class="big">{% icon "heart" %}</div>
+      <h3>Nothing saved yet</h3>
+      <p class="muted">Tap the heart on any listing and it will wait for you here.</p>
+      <a class="btn btn-primary" href="{% url 'property_list' %}">Browse properties</a>
+    </div>
+  {% endif %}
+</main>
+{% endblock %}

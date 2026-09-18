@@ -1,28 +1,106 @@
-{% extends "base.html" %}
-{%load static%}
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}About us &middot; {{ SITE_NAME }}{% endblock %}
+{% block body %}
+<main>
 
-{%block title%} <title>About Us</title>{% endblock %}
-{%block content%}
-       <!-- About Start -->
-        <div class="container-xxl py-5">
-            <div class="container">
-                <div class="row g-5 align-items-center">
-                    <div class="col-lg-6 wow fadeIn" data-wow-delay="0.1s">
-                        <div class="about-img position-relative overflow-hidden p-5 pe-0">
-                            <img class="img-fluid w-100" src="{% static 'img/about.jpg' %}" alt="">
-                        </div>
-                    </div>
-                    <div class="col-lg-6 wow fadeIn" data-wow-delay="0.5s">
-                        <h1 class="mb-4">#1 Place To Find The Perfect Property</h1>
-                        <p class="mb-4">Welcome to Rentorium, your trusted partner in hunting down your dream property</p>
-                        <p><i class="fa fa-check text-primary me-3"></i>Years of experience in the real estate industry</p>
-                        <p><i class="fa fa-check text-primary me-3"></i>Committed to Excellence and Integrity</p>
-                        <p><i class="fa fa-check text-primary me-3"></i>Wide Range of Properties for Sale and Rent</p>
-                    </div>
-                </div>
-            </div>
+  <section class="wrap" style="padding-top:1.6rem">
+    <div class="hero-photo" style="min-height:420px">
+      <div class="hero-media"><img src="{% static 'img/about.jpg' %}" alt=""></div>
+      <div class="hero-body">
+        <div class="eyebrow">About {{ SITE_NAME }}</div>
+        <h1>Finding a flat should not <em>take three weeks.</em></h1>
+        <p>Renting or buying in Bangladesh usually means a dozen phone calls, a
+           middleman who wants a month's rent, and no reliable way to tell a real
+           listing from a made-up one. We thought that could be better.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="grid grid-4" style="margin-block:2.4rem">
+      <div class="figure"><span class="n" data-count="{{ stats.listings }}">{{ stats.listings }}</span>
+        <span class="l">Live listings</span></div>
+      <div class="figure"><span class="n" data-count="{{ stats.areas }}">{{ stats.areas }}</span>
+        <span class="l">Areas covered</span></div>
+      <div class="figure"><span class="n" data-count="{{ stats.owners }}">{{ stats.owners }}</span>
+        <span class="l">Owners listing</span></div>
+      <div class="figure"><span class="n" data-count="{{ stats.reviews }}">{{ stats.reviews }}</span>
+        <span class="l">Customer reviews</span></div>
+    </div>
+  </section>
+
+  <section class="band band-tint">
+   <div class="wrap">
+  <div class="section-head">
+    <div>
+      <div class="eyebrow">How we are different</div>
+      <h2 class="mb0">Four things we refuse to compromise on</h2>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="tile">
+      <div class="feature-ico">{% icon "shield-check" %}</div>
+      <h3>Every listing is checked</h3>
+      <p>Someone on our team reads the details and looks at the ownership paper before
+         a property is published. Nothing goes live automatically.</p>
+    </div>
+    <div class="tile">
+      <div class="feature-ico">{% icon "calendar" %}</div>
+      <h3>Viewings are booked, not negotiated</h3>
+      <p>Pick a slot, the owner confirms it, and the system makes a double booking
+         impossible. No more turning up to a locked gate.</p>
+    </div>
+    <div class="tile">
+      <div class="feature-ico">{% icon "lock" %}</div>
+      <h3>Private papers stay private</h3>
+      <p>Ownership documents are visible only to the owner and to a verified member of
+         our team. They are never served from a public address.</p>
+    </div>
+    <div class="tile">
+      <div class="feature-ico">{% icon "star" %}</div>
+      <h3>Reviews you can trust</h3>
+      <p>One review per person per property, and an owner can never review their own
+         listing. What you read is what someone actually experienced.</p>
+    </div>
+  </div>
+
+   </div>
+  </section>
+
+  <div class="wrap" style="padding-bottom:3.4rem">
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <div class="card-title">Who we build for</div>
+        <p class="mb0">Renters who want to see a real price and a real photograph.
+          Owners who want their place in front of people who are genuinely looking.
+          And the team behind the scenes, who need one screen that keeps the whole
+          thing honest.</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-title">Where to find us</div>
+        <div class="entry">
+          <span class="ico">{% icon "building" %}</span>
+          <span class="body"><span class="t">{{ SITE_ADDRESS }}</span>
+            <span class="s">{{ SITE_HOURS }}</span></span>
         </div>
-        <!-- About End -->
-
-        
-{%endblock%}
+        <div class="entry">
+          <span class="ico">{% icon "mail" %}</span>
+          <span class="body"><span class="t">{{ SITE_EMAIL }}</span>
+            <span class="s">We reply within one working day</span></span>
+        </div>
+        <div class="entry">
+          <span class="ico">{% icon "phone" %}</span>
+          <span class="body"><span class="t">{{ SITE_PHONE }}</span>
+            <span class="s">{{ SITE_HOURS }}</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</main>
+{% endblock %}
