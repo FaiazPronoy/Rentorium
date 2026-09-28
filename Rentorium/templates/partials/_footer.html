@@ -2,9 +2,18 @@
   <div class="wrap">
     <div class="cols">
       <div>
-        <h4>{{ SITE_NAME }}</h4>
-        <p class="tiny" style="max-width:32ch">{{ SITE_TAGLINE }}</p>
-        <p class="tiny mb0">Built for CSE471 at BRAC University.</p>
+        <a class="brand" href="{% url 'home' %}">
+          <span class="brand-mark">R</span>{{ SITE_NAME }}
+        </a>
+        <p class="tiny" style="max-width:34ch;color:rgba(255,255,255,.62)">
+          {{ SITE_TAGLINE }} Every listing is checked by a member of our team before
+          it goes live.
+        </p>
+        <div class="social" style="margin-top:1.1rem">
+          <a href="mailto:{{ SITE_EMAIL }}" title="Email us" aria-label="Email us">{% icon "mail" %}</a>
+          <a href="tel:{{ SITE_PHONE|cut:' ' }}" title="Call us" aria-label="Call us">{% icon "phone" %}</a>
+          <a href="{% url 'contact' %}" title="Contact" aria-label="Contact">{% icon "chat" %}</a>
+        </div>
       </div>
       <div>
         <h4>Find a place</h4>
@@ -21,21 +30,22 @@
           <a href="{% url 'add_property' %}">Add a property</a>
           <a href="{% url 'posted_properties' %}">Manage my listings</a>
           <a href="{% url 'faqs' %}">How approval works</a>
-          <a href="{% url 'terms' %}">Terms</a>
+          <a href="{% url 'terms' %}">Terms of use</a>
         </div>
       </div>
       <div>
         <h4>Company</h4>
         <div class="links">
           <a href="{% url 'about' %}">About us</a>
-          <a href="{% url 'testimonial' %}">Reviews</a>
+          <a href="{% url 'testimonial' %}">Customer reviews</a>
           <a href="{% url 'contact' %}">Contact</a>
-          <a href="{% url 'license' %}">Licence</a>
+          <a href="{% url 'license' %}">Privacy and legal</a>
         </div>
       </div>
     </div>
     <div class="bottom">
-      &copy; {% now "Y" %} {{ SITE_NAME }}. A student project, not a real estate agency.
+      <span>&copy; {% now "Y" %} {{ SITE_LEGAL_NAME }}. All rights reserved.</span>
+      <span>{{ SITE_ADDRESS }}</span>
     </div>
   </div>
 </footer>

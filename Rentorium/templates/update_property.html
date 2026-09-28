@@ -9,7 +9,7 @@
     </div>
     <div class="btn-group">
       <a class="btn btn-ghost btn-sm" href="{% url 'manage_images' listing.pk %}">Photos</a>
-      <a class="btn btn-ghost btn-sm" href="{% url 'property_detail' listing.pk %}">View</a>
+      <a class="btn btn-ghost btn-sm" href="{{ listing.get_absolute_url }}">View</a>
     </div>
   </div>
 

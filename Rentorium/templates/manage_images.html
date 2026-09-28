@@ -2,12 +2,23 @@
 {% block title %}Photos &middot; {{ listing.Property_Name }}{% endblock %}
 {% block body %}
 <main class="wrap-md section">
-  <div class="between" style="margin-bottom:1rem">
+  <nav class="breadcrumb">
+    <a href="{% url 'posted_properties' %}">My listings</a>
+    <span class="sep">/</span>
+    <a href="{{ listing.get_absolute_url }}">{{ listing.Property_Name|truncatechars:36 }}</a>
+    <span class="sep">/</span><span>Photos</span>
+  </nav>
+  <div class="section-head">
     <div>
       <h1 class="mb0">Photos</h1>
       <p class="muted mb0">{{ listing.Property_Name }}</p>
     </div>
-    <a class="btn btn-ghost btn-sm" href="{% url 'property_detail' listing.pk %}">View listing</a>
+    <div class="btn-group">
+      <a class="btn btn-ghost btn-sm" href="{% url 'update_property' listing.pk %}">
+        {% icon "edit" %} Edit details</a>
+      <a class="btn btn-ghost btn-sm" href="{{ listing.get_absolute_url }}">
+        {% icon "eye" %} View listing</a>
+    </div>
   </div>
 
   <form class="card" method="post" enctype="multipart/form-data" style="margin-bottom:1.2rem" data-once>
@@ -20,43 +31,44 @@
         {% if room > 0 %}Room for {{ room }} more, 5 MB each.
         {% else %}This listing is full. Delete one to add another.{% endif %}
       </div>
-      <div id="imgPreview" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem"></div>
+      <div id="imgPreview" class="upload-preview"></div>
     </div>
     <button class="btn btn-primary btn-block" type="submit" {% if room <= 0 %}disabled{% endif %}>
-      Upload
+      {% icon "camera" %} Upload photos
     </button>
   </form>
 
   <div class="card">
     <div class="card-title">Current photos ({{ images|length }})</div>
     {% if images %}
-      <div class="grid grid-3">
+      <div class="photo-grid">
         {% for img in images %}
-          <div class="card card-sm" style="padding:0;overflow:hidden">
-            <div style="aspect-ratio:4/3;background:var(--surface-2)">
-              <img src="{{ img.image.url }}" alt="{{ img.caption }}"
-                   style="width:100%;height:100%;object-fit:cover">
-            </div>
-            <div style="padding:.6rem">
-              {% if forloop.first %}
-                <span class="badge badge-ok">Cover photo</span>
-              {% else %}
+          <div class="photo-tile">
+            <img src="{{ img.image.url }}" alt="{{ img.caption|default:listing.Property_Name }}"
+                 loading="lazy">
+            {% if forloop.first %}<span class="cover-flag">Cover</span>{% endif %}
+            <div class="tools">
+              {% if not forloop.first %}
                 <form method="post" action="{% url 'make_cover' img.pk %}" class="inline-form">
                   {% csrf_token %}
-                  <button class="btn btn-ghost btn-sm" type="submit">Make cover</button>
+                  <button class="btn btn-sm" type="submit"
+                          title="Use as the cover photo">{% icon "star" %} Cover</button>
                 </form>
               {% endif %}
               <form method="post" action="{% url 'delete_image' img.pk %}" class="inline-form"
                     data-confirm="Delete this photo?">
                 {% csrf_token %}
-                <button class="btn btn-danger btn-sm" type="submit">&#10005;</button>
+                <button class="btn btn-danger btn-sm" type="submit"
+                        title="Delete this photo">{% icon "trash" %}</button>
               </form>
             </div>
           </div>
         {% endfor %}
       </div>
+      <p class="tiny muted" style="margin-top:.9rem">The first photo is the one people
+        see on the search results. Hover a photo to change it.</p>
     {% else %}
-      <div class="empty"><div class="big">&#128247;</div>
+      <div class="empty"><div class="big">{% icon "camera" %}</div>
         <p class="mb0">No photos yet. Listings with photos get far more views.</p></div>
     {% endif %}
   </div>

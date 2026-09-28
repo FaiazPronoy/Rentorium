@@ -2,8 +2,11 @@
 {% block title %}Contact us &middot; {{ SITE_NAME }}{% endblock %}
 {% block body %}
 <main class="wrap section">
+  <nav class="breadcrumb"><a href="{% url 'home' %}">Home</a>
+    <span class="sep">/</span><span>Contact</span></nav>
   <h1>Get in touch</h1>
-  <p class="muted">Something broken, or a question the FAQ does not answer? Write to us.</p>
+  <p class="muted">A question the common questions page does not answer, or something
+     that looks wrong? Write to us and a person will read it.</p>
 
   <div class="row" style="margin-top:1.2rem;align-items:flex-start">
     <div class="col" style="flex:1.4 1 380px">
@@ -23,15 +26,15 @@
     <div class="col" style="flex:1 1 260px">
       <div class="card" style="margin-bottom:1.2rem">
         <div class="card-title">Other ways to reach us</div>
-        <div class="entry"><span class="ico">&#9993;</span>
-          <span class="body"><span class="t">hello@rentorium.example</span>
+        <div class="entry"><span class="ico">{% icon "mail" %}</span>
+          <span class="body"><span class="t">{{ SITE_EMAIL }}</span>
             <span class="s">We reply within one working day</span></span></div>
-        <div class="entry"><span class="ico">&#9742;</span>
-          <span class="body"><span class="t">+880 1XXX XXXXXX</span>
-            <span class="s">Sunday to Thursday, 10am to 6pm</span></span></div>
-        <div class="entry"><span class="ico">&#127970;</span>
-          <span class="body"><span class="t">BRAC University, Merul Badda</span>
-            <span class="s">Dhaka 1212, Bangladesh</span></span></div>
+        <div class="entry"><span class="ico">{% icon "phone" %}</span>
+          <span class="body"><span class="t">{{ SITE_PHONE }}</span>
+            <span class="s">{{ SITE_HOURS }}</span></span></div>
+        <div class="entry"><span class="ico">{% icon "building" %}</span>
+          <span class="body"><span class="t">{{ SITE_ADDRESS }}</span>
+            <span class="s">Bangladesh</span></span></div>
       </div>
       <div class="card">
         <div class="card-title">Faster answers</div>

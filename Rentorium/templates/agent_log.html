@@ -40,15 +40,24 @@
   <div class="card">
     <div class="table-wrap">
       <table>
-        <thead><tr><th>When</th><th>Agent</th><th>Action</th><th>Property</th><th>Reason</th></tr></thead>
+        <thead><tr><th>When</th><th>Agent</th><th>Action</th><th>About</th><th>Reason</th></tr></thead>
         <tbody>
         {% for a in rows %}
           <tr>
             <td class="tiny">{{ a.created_at|date:"d M Y, H:i" }}</td>
             <td>{{ a.agent.name|default:"removed agent" }}</td>
             <td><span class="badge {{ a.badge_class }}">{{ a.get_action_display }}</span></td>
-            <td><a href="{% url 'property_detail' a.property.pk %}">
-              {{ a.property.Property_Name|truncatechars:38 }}</a></td>
+            <td>
+              {% if a.property %}
+                <a href="{{ a.property.get_absolute_url }}">
+                  {{ a.property.Property_Name|truncatechars:38 }}</a>
+              {% elif a.subject %}
+                <a href="{{ a.subject.get_absolute_url }}">{{ a.subject.name }}</a>
+                <span class="tiny muted">(account)</span>
+              {% else %}
+                <span class="muted">removed record</span>
+              {% endif %}
+            </td>
             <td class="tiny muted">{{ a.reason|default:"-" }}</td>
           </tr>
         {% empty %}

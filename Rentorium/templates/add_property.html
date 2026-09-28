@@ -13,9 +13,9 @@
                border:2px solid var(--border)">
           {{ radio.tag }}
           <div style="font-size:2.2rem;margin:.3rem 0">
-            {% if radio.data.value == 'residential' %}&#127968;
-            {% elif radio.data.value == 'commercial' %}&#127970;
-            {% else %}&#127807;{% endif %}
+            {% if radio.data.value == 'residential' %}{% icon "building" %}
+            {% elif radio.data.value == 'commercial' %}{% icon "building" %}
+            {% else %}{% icon "land" %}{% endif %}
           </div>
           <div style="font-weight:800">{{ radio.choice_label }}</div>
           <div class="tiny muted">

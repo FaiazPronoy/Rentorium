@@ -45,7 +45,7 @@
                     {% endif %}
                   </div>
                   <div style="min-width:0">
-                    <a href="{% url 'property_detail' p.pk %}" style="font-weight:800">
+                    <a href="{{ p.get_absolute_url }}" style="font-weight:800">
                       {{ p.Property_Name|truncatechars:40 }}</a>
                     <div class="tiny muted">{{ p.Area }} &middot; {{ p.get_Property_type_display }}
                       &middot; {{ p.images.count }} photo{{ p.images.count|pluralize }}</div>
@@ -81,7 +81,7 @@
                   <form method="post" action="{% url 'delete_property' p.pk %}" class="inline-form"
                         data-confirm="Delete this listing and all its photos?">
                     {% csrf_token %}
-                    <button class="btn btn-danger btn-sm" type="submit">&#10005;</button>
+                    <button class="btn btn-danger btn-sm" type="submit">{% icon "close" %}</button>
                   </form>
                 </div>
               </td>
@@ -94,7 +94,7 @@
     {% include 'partials/_pagination.html' with page=filtered_properties %}
   {% else %}
     <div class="card empty">
-      <div class="big">&#127968;</div>
+      <div class="big">{% icon "building" %}</div>
       <h3>Nothing here</h3>
       <p class="muted">You have no listings in this state.</p>
       <a class="btn btn-primary" href="{% url 'add_property' %}">List a property</a>

@@ -1,12 +1,25 @@
-# Rentorium v2.0
+# Rentorium
+
+**A Property Rental & Sales Platform** · Django 5, SQLite
+
+🔗 **Live demo:** https://faiazpronoy.pythonanywhere.com · 📦 **[All versions](../../releases)**
+
+| | |
+|---|---|
+| **v2.0**: current | Rebuilt solo: new interface, agent console, private ownership documents, 177 tests. |
+| **v1.0**: [see release](../../releases/tag/v1.0) | The original CSE471 group submission at BRAC University, built on a Bootstrap template. |
+
+**Try it:** sign in as a renter with `rafid@rentorium.test` / `Rentorium@2026`, or as the agent with `agent@rentorium.test` / `Agent@2026`.
+
+---
 
 A property rental and sales platform for Bangladesh: search listings, book a
 viewing, message the owner, and let an agent keep the whole thing honest.
 
-Built as the **CSE471 System Analysis and Design** project at BRAC University.
-Django 5 and SQLite. Two dependencies, no CDN, no build step.
-The front end is hand written CSS and plain JavaScript, so the whole thing runs
-offline exactly as it runs online.
+Django 5 and SQLite. Two Python dependencies, no build step, no front end
+framework: the interface is hand written CSS and plain JavaScript, and every
+icon is inline SVG. The only external request is the web font, which falls back
+to a system serif and sans pair, so the site works the same offline.
 
 ---
 

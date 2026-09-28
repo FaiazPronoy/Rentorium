@@ -2,6 +2,7 @@ import os
 import uuid
 # `property` is a field name on several models below, which shadows the builtin
 # inside those class bodies. This alias keeps the decorator usable there.
+from builtins import property as computed
 
 from django.core.validators import (
     FileExtensionValidator, MaxValueValidator, MinValueValidator,
@@ -25,7 +26,9 @@ class Amenity(models.Model):
     """Lift, generator, gym, parking. Kept as rows so the admin can add more."""
 
     name = models.CharField(max_length=50, unique=True)
-    icon = models.CharField(max_length=8, default='✔')
+    # Legacy: the site draws an SVG picked from the name now, so this is only
+    # here for rows created before that change. Safe to leave blank.
+    icon = models.CharField(max_length=8, blank=True, default='')
     group = models.CharField(max_length=30, default='General')
 
     class Meta:
@@ -221,6 +224,9 @@ class AllProperty(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
+        # the readable form when there is a slug, the bare id otherwise
+        if self.slug:
+            return reverse('property_detail', args=[self.pk, self.slug])
         return reverse('property_detail', args=[self.pk])
 
     # behaviour
@@ -302,27 +308,37 @@ The subtype row for this listing, or None."""
         return [i <= round(r) for i in range(1, 6)]
 
     def headline_facts(self):
-        """The three or four numbers shown on a card, whatever the type."""
+        """
+        The three numbers shown on a card, whatever the type.
+
+        A card shows the first three, so size goes in before the nice-to-know
+        ones: a listing that told you bedrooms, bathrooms and balconies but
+        not the floor area was the least useful of the possible three.
+        """
         sub = self.specific
+        size = ((f'{int(self.Total_area_in_sqft):,}', 'sq ft')
+                if self.Total_area_in_sqft else None)
         facts = []
         if isinstance(sub, ResidentialProperty):
             facts = [
                 (f'{sub.Bedrooms}', 'bed'),
                 (f'{sub.Bathrooms}', 'bath'),
-                (f'{sub.Number_of_Balcony}', 'balcony'),
             ]
+            if size:
+                facts.append(size)
+            facts.append((f'{sub.Number_of_Balcony}', 'balcony'))
         elif isinstance(sub, CommercialProperty):
-            facts = [
-                (sub.get_Business_type_display() or 'Commercial', 'use'),
-                (f'{sub.Parking_spaces}', 'parking'),
-            ]
+            facts = [(sub.get_Business_type_display() or 'Commercial', 'use')]
+            if size:
+                facts.append(size)
+            facts.append((f'{sub.Parking_spaces}', 'parking'))
         elif isinstance(sub, LandProperty):
-            facts = [
-                (sub.get_Land_type_display() or 'Land', 'type'),
-                ('Fenced' if sub.Is_fenced else 'Open', 'boundary'),
-            ]
-        if self.Total_area_in_sqft:
-            facts.append((f'{int(self.Total_area_in_sqft):,}', 'sq ft'))
+            facts = [(sub.get_Land_type_display() or 'Land', 'type')]
+            if size:
+                facts.append(size)
+            facts.append(('Fenced' if sub.Is_fenced else 'Open', 'boundary'))
+        elif size:
+            facts = [size]
         return facts
 
     def can_be_seen_by(self, profile):
@@ -685,3 +701,120 @@ class PropertyView(models.Model):
 
     def __str__(self):
         return f'{self.property} viewed on {self.viewed_on}'
+
+
+# search history
+
+class RecentSearch(models.Model):
+    """The last few things a signed in person searched for.
+
+    Kept server side rather than in the browser so the list follows the person
+    from their phone to their laptop. One row per person per phrase: searching
+    the same thing again moves it back to the top instead of filling the list.
+    """
+
+    profile = models.ForeignKey(
+        UserProfile, on_delete=models.CASCADE, related_name='recent_searches'
+    )
+    term = models.CharField(max_length=80)
+    query_string = models.CharField(max_length=400, blank=True, default='')
+    hits = models.PositiveIntegerField(default=0)
+    searched_at = models.DateTimeField(default=timezone.now)
+
+    KEEP = 8
+
+    class Meta:
+        ordering = ['-searched_at']
+        constraints = [
+            models.UniqueConstraint(fields=['profile', 'term'],
+                                    name='one_row_per_person_per_term'),
+        ]
+        indexes = [models.Index(fields=['profile', '-searched_at'])]
+
+    def __str__(self):
+        return f'{self.profile}: {self.term}'
+
+    @classmethod
+    def remember(cls, profile, term, query_string='', hits=0):
+        """Record a search, then trim the list back to the newest few."""
+        term = ' '.join((term or '').split())[:80]
+        if not profile or not term:
+            return None
+        row, _ = cls.objects.update_or_create(
+            profile=profile, term=term,
+            defaults={'query_string': query_string[:400],
+                      'hits': hits, 'searched_at': timezone.now()},
+        )
+        stale = list(cls.objects.filter(profile=profile)
+                     .values_list('pk', flat=True)[cls.KEEP:])
+        if stale:
+            cls.objects.filter(pk__in=stale).delete()
+        return row
+
+
+# reports
+
+class PropertyReport(models.Model):
+    """Someone telling us a listing is wrong, fake or already gone.
+
+    Anyone signed in can file one; it lands in the agent queue. The same
+    person cannot report the same listing twice while their first report is
+    still open, so one annoyed user cannot bury the queue.
+    """
+
+    class Reason(models.TextChoices):
+        FAKE = 'fake', 'The listing looks fake'
+        TAKEN = 'taken', 'Already rented or sold'
+        WRONG = 'wrong', 'Details or photos are wrong'
+        PRICE = 'price', 'The price is misleading'
+        DUPLICATE = 'duplicate', 'Posted more than once'
+        OFFENSIVE = 'offensive', 'Offensive or spam content'
+        OTHER = 'other', 'Something else'
+
+    class Status(models.TextChoices):
+        OPEN = 'open', 'Open'
+        UPHELD = 'upheld', 'Upheld'
+        DISMISSED = 'dismissed', 'Dismissed'
+
+    property = models.ForeignKey(
+        AllProperty, on_delete=models.CASCADE, related_name='reports'
+    )
+    reporter = models.ForeignKey(
+        UserProfile, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='reports_filed',
+    )
+    reason = models.CharField(max_length=12, choices=Reason.choices)
+    detail = models.CharField(max_length=500, blank=True, default='')
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.OPEN)
+    handled_by = models.ForeignKey(
+        UserProfile, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='reports_handled',
+    )
+    handled_at = models.DateTimeField(null=True, blank=True)
+    outcome = models.CharField(max_length=200, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['property', 'reporter'],
+                condition=Q(status='open'),
+                name='one_open_report_per_person_per_listing',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['property', 'status']),
+        ]
+
+    def __str__(self):
+        return f'{self.get_reason_display()} on {self.property}'
+
+    @computed
+    def badge_class(self):
+        return {
+            self.Status.OPEN: 'badge-pending',
+            self.Status.UPHELD: 'badge-fail',
+            self.Status.DISMISSED: 'badge-ok',
+        }.get(self.status, '')

@@ -3,23 +3,45 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#009C6B">
+<meta name="theme-color" content="#0F7A57" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0A1210" media="(prefers-color-scheme: dark)">
 <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
 <meta name="description" content="{% block description %}{{ SITE_TAGLINE }}{% endblock %}">
+<meta property="og:site_name" content="{{ SITE_NAME }}">
+<meta property="og:title" content="{% block og_title %}{{ SITE_NAME }}{% endblock %}">
+<meta property="og:type" content="website">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Karla:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="{% static 'css/app.css' %}">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%2346552F'/><text x='16' y='23' font-size='19' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>R</text></svg>">
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<link rel="stylesheet" href="{% static 'css/app.css' %}?v={{ ASSET_VERSION }}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230F7A57'/><text x='16' y='23' font-size='19' font-family='Georgia,serif' font-weight='bold' fill='white' text-anchor='middle'>R</text></svg>">
+
 <script>
-/* set the theme before the first paint so the page never flashes */
-(function(){try{var t=localStorage.getItem('rent-theme');
+/* Decide the theme before the first paint, so the page never flashes white. */
+(function(){var r=document.documentElement;
+ r.classList.add('js');   /* CSS that would hide content is gated on this */
+ try{var t=localStorage.getItem('rent-theme');
  if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
- document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+ r.setAttribute('data-theme',t);}catch(e){}})();
 </script>
 {% block head %}{% endblock %}
 </head>
 <body>
+
+<div id="veil" aria-hidden="true">
+  <div class="mark"><span class="r">R</span>{{ SITE_NAME }}</div>
+  <span class="rule"></span>
+</div>
+
+<a class="skip-link" href="#content">Skip to content</a>
+
+{% comment %}
+The search suggestion panel is built in the browser and reuses these glyphs,
+so it never has to ship a copy of the icon set to JavaScript.
+{% endcomment %}
+<span hidden data-icon-sprite>{% icon "history" %}{% icon "pin" %}{% icon "building" %}{% icon "search" %}</span>
 
 {% include 'partials/_nav.html' %}
 
@@ -27,30 +49,39 @@
   <div class="toasts no-print">
     {% for message in messages %}
       <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-ok{% elif message.tags == 'warning' %}alert-warn{% else %}alert-info{% endif %}">
+        {% if message.tags == 'error' %}{% icon "alert" %}
+        {% elif message.tags == 'success' %}{% icon "check-circle" %}
+        {% elif message.tags == 'warning' %}{% icon "alert" %}
+        {% else %}{% icon "info" %}{% endif %}
         <span>{{ message }}</span>
       </div>
     {% endfor %}
   </div>
 {% endif %}
 
+<span id="content"></span>
 {% block body %}{% endblock %}
 
-{% if compare_count %}
-  <div class="compare-bar no-print">
-    <span>{{ compare_count }} propert{{ compare_count|pluralize:"y,ies" }} to compare</span>
+{% if request.resolver_match.url_name != 'compare' %}
+  <div class="compare-bar no-print {% if not compare_count %}hide{% endif %}" id="compareBar">
+    {% icon "compare" %}
+    <span data-compare-count>{{ compare_count }} propert{{ compare_count|pluralize:"y,ies" }} to compare</span>
     <a class="btn btn-primary btn-sm" href="{% url 'compare' %}">Compare</a>
     <form method="post" action="{% url 'clear_compare' %}" class="inline-form">
       {% csrf_token %}
-      <button type="submit" title="Clear"
-              style="background:none;border:0;color:#fff;cursor:pointer;font-size:1rem"
-              >&#10005;</button>
+      <button type="submit" class="x" title="Clear the comparison" aria-label="Clear the comparison">
+        {% icon "close" %}
+      </button>
     </form>
   </div>
 {% endif %}
 
 {% include 'partials/_footer.html' %}
 
-<script src="{% static 'js/app.js' %}"></script>
+<button id="toTop" type="button" class="no-print" aria-label="Back to the top">
+  {% icon "arrow-up" %}</button>
+
+<script src="{% static 'js/app.js' %}?v={{ ASSET_VERSION }}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

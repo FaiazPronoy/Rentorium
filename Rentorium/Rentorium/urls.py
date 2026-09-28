@@ -10,7 +10,7 @@ from authentication.views import password_reset_confirm, signin
 urlpatterns = [
     path('', include('basic.urls')),
     path('admin/', admin.site.urls),
-    path('authentication/', include('authentication.urls')),
+    path('account/', include('authentication.urls')),
     path('property/', include('property.urls')),
     path('agents/', include('Agents.urls')),
 

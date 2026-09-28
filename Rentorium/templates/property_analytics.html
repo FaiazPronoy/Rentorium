@@ -2,14 +2,24 @@
 {% block title %}Stats &middot; {{ listing.Property_Name }}{% endblock %}
 {% block body %}
 <main class="wrap section">
-  <div class="between" style="margin-bottom:1.2rem">
+  <nav class="breadcrumb">
+    <a href="{% url 'posted_properties' %}">My listings</a>
+    <span class="sep">/</span>
+    <a href="{{ listing.get_absolute_url }}">{{ listing.Property_Name|truncatechars:36 }}</a>
+    <span class="sep">/</span><span>Insights</span>
+  </nav>
+  <div class="section-head">
     <div>
       <h1 class="mb0">How this listing is doing</h1>
       <p class="muted mb0">{{ listing.Property_Name }}</p>
     </div>
     <div class="btn-group">
-      <a class="btn btn-ghost btn-sm" href="{% url 'update_property' listing.pk %}">Edit</a>
-      <a class="btn btn-ghost btn-sm" href="{% url 'property_detail' listing.pk %}">View</a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'update_property' listing.pk %}">
+        {% icon "edit" %} Edit</a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'manage_images' listing.pk %}">
+        {% icon "camera" %} Photos</a>
+      <a class="btn btn-ghost btn-sm" href="{{ listing.get_absolute_url }}">
+        {% icon "eye" %} View</a>
     </div>
   </div>
 
@@ -30,7 +40,8 @@
     <div class="bars" style="height:170px">
       {% for c in chart %}
         <div class="b" title="{{ c.label }}: {{ c.value }}">
-          <i style="height:{% widthratio c.value chart_max 100 %}%"></i>
+          <em>{{ c.value }}</em>
+              <i style="height:{% widthratio c.value chart_max 100 %}%"></i>
           {% if forloop.counter0|divisibleby:5 %}<small>{{ c.label }}</small>{% endif %}
         </div>
       {% endfor %}
@@ -45,7 +56,7 @@
           {{ f.profile.initials }}</span>
         <span class="body">
           <span class="t">{{ f.profile.name }}</span>
-          <span class="s">{{ f.created_at|timesince }} ago</span>
+          <span class="s">{{ f.created_at|since }}</span>
         </span>
       </div>
     {% empty %}

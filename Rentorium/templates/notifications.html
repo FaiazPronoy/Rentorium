@@ -22,26 +22,26 @@
     {% for n in rows %}
       <div class="entry" style="{% if not n.is_read %}background:var(--brand-soft);margin:0 -1.25rem;padding-left:1.25rem;padding-right:1.25rem{% endif %}">
         <span class="ico">
-          {% if n.kind == 'booking' %}&#128197;{% elif n.kind == 'message' %}&#9993;
-          {% elif n.kind == 'approval' %}&#9989;{% elif n.kind == 'review' %}&#11088;
-          {% elif n.kind == 'alert' %}&#128276;{% else %}&#8505;{% endif %}
+          {% if n.kind == 'booking' %}{% icon "calendar" %}{% elif n.kind == 'message' %}{% icon "mail" %}
+          {% elif n.kind == 'approval' %}{% icon "check-circle" %}{% elif n.kind == 'review' %}{% icon "star" %}
+          {% elif n.kind == 'alert' %}{% icon "bell" %}{% else %}{% icon "info" %}{% endif %}
         </span>
         <span class="body">
           <span class="t">{{ n.title }}
             {% if not n.is_read %}<span class="badge badge-pending">new</span>{% endif %}</span>
           <span class="s" style="white-space:normal">{{ n.body }}</span>
-          <span class="tiny muted">{{ n.created_at|timesince }} ago</span>
+          <span class="tiny muted">{{ n.created_at|since }}</span>
         </span>
         <form method="post" action="{% url 'read_notification' n.pk %}">
           {% csrf_token %}
           <button class="btn btn-ghost btn-sm" type="submit"
                   title="{% if n.link %}Open{% else %}Mark read{% endif %}">
-            {% if n.link %}Open{% else %}&#10003;{% endif %}</button>
+            {% if n.link %}Open{% else %}{% icon "check" %}{% endif %}</button>
         </form>
       </div>
     {% empty %}
       <div class="empty">
-        <div class="big">&#128276;</div>
+        <div class="big">{% icon "bell" %}</div>
         <p class="mb0">{% if show == 'unread' %}Nothing unread.{% else %}No notifications yet.{% endif %}</p>
       </div>
     {% endfor %}

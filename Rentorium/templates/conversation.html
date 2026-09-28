@@ -24,12 +24,12 @@
         {% endif %}
       </div>
       <div style="flex:1;min-width:0">
-        <a href="{% url 'property_detail' thread.property.pk %}" style="font-weight:800">
+        <a href="{{ thread.property.get_absolute_url }}" style="font-weight:800">
           {{ thread.property.Property_Name }}</a>
         <div class="tiny muted">{{ thread.property.Area }} &middot;
           {{ CURRENCY_SIGN }} {{ thread.property.Price|money }} {{ thread.property.price_label }}</div>
       </div>
-      <a class="btn btn-ghost btn-sm" href="{% url 'property_detail' thread.property.pk %}">Open</a>
+      <a class="btn btn-ghost btn-sm" href="{{ thread.property.get_absolute_url }}">Open</a>
     </div>
   </div>
 

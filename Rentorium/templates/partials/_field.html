@@ -2,14 +2,14 @@
 <div class="field {% if field.errors %}has-error{% endif %}">
   {% if field.field.widget.input_type != 'checkbox' %}
     <label for="{{ field.id_for_label }}">
-      {{ field.label }}{% if field.field.required %} <span class="muted">*</span>{% endif %}
+      {{ field.label }}{% if field.field.required %} <span class="muted" aria-hidden="true">*</span>{% endif %}
     </label>
     {{ field }}
   {% else %}
-    <label style="display:flex;align-items:center;gap:.5rem;font-weight:600">
-      {{ field }} {{ field.label }}
+    <label style="display:flex;align-items:center;gap:.55rem;font-weight:550;color:var(--text-2)">
+      {{ field }} <span>{{ field.label }}</span>
     </label>
   {% endif %}
   {% if field.help_text %}<div class="hint">{{ field.help_text }}</div>{% endif %}
-  {% for error in field.errors %}<div class="err">{{ error }}</div>{% endfor %}
+  {% for error in field.errors %}<div class="err"><span>{{ error }}</span></div>{% endfor %}
 </div>

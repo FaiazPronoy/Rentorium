@@ -1,37 +1,46 @@
 {% extends 'base.html' %}
-{% block title %}Terms &middot; {{ SITE_NAME }}{% endblock %}
+{% block title %}Terms of use &middot; {{ SITE_NAME }}{% endblock %}
 {% block body %}
 <main class="wrap-md section">
-  <h1>Terms of use</h1>
-  <p class="muted small">Last updated {% now "d F Y" %}. This is a student project, not a
-     real estate agency, and nothing here is legal advice.</p>
+  <nav class="breadcrumb"><a href="{% url 'home' %}">Home</a>
+    <span class="sep">/</span><span>Terms of use</span></nav>
 
-  <div class="card">
+  <h1>Terms of use</h1>
+  <p class="muted">Last updated {% now "d F Y" %}. These terms cover how you may use
+     {{ SITE_NAME }}. They are written plainly on purpose; they are not legal advice.</p>
+
+  <div class="card" style="margin-top:1.6rem">
     <h3>1. Using the site</h3>
-    <p class="small muted">You need an account to list a property, book a visit or message
-      an owner. Keep your password to yourself and tell us if you think someone else has it.</p>
+    <p class="small muted">You need an account to list a property, book a viewing or
+      message an owner. Keep your password to yourself and tell us straight away if you
+      think somebody else has it.</p>
 
     <h3>2. Listing a property</h3>
-    <p class="small muted">List only what you own or are allowed to let. The details and the
-      photos have to be the real ones. An agent reviews every listing and can send it back
-      or take it down.</p>
+    <p class="small muted">List only what you own or are authorised to let. The details
+      and the photographs must be the real ones. Our team reviews every listing and can
+      send it back for changes or take it down.</p>
 
-    <h3>3. Visits</h3>
+    <h3>3. Viewings</h3>
     <p class="small muted">A booking is a request until the owner accepts it. Turning up
-      without an accepted booking is between you and the owner.</p>
+      without an accepted booking is a matter between you and the owner.</p>
 
     <h3>4. Reviews</h3>
-    <p class="small muted">One review per person per property. Write about the place and the
-      experience, not about the person. Reviews that are abusive get removed.</p>
+    <p class="small muted">One review per person per property. Write about the place and
+      the experience, not about the person. Abusive reviews are removed.</p>
 
     <h3>5. Your data</h3>
-    <p class="small muted">We keep what you give us so the site can work. Ownership documents
-      are shown only to you and to a verified agent. Delete your account and everything on
-      it goes with it.</p>
+    <p class="small muted">We keep what you give us so the service can work. Ownership
+      documents are shown only to you and to a verified member of our team. Delete your
+      account and everything attached to it goes with it.</p>
 
     <h3>6. What we do not do</h3>
-    <p class="small muted">We do not hold deposits, act as a broker, or guarantee any listing.
-      Check the property and the paperwork yourself before money changes hands.</p>
+    <p class="small muted">We do not hold deposits, act as a broker, or guarantee any
+      listing. Inspect the property and the paperwork yourself before money changes
+      hands.</p>
+
+    <h3>7. Changes</h3>
+    <p class="small muted mb0">If these terms change in a way that affects you, we will
+      say so on this page and date the change at the top.</p>
   </div>
 </main>
 {% endblock %}

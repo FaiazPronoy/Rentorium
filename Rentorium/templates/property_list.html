@@ -3,32 +3,51 @@
 {% block title %}Browse properties &middot; {{ SITE_NAME }}{% endblock %}
 
 {% block body %}
-<main class="wrap section">
+<main>
 
-  <div class="between" style="margin-bottom:1rem">
-    <div>
+  <div class="page-head">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb" style="margin-bottom:.6rem">
+        <a href="{% url 'home' %}">Home</a>
+        <span class="sep">/</span>
+        <span>Browse</span>
+      </nav>
+      <div class="eyebrow">Every listing checked before it is published</div>
       <h1 class="mb0">Browse properties</h1>
-      <p class="muted mb0">{{ total }} listing{{ total|pluralize }} match
-        {% if filter_form.active_count %}your filters{% else %}right now{% endif %}.</p>
-    </div>
-    <div class="btn-group">
-      <a class="btn btn-ghost btn-sm {% if view_mode == 'grid' %}btn-primary{% endif %}"
-         href="?{% url_replace view='' %}">Grid</a>
-      <a class="btn btn-ghost btn-sm {% if view_mode == 'list' %}btn-primary{% endif %}"
-         href="?{% url_replace view='list' %}">List</a>
+      <p class="muted mb0">{{ total }} listing{{ total|pluralize }}
+        {% if filter_form.active_count %}match your filters{% else %}available right now{% endif %}.</p>
     </div>
   </div>
 
-  <div class="row" style="align-items:flex-start">
+  <div class="wrap section" style="padding-top:1.8rem">
+  <div class="section-head">
+    <div></div>
+    <div class="btn-group">
+      <button class="btn btn-ghost btn-sm filter-open-btn" type="button" onclick="openFilters()">
+        {% icon "filter" %} Filters
+        {% if filter_form.active_count %}<span class="badge badge-ok">{{ filter_form.active_count }}</span>{% endif %}
+      </button>
+      <a class="btn btn-sm {% if view_mode == 'grid' %}btn-primary{% else %}btn-ghost{% endif %}"
+         href="?{% url_replace view='' %}" aria-label="Grid view">{% icon "floors" %} Grid</a>
+      <a class="btn btn-sm {% if view_mode == 'list' %}btn-primary{% else %}btn-ghost{% endif %}"
+         href="?{% url_replace view='list' %}" aria-label="List view">{% icon "menu" %} List</a>
+    </div>
+  </div>
 
-    <!-- filters -->
-    <aside class="col" style="flex:0 0 280px;max-width:100%">
-      <form class="card" method="get" id="filterForm">
-        <div class="between" style="margin-bottom:.6rem">
+  <div class="row" style="align-items:flex-start;gap:1.6rem">
+
+    <!-- ============ filters ============ -->
+    <aside class="col filter-panel" id="filterPanel">
+      <form class="card sticky-side" method="get" id="filterForm">
+        <div class="between" style="margin-bottom:1rem">
           <div class="card-title mb0">Filters</div>
-          {% if filter_form.active_count %}
-            <a class="tiny" href="{% url 'property_list' %}">Clear {{ filter_form.active_count }}</a>
-          {% endif %}
+          <div class="btn-group">
+            {% if filter_form.active_count %}
+              <a class="tiny" href="{% url 'property_list' %}">Clear all</a>
+            {% endif %}
+            <button class="filter-close-btn" type="button" onclick="closeFilters()"
+                    aria-label="Close the filters">{% icon "close" %}</button>
+          </div>
         </div>
 
         {% include 'partials/_field.html' with field=filter_form.q %}
@@ -38,8 +57,8 @@
         {% include 'partials/_field.html' with field=filter_form.area %}
 
         <div class="field">
-          <label>Price range</label>
-          <div class="row" style="gap:.5rem">
+          <label>Price range ({{ CURRENCY_SIGN }})</label>
+          <div class="row" style="gap:.55rem">
             <div class="col">{{ filter_form.min_price }}</div>
             <div class="col">{{ filter_form.max_price }}</div>
           </div>
@@ -52,7 +71,7 @@
         </div>
 
         <div data-only-for="residential">
-          <div class="row" style="gap:.5rem">
+          <div class="row" style="gap:.55rem">
             <div class="col">{% include 'partials/_field.html' with field=filter_form.bedrooms %}</div>
             <div class="col">{% include 'partials/_field.html' with field=filter_form.bathrooms %}</div>
           </div>
@@ -60,9 +79,9 @@
 
         <div data-only-for="commercial">
           {% include 'partials/_field.html' with field=filter_form.business_type %}
-          <div class="check-row" style="margin-bottom:1rem">
-            <label>{{ filter_form.has_conference }} Conference room</label>
-            <label>{{ filter_form.has_security }} Security</label>
+          <div class="check-row" style="margin-bottom:1.05rem">
+            <label>{{ filter_form.has_conference }} <span>Conference room</span></label>
+            <label>{{ filter_form.has_security }} <span>Security</span></label>
           </div>
         </div>
 
@@ -71,31 +90,35 @@
         </div>
 
         {% if filter_form.amenities.field.queryset %}
-          <fieldset>
-            <legend>Amenities</legend>
-            <div class="check-row" style="flex-direction:column;align-items:flex-start;gap:.4rem">
+          <details class="field" {% if filter_form.amenities.value %}open{% endif %}>
+            <summary style="cursor:pointer;font-size:.885rem;font-weight:650;
+                            color:var(--text-2);margin-bottom:.5rem">
+              Amenities</summary>
+            <div class="check-row" style="flex-direction:column;align-items:flex-start;
+                        gap:.45rem;padding-top:.5rem">
               {% for box in filter_form.amenities %}
-                <label>{{ box.tag }} {{ box.choice_label }}</label>
+                <label>{{ box.tag }} <span>{{ box.choice_label }}</span></label>
               {% endfor %}
             </div>
-          </fieldset>
+          </details>
         {% endif %}
 
         {% include 'partials/_field.html' with field=filter_form.ordering %}
 
-        <button class="btn btn-primary btn-block" type="submit">Apply filters</button>
+        <button class="btn btn-primary btn-block" type="submit">
+          {% icon "search" %} Apply filters</button>
 
         {% if is_logged_in %}
           <button class="btn btn-ghost btn-block btn-sm" type="button"
-                  style="margin-top:.5rem" onclick="openModal('saveSearch')">
-            Save this search
+                  style="margin-top:.55rem" onclick="openModal('saveSearch')">
+            {% icon "heart" %} Save this search
           </button>
         {% endif %}
       </form>
     </aside>
 
-    <!-- results -->
-    <div class="col" style="flex:1 1 480px">
+    <!-- ============ results ============ -->
+    <div class="col" style="flex:1 1 520px">
       {% if filtered_properties %}
         <div class="plist {% if view_mode == 'list' %}as-list{% endif %}">
           {% for p in filtered_properties %}
@@ -105,7 +128,7 @@
         {% include 'partials/_pagination.html' with page=filtered_properties %}
       {% else %}
         <div class="card empty">
-          <div class="big">&#128269;</div>
+          <div class="big">{% icon "search" %}</div>
           <h3>Nothing matches those filters</h3>
           <p class="muted">Try widening the price range, or clearing a filter or two.</p>
           <a class="btn btn-primary" href="{% url 'property_list' %}">Clear all filters</a>
@@ -113,23 +136,27 @@
       {% endif %}
     </div>
   </div>
+  </div>
 </main>
 
 {% if is_logged_in %}
   <div class="modal" id="saveSearch">
     <div class="modal-box">
       <h2>Save this search</h2>
-      <p class="muted tiny">We will keep the filters so you can come straight back to them.</p>
-      <form method="post" action="{% url 'save_search' %}" data-once>
+      <p class="muted tiny">We will keep these filters, and tell you how many new
+        properties have matched since you last looked.</p>
+      <form method="post" action="{% url 'save_search' %}" data-once style="margin-top:1.2rem">
         {% csrf_token %}
         <input type="hidden" name="query_string" value="{{ request.GET.urlencode }}">
         <div class="field">
-          <label for="label">Name it</label>
+          <label for="label">Name this search</label>
           <input id="label" name="label" maxlength="60" required
                  placeholder="Three bed flats in Dhanmondi under 40k">
         </div>
-        <label style="display:flex;gap:.5rem;align-items:center;margin-bottom:1rem">
-          <input type="checkbox" name="alert_enabled" checked> Tell me about new matches
+        <label style="display:flex;gap:.55rem;align-items:center;margin-bottom:1.2rem;
+                      font-weight:500;color:var(--text-2)">
+          <input type="checkbox" name="alert_enabled" checked>
+          <span>Count new matches for me</span>
         </label>
         <div class="btn-group">
           <button class="btn btn-ghost btn-block" type="button"

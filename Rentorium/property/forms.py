@@ -17,7 +17,22 @@ SHARED_FIELDS = [
     'Property_Pictures', 'Property_Documents', 'amenities',
 ]
 
+class PrivateFileInput(forms.FileInput):
+    """A file box for a document that has no public URL.
+
+    The default for a FileField is ClearableFileInput, which renders
+    "Currently: <a href="{{ value.url }}">" for a file that is already saved.
+    Ownership papers live outside MEDIA_ROOT and their storage refuses to
+    produce a URL, so that widget raised ValueError and the edit page of every
+    listing that had a document returned a 500. A plain file input never asks
+    for the URL; the name of the file on record goes in the help text below,
+    and the only way to open it stays the permission-checked document view.
+    """
+
+
 SHARED_WIDGETS = {
+    'Property_Documents': PrivateFileInput,
+    'Property_Documents': PrivateFileInput,
     'Property_Name': forms.TextInput(
         attrs={'placeholder': 'Bright 3 bedroom flat near Gulshan 2 circle'}),
     'Property_Description': forms.Textarea(
@@ -46,6 +61,36 @@ class BasePropertyForm(forms.ModelForm):
             self.fields['amenities'].queryset = Amenity.objects.all()
         if 'available_from' in self.fields and not self.instance.pk:
             self.fields['available_from'].initial = timezone.localdate()
+
+        # These carry `default=0` on the model, so a brand new form arrived
+        # showing a 0 in every money box: a filled-in field that the price
+        # check then rejects. Start them empty with a hint instead, and let
+        # the two optional ones fall back to 0 on save.
+        if not self.instance.pk:
+            for name, hint in (('Price', 'e.g. 45000'),
+                               ('service_charge', '0 if there is none'),
+                               ('security_deposit_months', '0 if there is none')):
+                if name in self.fields:
+                    self.fields[name].initial = None
+                    self.fields[name].widget.attrs.setdefault('placeholder', hint)
+        for name in ('service_charge', 'security_deposit_months'):
+            if name in self.fields:
+                self.fields[name].required = False
+
+        # Say which paper is already on record, since the box itself cannot
+        # link to it.
+        doc = getattr(self.instance, 'Property_Documents', None)
+        if 'Property_Documents' in self.fields and doc:
+            self.fields['Property_Documents'].help_text = (
+                'On record: %s. Upload a new file to replace it.'
+                % (doc.name or '').rsplit('/', 1)[-1]
+            )
+
+    def clean_service_charge(self):
+        return self.cleaned_data.get('service_charge') or 0
+
+    def clean_security_deposit_months(self):
+        return self.cleaned_data.get('security_deposit_months') or 0
 
     def clean_Property_Name(self):
         title = ' '.join(self.cleaned_data['Property_Name'].split())
@@ -208,6 +253,8 @@ class PropertyFilterForm(forms.Form):
         required=False, label='Search',
         widget=forms.TextInput(attrs={
             'placeholder': 'Title, area, landmark or description',
+            # picked up by the suggestion panel in static/js/app.js
+            'data-suggest': '/property/suggest/',
         }),
     )
     property_type = forms.ChoiceField(
@@ -260,14 +307,29 @@ class PropertyFilterForm(forms.Form):
 
     @property
     def active_count(self):
-        """How many filters the user actually set, for the 'clear' button."""
+        """
+        How many filters the user actually set, for the 'clear' button.
+
+        The amenity field cleans to an empty queryset when nothing is ticked,
+        and an empty queryset is not equal to [], so the old membership test
+        counted it as a live filter on every visit and the page always claimed
+        the results were filtered.
+        """
         if not self.is_bound or not self.is_valid():
             return 0
         skip = {'ordering'}
-        return sum(
-            1 for k, v in self.cleaned_data.items()
-            if k not in skip and v not in (None, '', [], False)
-        )
+
+        def is_set(value):
+            if value is None or value is False or value == '':
+                return False
+            if hasattr(value, 'exists'):            # a queryset
+                return value.exists()
+            if isinstance(value, (list, tuple, set, dict)):
+                return bool(value)
+            return True
+
+        return sum(1 for k, v in self.cleaned_data.items()
+                   if k not in skip and is_set(v))
 
 
 class SavedSearchForm(forms.ModelForm):
@@ -315,7 +377,12 @@ class BookingForm(forms.ModelForm):
         self.property = kwargs.pop('property', None)
         self.renter = kwargs.pop('renter', None)
         super().__init__(*args, **kwargs)
+        # The three month window is enforced in clean_visit_date; mirroring it
+        # onto the widget means the date picker itself will not offer a day the
+        # server is going to refuse.
         self.fields['visit_date'].widget.attrs['min'] = timezone.localdate().isoformat()
+        self.fields['visit_date'].widget.attrs['max'] = (
+            timezone.localdate() + timedelta(days=90)).isoformat()
         self.fields['visit_date'].initial = timezone.localdate() + timedelta(days=1)
         self.fields['message'].required = False
 

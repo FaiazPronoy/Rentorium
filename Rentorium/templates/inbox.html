@@ -19,11 +19,11 @@
             <span class="s">{{ r.last.sender.first_name }}: {{ r.last.body|truncatechars:60 }}</span>
           {% endif %}
         </span>
-        <span class="tiny muted">{{ r.thread.last_message_at|timesince|truncatewords:1 }}</span>
+        <span class="tiny muted">{{ r.thread.last_message_at|since }}</span>
       </a>
     {% empty %}
       <div class="empty">
-        <div class="big">&#9993;</div>
+        <div class="big">{% icon "mail" %}</div>
         <h3>No conversations yet</h3>
         <p class="muted">Message an owner from any listing and the thread appears here.</p>
         <a class="btn btn-primary" href="{% url 'property_list' %}">Browse properties</a>

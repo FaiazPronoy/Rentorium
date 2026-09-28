@@ -3,7 +3,9 @@
 {% block title %}Reviews &middot; {{ SITE_NAME }}{% endblock %}
 {% block body %}
 <main class="wrap section">
-  <div class="between" style="margin-bottom:1.2rem">
+  <nav class="breadcrumb"><a href="{% url 'home' %}">Home</a>
+    <span class="sep">/</span><span>Customer reviews</span></nav>
+  <div class="section-head">
     <div>
       <h1 class="mb0">What people say about {{ SITE_NAME }}</h1>
       <p class="muted mb0">{{ review_count }} review{{ review_count|pluralize }}
@@ -23,8 +25,7 @@
     <div class="row" style="margin-bottom:1.4rem">
       <div class="col" style="flex:0 0 260px">
         <div class="card center">
-          <div style="font-size:3rem;font-weight:900;color:var(--brand-dark);line-height:1">
-            {{ average }}</div>
+          <div class="score">{{ average }}</div>
           {{ average|stars }}
           <div class="tiny muted" style="margin-top:.4rem">
             from {{ review_count }} review{{ review_count|pluralize }}</div>
@@ -32,13 +33,15 @@
       </div>
       <div class="col">
         <div class="card">
-          {% for b in breakdown %}
-            <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.45rem">
-              <span class="tiny nowrap" style="width:44px">{{ b.star }} star</span>
-              <div class="bar" style="flex:1"><span style="width:{{ b.pct }}%"></span></div>
-              <span class="tiny muted" style="width:34px;text-align:right">{{ b.count }}</span>
-            </div>
-          {% endfor %}
+          <div class="rating-rows">
+            {% for b in breakdown %}
+              <div class="r">
+                <span class="lbl">{{ b.star }} star</span>
+                <div class="bar"><i style="width:{{ b.pct }}%"></i></div>
+                <span class="n">{{ b.count }}</span>
+              </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>
@@ -47,15 +50,15 @@
   {% if all_review %}
     <div class="grid grid-3">
       {% for r in all_review %}
-        <div class="card">
+        <div class="tile">
           {{ r.rating|stars }}
-          <p style="margin-top:.6rem">{{ r.comment }}</p>
+          <p style="margin-top:.8rem;color:var(--text)">{{ r.comment }}</p>
           <div class="between" style="margin-top:.8rem">
             <div style="display:flex;align-items:center;gap:.6rem">
               <span class="avatar avatar-sm" style="background:{{ r.user.avatar_color }}">
                 {{ r.user.initials }}</span>
               <div>
-                <div style="font-weight:800;font-size:.9rem">{{ r.user.name }}</div>
+                <div style="font-weight:650;font-size:.94rem">{{ r.user.name }}</div>
                 <div class="tiny muted">{{ r.date|date:"d M Y" }}</div>
               </div>
             </div>
@@ -63,7 +66,7 @@
               <form method="post" action="{% url 'delete_testimonial' %}"
                     data-confirm="Delete your review?">
                 {% csrf_token %}
-                <button class="btn btn-ghost btn-sm" type="submit">&#10005;</button>
+                <button class="btn btn-ghost btn-sm" type="submit">{% icon "close" %}</button>
               </form>
             {% endif %}
           </div>
@@ -73,9 +76,9 @@
     {% include 'partials/_pagination.html' with page=all_review querystring='' %}
   {% else %}
     <div class="card empty">
-      <div class="big">&#11088;</div>
+      <div class="big">{% icon "star" %}</div>
       <h3>No reviews yet</h3>
-      <p class="muted">Be the first to say how Rentorium worked out for you.</p>
+      <p class="muted">Be the first to say how {{ SITE_NAME }} worked out for you.</p>
     </div>
   {% endif %}
 </main>

@@ -19,6 +19,26 @@ def profile_of(request):
     return None
 
 
+def _suspended(request, profile):
+    """Ends the session of someone suspended while they were signed in.
+
+    Deactivating the account stops the next sign in, but it does not touch a
+    session that already exists, so without this a suspended person could
+    carry on posting until their cookie expired.
+    """
+    from django.contrib.auth import logout
+    logout(request)
+    messages.error(
+        request,
+        'This account has been suspended. {}Write to us if you think that is '
+        'a mistake.'.format(
+            f'Reason given: {profile.suspended_reason}. '
+            if profile.suspended_reason else ''
+        ),
+    )
+    return redirect('home')
+
+
 def login_required_message(view):
     """Sends anonymous visitors to sign in, and brings them back afterwards."""
 
@@ -27,9 +47,12 @@ def login_required_message(view):
         if not request.user.is_authenticated:
             messages.info(request, 'Please sign in to continue.')
             return redirect(f"{reverse('signin')}?next={request.get_full_path()}")
-        if profile_of(request) is None:
+        profile = profile_of(request)
+        if profile is None:
             messages.error(request, 'Your profile could not be loaded.')
             return redirect('home')
+        if profile.is_suspended:
+            return _suspended(request, profile)
         return view(request, *args, **kwargs)
 
     return wrapper
@@ -44,6 +67,8 @@ def agent_required(view):
             messages.info(request, 'Please sign in to continue.')
             return redirect(f"{reverse('signin')}?next={request.get_full_path()}")
         profile = profile_of(request)
+        if profile is not None and profile.is_suspended:
+            return _suspended(request, profile)
         if profile is None or not profile.is_agent:
             messages.error(request, 'That area is for agents only.')
             return redirect('PageNotFound')

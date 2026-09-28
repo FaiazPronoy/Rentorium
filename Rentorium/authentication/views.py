@@ -115,6 +115,29 @@ def signin(request):
             LoginAttempt.objects.create(
                 username=username, ip=client_ip(request), successful=False
             )
+            # A suspended account is deactivated, so Django's own check fails
+            # with the same wording as a wrong password. Say what actually
+            # happened instead, or the person keeps retrying a good password.
+            held = UserProfile.objects.filter(
+                user__username__iexact=username, is_suspended=True).first()
+            if held:
+                # Drop the form's own "wrong email or password", which is not
+                # what happened and reads as a contradiction beside this.
+                form.errors.clear()
+                messages.error(
+                    request,
+                    'This account is suspended. {}Write to {} if you think that '
+                    'is a mistake.'.format(
+                        f'Reason given: {held.suspended_reason} '
+                        if held.suspended_reason else '',
+                        settings.SITE_EMAIL,
+                    ),
+                )
+                return render(request, 'signin.html', {
+                    'form': form, 'locked': False,
+                    'next': _safe_next(request, ''),
+                })
+
             left = MAX_LOGIN_FAILURES - failures - 1
             if 0 < left <= 2:
                 messages.warning(request, f'{left} attempt(s) left before a lockout.')

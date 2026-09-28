@@ -12,7 +12,8 @@ from django.utils import timezone
 from authentication.models import UserProfile
 from property.models import (
     AllProperty, Amenity, Booking, CommercialProperty, Conversation, Favourite,
-    LandProperty, Message, PropertyReview, ResidentialProperty, SavedSearch,
+    LandProperty, Message, PropertyReport, PropertyReview, RecentSearch,
+    ResidentialProperty, SavedSearch,
 )
 
 PASSWORD = 'Rentorium@2026'
@@ -154,6 +155,27 @@ class AccessControlTests(TestCase):
         self.client.login(username='other@test.com', password=PASSWORD)
         r = self.client.get(reverse('update_property', args=[self.listing.pk]))
         self.assertEqual(r.status_code, 404)
+
+    def test_the_edit_page_opens_for_a_listing_that_has_a_document(self):
+        """The ownership paper has no public URL by design.
+
+        Django's default file widget renders a link to `value.url`, so it
+        asked the private storage for one and the page returned a 500. The
+        form uses a plain file input for that field now.
+        """
+        self.listing.Property_Documents.save(
+            'deed.pdf', ContentFile(b'%PDF-1.4 test'), save=True)
+        self.client.login(username='owner@test.com', password=PASSWORD)
+        r = self.client.get(reverse('update_property', args=[self.listing.pk]))
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('On record', r.content.decode())
+
+    def test_a_new_listing_form_does_not_prefill_the_price_with_zero(self):
+        """`default=0` on the model showed a 0 the price check then rejected."""
+        self.client.login(username='owner@test.com', password=PASSWORD)
+        r = self.client.get(reverse('add_property_data', args=['residential']))
+        self.assertEqual(r.status_code, 200)
+        self.assertIsNone(r.context['form'].initial.get('Price'))
 
     def test_a_stranger_cannot_post_an_edit(self):
         self.client.login(username='other@test.com', password=PASSWORD)
@@ -622,3 +644,169 @@ class SavedSearchTests(TestCase):
         self.client.post(reverse('delete_saved_search', args=[row.pk]))
         self.assertTrue(SavedSearch.objects.filter(pk=row.pk).exists())
 
+
+
+class SearchSuggestionTests(TestCase):
+    """The box under the search field: live suggestions and recent searches."""
+
+    def setUp(self):
+        _, self.owner = make_user('owner@test.com', 'Owner', UserProfile.Role.OWNER)
+        _, self.me = make_user('me@test.com', 'Me')
+        self.flat = make_listing(
+            self.owner, Property_Name='Bright flat near Gulshan 2 circle',
+            Area='Gulshan', landmark='Beside the lake')
+        make_listing(self.owner, Property_Name='Shop on Dhanmondi road 27',
+                     Area='Dhanmondi')
+        make_listing(self.owner, Property_Name='A hidden one', Area='Banani',
+                     status=AllProperty.Status.PENDING)
+
+    def suggest(self, term=''):
+        r = self.client.get(reverse('search_suggest'), {'q': term})
+        self.assertEqual(r.status_code, 200)
+        return r.json()
+
+    def flat_items(self, data):
+        out = []
+        for group in data['groups']:
+            out += group['items']
+        return out
+
+    def test_typing_suggests_an_area_and_a_listing(self):
+        items = self.flat_items(self.suggest('gul'))
+        kinds = {i['kind'] for i in items}
+        self.assertIn('area', kinds)
+        self.assertIn('listing', kinds)
+        labels = [i['label'] for i in items]
+        self.assertIn('Gulshan', labels)
+        self.assertIn('Bright flat near Gulshan 2 circle', labels)
+
+    def test_a_listing_that_is_not_live_is_never_suggested(self):
+        labels = [i['label'] for i in self.flat_items(self.suggest('hidden'))]
+        self.assertNotIn('A hidden one', labels)
+
+    def test_there_is_always_a_plain_search_fallback(self):
+        items = self.flat_items(self.suggest('nothing matches this'))
+        self.assertEqual([i['kind'] for i in items], ['search'])
+
+    def test_a_signed_out_visitor_gets_no_recent_searches(self):
+        self.assertEqual(self.suggest('')['groups'], [])
+
+    def test_searching_records_it_and_it_comes_back_as_a_suggestion(self):
+        self.client.login(username='me@test.com', password=PASSWORD)
+        self.client.get(reverse('property_list'), {'q': 'Gulshan'})
+        row = RecentSearch.objects.get(profile=self.me)
+        self.assertEqual(row.term, 'Gulshan')
+        self.assertEqual(row.hits, 1)
+
+        items = self.flat_items(self.suggest(''))
+        self.assertEqual([i['kind'] for i in items], ['recent'])
+        self.assertEqual(items[0]['label'], 'Gulshan')
+
+    def test_an_empty_search_is_not_recorded(self):
+        self.client.login(username='me@test.com', password=PASSWORD)
+        self.client.get(reverse('property_list'), {'q': '   '})
+        self.assertFalse(RecentSearch.objects.exists())
+
+    def test_paging_through_results_does_not_record_the_search_again(self):
+        self.client.login(username='me@test.com', password=PASSWORD)
+        self.client.get(reverse('property_list'), {'q': 'Gulshan'})
+        first = RecentSearch.objects.get(profile=self.me).searched_at
+        self.client.get(reverse('property_list'), {'q': 'Gulshan', 'page': '2'})
+        self.assertEqual(RecentSearch.objects.get(profile=self.me).searched_at, first)
+
+    def test_the_same_search_twice_makes_one_row(self):
+        self.client.login(username='me@test.com', password=PASSWORD)
+        self.client.get(reverse('property_list'), {'q': 'Gulshan'})
+        self.client.get(reverse('property_list'), {'q': 'Gulshan'})
+        self.assertEqual(RecentSearch.objects.filter(profile=self.me).count(), 1)
+
+    def test_only_the_newest_few_are_kept(self):
+        for n in range(RecentSearch.KEEP + 4):
+            RecentSearch.remember(self.me, f'term {n}')
+        self.assertEqual(RecentSearch.objects.filter(profile=self.me).count(),
+                         RecentSearch.KEEP)
+        newest = RecentSearch.objects.filter(profile=self.me).first()
+        self.assertEqual(newest.term, f'term {RecentSearch.KEEP + 3}')
+
+    def test_recent_searches_are_private_to_one_person(self):
+        _, other = make_user('other@test.com', 'Other')
+        RecentSearch.remember(other, 'their private search')
+        self.client.login(username='me@test.com', password=PASSWORD)
+        labels = [i['label'] for i in self.flat_items(self.suggest(''))]
+        self.assertNotIn('their private search', labels)
+
+    def test_clearing_removes_only_your_own(self):
+        _, other = make_user('other@test.com', 'Other')
+        RecentSearch.remember(self.me, 'mine')
+        RecentSearch.remember(other, 'theirs')
+        self.client.login(username='me@test.com', password=PASSWORD)
+        self.client.post(reverse('clear_recent_searches'))
+        self.assertFalse(RecentSearch.objects.filter(profile=self.me).exists())
+        self.assertTrue(RecentSearch.objects.filter(profile=other).exists())
+
+
+class ReportListingTests(TestCase):
+    def setUp(self):
+        _, self.owner = make_user('owner@test.com', 'Owner', UserProfile.Role.OWNER)
+        _, self.me = make_user('me@test.com', 'Me')
+        self.listing = make_listing(self.owner)
+
+    def report(self, **data):
+        payload = {'reason': PropertyReport.Reason.FAKE, 'detail': 'It is not real.'}
+        payload.update(data)
+        return self.client.post(
+            reverse('report_property', args=[self.listing.pk]), payload)
+
+    def test_a_signed_out_visitor_is_sent_to_sign_in(self):
+        self.report()
+        self.assertFalse(PropertyReport.objects.exists())
+
+    def test_a_signed_in_person_can_report(self):
+        self.client.login(username='me@test.com', password=PASSWORD)
+        self.report()
+        row = PropertyReport.objects.get()
+        self.assertEqual(row.property_id, self.listing.pk)
+        self.assertEqual(row.reporter, self.me)
+        self.assertEqual(row.status, PropertyReport.Status.OPEN)
+
+    def test_an_owner_cannot_report_their_own_listing(self):
+        self.client.login(username='owner@test.com', password=PASSWORD)
+        self.report()
+        self.assertFalse(PropertyReport.objects.exists())
+
+    def test_a_made_up_reason_is_refused(self):
+        self.client.login(username='me@test.com', password=PASSWORD)
+        self.report(reason='because-i-say-so')
+        self.assertFalse(PropertyReport.objects.exists())
+
+    def test_the_same_person_cannot_pile_on(self):
+        self.client.login(username='me@test.com', password=PASSWORD)
+        self.report()
+        self.report(reason=PropertyReport.Reason.TAKEN)
+        self.assertEqual(PropertyReport.objects.count(), 1)
+
+    def test_a_second_person_can_still_report_the_same_listing(self):
+        _, other = make_user('other@test.com', 'Other')
+        self.client.login(username='me@test.com', password=PASSWORD)
+        self.report()
+        self.client.login(username='other@test.com', password=PASSWORD)
+        self.report()
+        self.assertEqual(PropertyReport.objects.count(), 2)
+
+    def test_reporting_again_is_allowed_once_the_first_is_settled(self):
+        self.client.login(username='me@test.com', password=PASSWORD)
+        self.report()
+        PropertyReport.objects.update(status=PropertyReport.Status.DISMISSED)
+        self.report(reason=PropertyReport.Reason.TAKEN)
+        self.assertEqual(PropertyReport.objects.count(), 2)
+
+    def test_the_detail_page_shows_the_report_link_and_the_reasons(self):
+        self.client.login(username='me@test.com', password=PASSWORD)
+        r = self.client.get(self.listing.get_absolute_url())
+        self.assertContains(r, 'Something wrong with this listing?')
+        self.assertContains(r, 'reportModal')
+
+    def test_the_owner_sees_no_report_link_on_their_own_listing(self):
+        self.client.login(username='owner@test.com', password=PASSWORD)
+        r = self.client.get(self.listing.get_absolute_url())
+        self.assertNotContains(r, 'Something wrong with this listing?')

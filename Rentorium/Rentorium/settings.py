@@ -35,6 +35,17 @@ SECRET_KEY = env('DJANGO_SECRET_KEY', 'dev-only-key-change-me-before-deploying')
 DEBUG = env_bool('DJANGO_DEBUG', True)
 ALLOWED_HOSTS = [h for h in env('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',') if h]
 
+# Behind a host that terminates TLS for us (PythonAnywhere, Render and the
+# like), Django sees plain HTTP unless it is told which header carries the
+# real scheme. Without this, `request.is_secure()` is False, the secure
+# cookies below are set but never sent back, and sign in silently fails.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Django checks the Origin of every POST over HTTPS against this list.
+_public_hosts = [h for h in ALLOWED_HOSTS
+                 if h not in ('localhost', '127.0.0.1', 'testserver')]
+CSRF_TRUSTED_ORIGINS = [f'https://{h}' for h in _public_hosts]
+
 if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
@@ -93,6 +104,9 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'basic.context_processors.site_context',
             ],
+            # the icon set is used on nearly every page, so it is a builtin
+            # rather than a load tag repeated in forty templates
+            'builtins': ['basic.templatetags.icons'],
         },
     },
 ]
@@ -133,6 +147,26 @@ STATIC_ROOT = BASE_DIR / 'static_root'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+
+def _asset_version():
+    """
+    A stamp appended to the stylesheet and script URLs.
+
+    Without it a browser that has already cached app.css keeps serving the old
+    one after an update, which looks exactly like "the change did not work".
+    Taking the newest modification time means it changes by itself whenever
+    either file is edited, and stays stable otherwise.
+    """
+    stamps = []
+    for rel in ('css/app.css', 'js/app.js'):
+        f = BASE_DIR / 'static' / rel
+        if f.exists():
+            stamps.append(int(f.stat().st_mtime))
+    return str(max(stamps)) if stamps else '1'
+
+
+ASSET_VERSION = _asset_version()
+
 # Ownership papers live here, deliberately outside MEDIA_ROOT, so no web
 # server ever maps a URL to them. See property/storage.py.
 PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
@@ -162,7 +196,12 @@ SUPPORT_EMAIL = env('SUPPORT_EMAIL', EMAIL_HOST_USER)
 
 # app config
 SITE_NAME = 'Rentorium'
-SITE_TAGLINE = 'Find a place you actually want to live in.'
+SITE_LEGAL_NAME = 'Rentorium Technologies Limited'
+SITE_TAGLINE = 'Property in Bangladesh, without the guesswork.'
+SITE_ADDRESS = 'Level 7, 12 North Avenue, Gulshan 2, Dhaka 1212'
+SITE_PHONE = '+880 9612 000 200'
+SITE_EMAIL = 'hello@rentorium.com.bd'
+SITE_HOURS = 'Saturday to Thursday, 9am to 7pm'
 CURRENCY_SIGN = '৳'
 PROPERTIES_PER_PAGE = 9
 MAX_IMAGES_PER_PROPERTY = 8

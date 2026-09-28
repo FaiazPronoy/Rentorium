@@ -2,10 +2,10 @@
 {% block title %}Page not found &middot; {{ SITE_NAME }}{% endblock %}
 {% block body %}
 <main class="wrap-sm section">
-  <div class="card empty">
-    <div class="big">&#127968;</div>
-    <h1>Nothing here</h1>
-    <p class="muted">That page does not exist, or it is not yours to look at.</p>
+  <div class="card empty" style="padding-block:4rem">
+    <div class="big">{% icon "search" %}</div>
+    <h1>We cannot find that page</h1>
+    <p class="muted">It may have been taken down, or it may not be yours to look at.</p>
     <div class="btn-group" style="justify-content:center">
       <a class="btn btn-primary" href="{% url 'home' %}">Back to home</a>
       <a class="btn btn-ghost" href="{% url 'property_list' %}">Browse properties</a>

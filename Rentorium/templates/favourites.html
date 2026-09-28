@@ -19,7 +19,7 @@
     </div>
   {% else %}
     <div class="card empty">
-      <div class="big">&#9825;</div>
+      <div class="big">{% icon "heart" %}</div>
       <h3>Nothing saved yet</h3>
       <p class="muted">Tap the heart on any listing and it will wait for you here.</p>
       <a class="btn btn-primary" href="{% url 'property_list' %}">Browse properties</a>

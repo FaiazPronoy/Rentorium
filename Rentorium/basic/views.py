@@ -17,15 +17,23 @@ from .models import Faq, Reviews
 def home(request):
     live = AllProperty.objects.live()
 
-    featured = live.filter(is_featured=True).with_stats().select_related('user')[:6]
-    if not featured:
-        featured = live.with_stats().select_related('user').order_by('-created_at')[:6]
+    # The home page lays these out as one large card and four small ones, so
+    # it wants exactly five. Take the featured listings first and top the row
+    # up with the newest ones rather than leaving holes in the grid.
+    WANTED = 5
+    featured = list(live.filter(is_featured=True).with_cards()
+                    .order_by('-approved_at', '-created_at')[:WANTED])
+    if len(featured) < WANTED:
+        seen = [p.pk for p in featured]
+        featured += list(live.exclude(pk__in=seen).with_cards()
+                         .order_by('-created_at')[:WANTED - len(featured)])
 
     context = {
         'featured': featured,
-        'newest': live.with_stats().order_by('-created_at')[:6],
+        'newest': live.with_cards().order_by('-created_at')[:6],
+        # The carousel shows three at a time, so give it enough to turn.
         'top_review': Reviews.objects.filter(is_published=True)
-                                     .select_related('user')[:3],
+                                     .select_related('user')[:9],
         'counts': {
             'total': live.count(),
             'rent': live.filter(Property_on='rent').count(),
@@ -33,10 +41,11 @@ def home(request):
             'residential': live.filter(Property_type='residential').count(),
             'commercial': live.filter(Property_type='commercial').count(),
             'land': live.filter(Property_type='land').count(),
+            'areas': live.values('Area').distinct().count(),
         },
         'areas': (live.values('Area')
                       .annotate(n=Count('id'))
-                      .order_by('-n')[:8]),
+                      .order_by('-n')[:10]),
         'active': 'home',
     }
     return render(request, 'index.html', context)

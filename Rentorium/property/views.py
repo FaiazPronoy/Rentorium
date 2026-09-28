@@ -1,5 +1,6 @@
+import json
 import mimetypes
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 
 from django.conf import settings
 from django.contrib import messages
@@ -10,19 +11,21 @@ from django.http import FileResponse, Http404, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from authentication.decorators import (
     login_required_message, post_required, profile_of,
 )
 from authentication.models import Notification
 
+from .templatetags.property_filters import money
 from .forms import (
     FORM_FOR_TYPE, BookingForm, MessageForm, PropertyFilterForm,
     PropertyImageForm, PropertyReviewForm, PropertyTypeForm, SavedSearchForm,
 )
 from .models import (
     AllProperty, Booking, Conversation, Favourite, Message, PropertyImage,
-    PropertyReview, PropertyView, SavedSearch,
+    PropertyReport, PropertyReview, PropertyView, RecentSearch, SavedSearch,
 )
 
 
@@ -174,6 +177,17 @@ def property_list(request):
     results, form = apply_filters(request, base)
 
     total = results.count()
+
+    # Remember what they searched for, but only the first page of a real
+    # search: paging through the same results should not re-record it, and an
+    # empty box is not a search.
+    term = (request.GET.get('q') or '').strip()
+    if term and profile and request.GET.get('page') in (None, '', '1'):
+        # query_without_page() is built for appending to a URL, so it starts
+        # with '&'; a saved search needs it as a bare query string.
+        RecentSearch.remember(
+            profile, term, query_without_page(request).lstrip('&'), total)
+
     page = paginate(request, results)
     annotate_saved(page, profile)
 
@@ -205,7 +219,7 @@ def property_type(request):
     })
 
 
-def property_detail(request, pk):
+def property_detail(request, pk, slug=None):
     listing = get_object_or_404(
         AllProperty.objects.select_related('user').prefetch_related('images', 'amenities'),
         pk=pk,
@@ -235,8 +249,15 @@ def property_detail(request, pk):
 
     can_review = bool(profile and profile != listing.user and not my_review)
 
+    # every photo, in gallery order, for the tiles and the lightbox
+    photos = [i.image.url for i in listing.images.all() if i.image]
+    if not photos and listing.Property_Pictures:
+        photos = [listing.Property_Pictures.url]
+
     return render(request, 'property_detail.html', {
         'listing': listing,
+        'photos': photos,
+        'photos_json': json.dumps(photos),
         'facts': _detail_facts(listing, specific),
         'reviews': reviews[:10],
         'my_review': my_review,
@@ -249,6 +270,10 @@ def property_detail(request, pk):
         'is_owner': profile == listing.user,
         'can_see_documents': listing.can_documents_be_seen_by(profile),
         'in_compare': listing.pk in request.session.get('compare', []),
+        'report_reasons': PropertyReport.Reason.choices,
+        'my_open_report': bool(profile and PropertyReport.objects.filter(
+            property=listing, reporter=profile,
+            status=PropertyReport.Status.OPEN).exists()),
         'similar': similar,
         'booked_slots': list(
             listing.bookings.filter(status=Booking.Status.ACCEPTED,
@@ -594,6 +619,7 @@ def make_cover(request, image_id):
 # documents
 
 @login_required_message
+@xframe_options_sameorigin   # the papers page previews it in an iframe
 def property_document_file(request, property_id):
     """
     Sends the file itself, after checking who is asking.
@@ -702,15 +728,25 @@ def toggle_compare(request, property_id):
     if not listing.can_be_seen_by(profile_of(request)):
         raise Http404('Not available.')
     ids = request.session.get('compare', [])
+    added = False
     if listing.pk in ids:
         ids.remove(listing.pk)
-        messages.info(request, 'Removed from the comparison.')
+        note = 'Removed from the comparison.'
     elif len(ids) >= settings.MAX_COMPARE:
-        messages.warning(request, f'You can compare up to {settings.MAX_COMPARE} at once.')
+        note = f'You can compare up to {settings.MAX_COMPARE} at once.'
     else:
         ids.append(listing.pk)
-        messages.success(request, 'Added to the comparison.')
+        added = True
+        note = 'Added to the comparison.'
     request.session['compare'] = ids
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'added': added, 'count': len(ids), 'message': note})
+
+    if added:
+        messages.success(request, note)
+    else:
+        messages.info(request, note)
     return safe_back(request, listing.get_absolute_url())
 
 
@@ -729,13 +765,14 @@ def compare(request):
     rows = []
     if listings:
         keys = [
-            ('Price', lambda p: f'{settings.CURRENCY_SIGN} {p.Price:,.0f}'),
+            ('Price', lambda p: f'{settings.CURRENCY_SIGN} {money(p.Price)}'),
             ('Listed for', lambda p: p.get_Property_on_display()),
             ('Type', lambda p: p.get_Property_type_display()),
             ('Area', lambda p: f'{p.Area}, {p.City}'),
             ('Size', lambda p: f'{int(p.Total_area_in_sqft):,} sq ft' if p.Total_area_in_sqft else '-'),
-            ('Price per sq ft', lambda p: f'{p.price_per_sqft:,.2f}' if p.price_per_sqft else '-'),
-            ('Service charge', lambda p: f'{settings.CURRENCY_SIGN} {p.service_charge:,.0f}'),
+            ('Price per sq ft', lambda p: (f'{settings.CURRENCY_SIGN} {p.price_per_sqft:,.2f}'
+                                           if p.price_per_sqft else '-')),
+            ('Service charge', lambda p: f'{settings.CURRENCY_SIGN} {money(p.service_charge)}'),
             ('Furnishing', lambda p: p.get_furnishing_display()),
             ('Bedrooms', lambda p: getattr(p.specific, 'Bedrooms', '-')),
             ('Bathrooms', lambda p: getattr(p.specific, 'Bathrooms', '-')),
@@ -857,6 +894,16 @@ def book_property(request, property_id):
 @login_required_message
 def bookings(request):
     me = profile_of(request)
+
+    # An accepted visit whose date has passed is finished, whether or not
+    # anyone remembered to press the button. Leaving them "accepted" for ever
+    # made the list unreadable after a few weeks.
+    Booking.objects.filter(
+        Q(owner=me) | Q(renter=me),
+        status=Booking.Status.ACCEPTED,
+        visit_date__lt=timezone.localdate(),
+    ).update(status=Booking.Status.COMPLETED)
+
     tab = request.GET.get('tab', 'incoming' if me.properties.exists() else 'mine')
 
     incoming = (me.bookings_received
@@ -1051,24 +1098,50 @@ def conversation(request, conversation_id):
 
 # saved searches
 
+def run_saved_search(search):
+    """Re-runs one saved search. Returns (total matches, matches since last look)."""
+    params = QueryDict(search.query_string)
+    form = PropertyFilterForm(params)
+    results = AllProperty.objects.live()
+    if form.is_valid():
+        results = _apply_cleaned(results, form.cleaned_data)
+    results = results.distinct()
+    fresh = 0
+    if search.alert_enabled and search.last_checked:
+        fresh = results.filter(created_at__gt=search.last_checked).count()
+    return results.count(), fresh, {k: v for k, v in params.items() if v}
+
+
+def new_saved_search_matches(profile):
+    """How many new properties are waiting across every saved search."""
+    total = 0
+    for search in profile.saved_searches.filter(alert_enabled=True):
+        total += run_saved_search(search)[1]
+    return total
+
+
 @login_required_message
 def saved_searches(request):
-    """Each saved search is re-run so the count next to it is the real one."""
+    """
+    Each saved search is re-run, so both counts on the page are real: how many
+    match now, and how many of those appeared since the last time this page was
+    opened. Looking at the page is what marks them as seen.
+    """
     me = profile_of(request)
     rows = []
     for search in me.saved_searches.all():
-        params = QueryDict(search.query_string)
-        form = PropertyFilterForm(params)
-        results = AllProperty.objects.live()
-        if form.is_valid():
-            results = _apply_cleaned(results, form.cleaned_data)
+        matches, fresh, params = run_saved_search(search)
         rows.append({
-            'search': search,
-            'matches': results.distinct().count(),
-            'params': {k: v for k, v in params.items() if v},
+            'search': search, 'matches': matches, 'new': fresh, 'params': params,
         })
+
+    # they have now seen them
+    if rows:
+        me.saved_searches.all().update(last_checked=timezone.now())
+
     return render(request, 'saved_searches.html', {
         'rows': rows,
+        'new_total': sum(r['new'] for r in rows),
         'active': 'saved',
     })
 
@@ -1099,6 +1172,118 @@ def delete_saved_search(request, search_id):
     SavedSearch.objects.filter(pk=search_id, profile=profile_of(request)).delete()
     messages.success(request, 'Saved search removed.')
     return redirect('saved_searches')
+
+
+# search suggestions
+
+SUGGEST_LIMIT = 8
+
+
+def search_suggest(request):
+    """
+    What the box under the search field offers.
+
+    With nothing typed it answers with the person's own last few searches;
+    once they start typing it answers with places and listings that actually
+    exist, so a suggestion never leads to an empty results page. Read only,
+    so it needs no CSRF token and no sign in.
+    """
+    term = ' '.join((request.GET.get('q') or '').split())[:60]
+    profile = profile_of(request)
+    live = AllProperty.objects.live()
+    out = []
+
+    if not term:
+        if profile:
+            for row in profile.recent_searches.all()[:SUGGEST_LIMIT]:
+                out.append({
+                    'kind': 'recent',
+                    'label': row.term,
+                    'note': ('no matches' if row.hits == 0
+                             else f'{row.hits} match{"" if row.hits == 1 else "es"}'),
+                    'url': f"{reverse('property_list')}?{row.query_string}"
+                           if row.query_string else
+                           f"{reverse('property_list')}?q={quote_plus(row.term)}",
+                })
+        return JsonResponse({'term': term, 'groups': [
+            {'title': 'Recent searches', 'items': out}] if out else []})
+
+    # areas and cities, ranked by how much there is to see there
+    places = (live.filter(Q(Area__icontains=term) | Q(City__icontains=term))
+              .values('Area', 'City').annotate(n=Count('id')).order_by('-n')[:4])
+    place_items = [{
+        'kind': 'area',
+        'label': p['Area'],
+        'note': f"{p['City']} · {p['n']} listing{'' if p['n'] == 1 else 's'}",
+        'url': f"{reverse('property_list')}?area={quote_plus(p['Area'])}",
+    } for p in places]
+
+    listings = (live.filter(Q(Property_Name__icontains=term)
+                            | Q(landmark__icontains=term))
+                .order_by('-is_featured', '-created_at')[:5])
+    listing_items = [{
+        'kind': 'listing',
+        'label': row.Property_Name,
+        'note': f'{row.Area}, {row.City} · {settings.CURRENCY_SIGN} {money(row.Price)}',
+        'url': row.get_absolute_url(),
+    } for row in listings]
+
+    groups = []
+    if place_items:
+        groups.append({'title': 'Areas', 'items': place_items})
+    if listing_items:
+        groups.append({'title': 'Listings', 'items': listing_items})
+    groups.append({'title': '', 'items': [{
+        'kind': 'search',
+        'label': f'Search everything for “{term}”',
+        'note': '',
+        'url': f"{reverse('property_list')}?q={quote_plus(term)}",
+    }]})
+    return JsonResponse({'term': term, 'groups': groups})
+
+
+@login_required_message
+@post_required
+def clear_recent_searches(request):
+    RecentSearch.objects.filter(profile=profile_of(request)).delete()
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'cleared': True})
+    messages.success(request, 'Recent searches cleared.')
+    return safe_back(request, reverse('property_list'))
+
+
+# reporting a listing
+
+@login_required_message
+@post_required
+def report_property(request, property_id):
+    """Anyone signed in can flag a listing. It lands in the agent queue."""
+    listing = get_object_or_404(AllProperty, pk=property_id)
+    me = profile_of(request)
+
+    if listing.user == me:
+        messages.error(request, 'You cannot report your own listing.')
+        return safe_back(request, listing.get_absolute_url())
+
+    reason = request.POST.get('reason')
+    if reason not in dict(PropertyReport.Reason.choices):
+        messages.error(request, 'Pick a reason for the report.')
+        return safe_back(request, listing.get_absolute_url())
+
+    detail = ' '.join((request.POST.get('detail') or '').split())[:500]
+    try:
+        with transaction.atomic():
+            PropertyReport.objects.create(
+                property=listing, reporter=me, reason=reason, detail=detail,
+            )
+    except IntegrityError:
+        # the unique constraint, so they have one open already
+        messages.info(request, 'You have already reported this listing. '
+                               'An agent is looking at it.')
+        return safe_back(request, listing.get_absolute_url())
+
+    messages.success(request, 'Thank you. An agent will look at this listing.')
+    return safe_back(request, listing.get_absolute_url())
 
 
 # analytics

@@ -46,6 +46,18 @@ class UserProfile(models.Model):
     is_verified = models.BooleanField(default=False)
     avatar_color = models.CharField(max_length=7, default='#009C6B')
 
+    # --- moderation -------------------------------------------------------
+    # A suspended person keeps their account and their data; they simply
+    # cannot sign in or act until an agent lifts it. Nothing is deleted, so a
+    # mistake can be undone, and their listings come back with them.
+    is_suspended = models.BooleanField(default=False)
+    suspended_at = models.DateTimeField(null=True, blank=True)
+    suspended_reason = models.CharField(max_length=200, blank=True, default='')
+    suspended_by = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='suspensions_made',
+    )
+
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -54,6 +66,7 @@ class UserProfile(models.Model):
         indexes = [
             models.Index(fields=['role']),
             models.Index(fields=['is_agent']),
+            models.Index(fields=['is_suspended']),
         ]
 
     def __str__(self):
@@ -88,6 +101,32 @@ class UserProfile(models.Model):
     @property
     def is_owner(self):
         return self.role == self.Role.OWNER or self.properties.exists()
+
+    def suspend(self, by=None, reason=''):
+        """Lock the account and hide everything they have listed."""
+        from property.models import AllProperty
+        self.is_suspended = True
+        self.suspended_at = timezone.now()
+        self.suspended_reason = (reason or '')[:200]
+        self.suspended_by = by
+        self.save(update_fields=['is_suspended', 'suspended_at',
+                                 'suspended_reason', 'suspended_by'])
+        # Their listings come off the site with them, but stay in the database
+        # so lifting the suspension puts everything back untouched.
+        self.properties.filter(is_archived=False).update(is_archived=True)
+        self.user.is_active = False
+        self.user.save(update_fields=['is_active'])
+
+    def lift_suspension(self, by=None):
+        self.is_suspended = False
+        self.suspended_at = None
+        self.suspended_reason = ''
+        self.suspended_by = by
+        self.save(update_fields=['is_suspended', 'suspended_at',
+                                 'suspended_reason', 'suspended_by'])
+        self.properties.filter(is_archived=True).update(is_archived=False)
+        self.user.is_active = True
+        self.user.save(update_fields=['is_active'])
 
     @property
     def masked_nid(self):

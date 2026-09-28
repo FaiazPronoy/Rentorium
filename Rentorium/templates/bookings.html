@@ -25,7 +25,7 @@
             {{ b.renter.initials }}</span>
           <span class="body">
             <span class="t">{{ b.renter.name }} wants to see
-              <a href="{% url 'property_detail' b.property.pk %}">{{ b.property.Property_Name|truncatechars:40 }}</a>
+              <a href="{{ b.property.get_absolute_url }}">{{ b.property.Property_Name|truncatechars:40 }}</a>
             </span>
             <span class="s">{{ b.visit_date|date:"l d M Y" }} at {{ b.visit_time|time:"H:i" }}
               &middot; ref {{ b.reference }}</span>
@@ -56,7 +56,7 @@
           {% endif %}
         </div>
       {% empty %}
-        <div class="empty"><div class="big">&#128197;</div>
+        <div class="empty"><div class="big">{% icon "calendar" %}</div>
           <p class="mb0">Nobody has asked to visit your places yet.</p></div>
       {% endfor %}
     </div>
@@ -64,9 +64,9 @@
     <div class="card">
       {% for b in mine %}
         <div class="entry" style="flex-wrap:wrap;align-items:flex-start">
-          <span class="ico">&#128197;</span>
+          <span class="ico">{% icon "calendar" %}</span>
           <span class="body">
-            <span class="t"><a href="{% url 'property_detail' b.property.pk %}"
+            <span class="t"><a href="{{ b.property.get_absolute_url }}"
                  style="color:inherit">{{ b.property.Property_Name|truncatechars:44 }}</a></span>
             <span class="s">{{ b.visit_date|date:"l d M Y" }} at {{ b.visit_time|time:"H:i" }}
               &middot; ref {{ b.reference }}</span>
@@ -88,7 +88,7 @@
           {% endif %}
         </div>
       {% empty %}
-        <div class="empty"><div class="big">&#128269;</div>
+        <div class="empty"><div class="big">{% icon "search" %}</div>
           <p class="mb0">You have not booked any visits yet.</p>
           <a class="btn btn-primary btn-sm" style="margin-top:.6rem"
              href="{% url 'property_list' %}">Find a place</a></div>

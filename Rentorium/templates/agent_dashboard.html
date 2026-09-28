@@ -12,9 +12,14 @@
         Showing the 40 oldest.{% endif %}</p>
     </div>
     <div class="btn-group">
+      <a class="btn btn-ghost btn-sm" href="{% url 'agent_reports' %}">
+        Reports
+        {% if counts.reports %}<span class="badge badge-fail">{{ counts.reports }}</span>{% endif %}
+      </a>
       <a class="btn btn-ghost btn-sm" href="{% url 'agent_users' %}">Users</a>
       <a class="btn btn-ghost btn-sm" href="{% url 'agent_enquiries' %}">Enquiries</a>
       <a class="btn btn-ghost btn-sm" href="{% url 'agent_log' %}">Decision log</a>
+      {% include 'partials/_export_menu.html' %}
       <a class="btn btn-primary btn-sm" href="{% url 'agent_stats' %}">Platform stats</a>
     </div>
   </div>
@@ -23,9 +28,10 @@
     <div class="stat"><div class="k">Waiting</div>
       <div class="v" style="color:var(--warn)">{{ counts.pending }}</div></div>
     <div class="stat"><div class="k">Live</div><div class="v pos">{{ counts.approved }}</div></div>
-    <div class="stat"><div class="k">Sent back</div>
-      <div class="v neg">{{ counts.rejected }}</div></div>
-    <div class="stat"><div class="k">All listings</div><div class="v">{{ counts.total }}</div></div>
+    <div class="stat"><div class="k">Open reports</div>
+      <div class="v {% if counts.reports %}neg{% endif %}">{{ counts.reports }}</div></div>
+    <div class="stat"><div class="k">Suspended accounts</div>
+      <div class="v {% if counts.suspended %}neg{% endif %}">{{ counts.suspended }}</div></div>
   </div>
 
   <form method="get" class="card" style="margin-bottom:1.2rem">
@@ -42,11 +48,36 @@
   </form>
 
   {% if pending_properties %}
+    <form method="post" action="{% url 'bulk_decide' %}" id="bulkForm"
+          class="bulk-bar idle no-print" data-bulk-bar>
+      {% csrf_token %}
+      <label class="pick" style="border:0;background:none;padding:.2rem 0">
+        <input type="checkbox" data-bulk-all>
+        <span>Select all</span>
+      </label>
+      <span class="n" data-bulk-count>Select listings to act on several at once</span>
+      <span class="spacer"></span>
+      <span class="act" style="display:contents">
+        <input type="text" name="bulk_reason" maxlength="200"
+               placeholder="Reason, if sending back">
+        <button class="btn btn-success btn-sm" type="submit"
+                name="bulk_action" value="approve" data-bulk-do="approve">
+          {% icon "check" %} Approve selected</button>
+        <button class="btn btn-danger btn-sm" type="submit"
+                name="bulk_action" value="reject" data-bulk-do="reject">
+          Send selected back</button>
+      </span>
+    </form>
+
     <div class="stack">
       {% for p in pending_properties %}
-        <div class="card">
+        <div class="card" data-row>
           <div class="row" style="align-items:flex-start">
-            <div style="width:200px;flex:none">
+            <div style="width:200px;flex:none;position:relative">
+              <label class="pick-box" title="Select for a bulk decision">
+                <input type="checkbox" name="picked" value="{{ p.pk }}" form="bulkForm"
+                       aria-label="Select {{ p.Property_Name }}">
+              </label>
               <div style="aspect-ratio:16/10;border-radius:10px;overflow:hidden;
                    background:var(--surface-2)">
                 {% if p.cover_image %}
@@ -54,7 +85,7 @@
                        style="width:100%;height:100%;object-fit:cover">
                 {% else %}
                   <div class="placeholder" style="display:grid;place-items:center;height:100%;
-                       font-size:2rem">&#127968;</div>
+                       font-size:2rem">{% icon "building" %}</div>
                 {% endif %}
               </div>
               <div class="tiny muted center" style="margin-top:.3rem">
@@ -72,8 +103,8 @@
                   <span class="badge badge-pending">No papers</span>
                 {% endif %}
               </div>
-              <h3 class="mb0"><a href="{% url 'property_detail' p.pk %}">{{ p.Property_Name }}</a></h3>
-              <div class="muted small">&#128205; {{ p.full_address }}</div>
+              <h3 class="mb0"><a href="{{ p.get_absolute_url }}">{{ p.Property_Name }}</a></h3>
+              <div class="muted small">{% icon "pin" %} {{ p.full_address }}</div>
               <div style="font-weight:900;color:var(--brand-dark);margin:.3rem 0">
                 {{ CURRENCY_SIGN }} {{ p.Price|money }}
                 <span class="tiny muted">{{ p.price_label }}</span>
@@ -89,7 +120,7 @@
 
             <div style="width:230px;flex:none">
               <a class="btn btn-ghost btn-block btn-sm" style="margin-bottom:.4rem"
-                 href="{% url 'property_detail' p.pk %}">Open the listing</a>
+                 href="{{ p.get_absolute_url }}">Open the listing</a>
               {% if p.Property_Documents %}
                 <a class="btn btn-ghost btn-block btn-sm" style="margin-bottom:.4rem"
                    href="{% url 'view_property_documents' p.pk %}">Check the papers</a>
@@ -111,7 +142,7 @@
     </div>
   {% else %}
     <div class="card empty">
-      <div class="big">&#127881;</div>
+      <div class="big">{% icon "check-circle" %}</div>
       <h3>The queue is clear</h3>
       <p class="muted">Nothing is waiting for a decision.</p>
       <a class="btn btn-primary" href="{% url 'agent_stats' %}">See the platform stats</a>
@@ -127,9 +158,11 @@
       {% for a in recent_actions %}
         <div class="entry" style="padding:.5rem 0">
           <span class="body">
-            <span class="t" style="font-size:.87rem">{{ a.property.Property_Name|truncatechars:44 }}</span>
+            <span class="t" style="font-size:.87rem">
+              {% if a.property %}{{ a.property.Property_Name|truncatechars:44 }}
+              {% else %}{{ a.subject.name|default:"a removed record" }}{% endif %}</span>
             <span class="s">{{ a.agent.name|default:"removed agent" }}
-              &middot; {{ a.created_at|timesince }} ago
+              &middot; {{ a.created_at|since }}
               {% if a.reason %}&middot; {{ a.reason|truncatechars:50 }}{% endif %}</span>
           </span>
           <span class="badge {{ a.badge_class }}">{{ a.get_action_display }}</span>

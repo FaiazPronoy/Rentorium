@@ -1,30 +1,47 @@
 {% extends 'base.html' %}
-{% block title %}Licence &middot; {{ SITE_NAME }}{% endblock %}
+{% block title %}Privacy and legal &middot; {{ SITE_NAME }}{% endblock %}
 {% block body %}
 <main class="wrap-md section">
-  <h1>Licence and credits</h1>
-  <div class="card">
-    <h3>The project</h3>
-    <p class="small muted">{{ SITE_NAME }} was written as a university project for CSE471 at
-      BRAC University. The source is released under the MIT licence, so you may read it,
-      run it and learn from it.</p>
+  <nav class="breadcrumb"><a href="{% url 'home' %}">Home</a>
+    <span class="sep">/</span><span>Privacy and legal</span></nav>
 
-    <h3>What it is built with</h3>
-    <div class="table-wrap">
-      <table>
-        <tbody>
-          <tr><td>Framework</td><td><strong>Django 5</strong></td></tr>
-          <tr><td>Database</td><td><strong>SQLite, swappable</strong></td></tr>
-          <tr><td>Front end</td><td><strong>Hand written CSS and plain JavaScript</strong></td></tr>
-          <tr><td>External libraries</td><td><strong>None on the front end</strong></td></tr>
-        </tbody>
-      </table>
-    </div>
+  <h1>Privacy and legal</h1>
+  <p class="muted">How we handle your information, and who we are.</p>
 
-    <h3>Images</h3>
-    <p class="small muted mb0">The sample photographs that ship with the project are the
-      demonstration images from the original template and are used here only to show
-      what a filled in site looks like.</p>
+  <div class="card" style="margin-top:1.6rem">
+    <h3>What we collect</h3>
+    <p class="small muted">Your name, email address and phone number, so owners know who
+      they are speaking to. If you list a property we also keep the details you enter,
+      the photographs you upload and, where you provide it, the ownership document.</p>
+
+    <h3>Who can see it</h3>
+    <p class="small muted">Your name, profile photograph and the properties you have
+      listed are public. Your phone number is shared with the other party only after a
+      viewing has been accepted. Ownership documents are shown to you and to a verified
+      member of our team, and to nobody else.</p>
+
+    <h3>Cookies</h3>
+    <p class="small muted">One cookie keeps you signed in and remembers the properties
+      you have added to a comparison. We do not run advertising or third party
+      tracking.</p>
+
+    <h3>Deleting your account</h3>
+    <p class="small muted">You can delete your account from your profile page at any
+      time. Your listings, messages, bookings and documents are removed with it.</p>
+
+    <h3>Company details</h3>
+    <div class="kv"><span class="k">Registered name</span>
+      <span class="v">{{ SITE_LEGAL_NAME }}</span></div>
+    <div class="kv"><span class="k">Registered office</span>
+      <span class="v">{{ SITE_ADDRESS }}</span></div>
+    <div class="kv"><span class="k">Email</span><span class="v">{{ SITE_EMAIL }}</span></div>
+    <div class="kv"><span class="k">Telephone</span><span class="v">{{ SITE_PHONE }}</span></div>
+
+    <h3 style="margin-top:1.4rem">Photography</h3>
+    <p class="small muted mb0">Photographs on a listing are supplied by the owner of
+      that property. If you believe an image has been used without permission,
+      <a href="{% url 'contact' %}">tell us</a> and we will take it down while we look
+      into it.</p>
   </div>
 </main>
 {% endblock %}

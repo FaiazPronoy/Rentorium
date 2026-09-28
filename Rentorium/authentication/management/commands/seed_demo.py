@@ -13,8 +13,10 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files import File
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from Agents.models import AgentAction
@@ -22,19 +24,21 @@ from authentication.models import Notification, UserProfile
 from basic.models import Contact, Faq, Reviews
 from property.models import (
     AllProperty, Amenity, Booking, CommercialProperty, Conversation, Favourite,
-    LandProperty, Message, PropertyImage, PropertyReview, PropertyView,
-    ResidentialProperty,
+    LandProperty, Message, PropertyImage, PropertyReport, PropertyReview,
+    PropertyView, RecentSearch, ResidentialProperty,
 )
 
+# The icon column is legacy; the site now draws an SVG chosen from the name
+# (see basic/templatetags/icons.py), so these stay blank.
 AMENITIES = [
-    ('Lift', '🛗', 'Building'), ('Generator', '🔌', 'Building'),
-    ('Parking', '🚗', 'Building'), ('Security guard', '💂', 'Building'),
-    ('CCTV', '📹', 'Building'), ('Rooftop access', '🌇', 'Building'),
-    ('Air conditioning', '❄️', 'Inside'), ('Gas line', '🔥', 'Inside'),
-    ('Water reserve', '💧', 'Inside'), ('Balcony', '🪟', 'Inside'),
-    ('Gym', '🏋️', 'Extras'), ('Swimming pool', '🏊', 'Extras'),
-    ('Prayer room', '🕌', 'Extras'), ('Community hall', '🏛️', 'Extras'),
-    ('Internet ready', '🌐', 'Extras'), ('Pet friendly', '🐈', 'Extras'),
+    ('Lift', '', 'Building'), ('Generator', '', 'Building'),
+    ('Parking', '', 'Building'), ('Security guard', '', 'Building'),
+    ('CCTV', '', 'Building'), ('Rooftop access', '', 'Building'),
+    ('Air conditioning', '', 'Inside'), ('Gas line', '', 'Inside'),
+    ('Water reserve', '', 'Inside'), ('Balcony', '', 'Inside'),
+    ('Gym', '', 'Extras'), ('Swimming pool', '', 'Extras'),
+    ('Prayer room', '', 'Extras'), ('Community hall', '', 'Extras'),
+    ('Internet ready', '', 'Extras'), ('Pet friendly', '', 'Extras'),
 ]
 
 FAQS = [
@@ -173,7 +177,7 @@ class Command(BaseCommand):
             Contact.objects.all().delete()
             Faq.objects.all().delete()
 
-        # amenities
+        # ---------------------------------------------------- amenities --
         amenities = {}
         for name, icon, group in AMENITIES:
             amenity, _ = Amenity.objects.get_or_create(
@@ -181,14 +185,14 @@ class Command(BaseCommand):
             amenities[name] = amenity
         self.stdout.write(f'  {len(amenities)} amenities')
 
-        # FAQs
+        # --------------------------------------------------------- FAQs --
         for i, (question, answer) in enumerate(FAQS):
             Faq.objects.get_or_create(question=question,
                                       defaults={'answer': answer, 'position': i})
         self.stdout.write(f'  {len(FAQS)} FAQs')
 
-        # users
-        colours = ['#009C6B', '#0FB5AE', '#07211A', '#2E8FB8', '#E0951C', '#5B7F71']
+        # -------------------------------------------------------- users --
+        colours = ['#46552F', '#A4552F', '#232719', '#6E5A7D', '#B07A2A', '#4C6B7A']
         profiles = {}
 
         agent_user, created = User.objects.get_or_create(
@@ -204,7 +208,7 @@ class Command(BaseCommand):
         agent.is_agent = True
         agent.is_verified = True
         agent.contact_no = '01700000000'
-        agent.avatar_color = '#07211A'
+        agent.avatar_color = '#232719'
         agent.bio = 'Agent at Rentorium. I check every listing before it goes live.'
         agent.save()
         profiles['agent'] = agent
@@ -236,11 +240,24 @@ class Command(BaseCommand):
             User.objects.create_superuser('admin', 'admin@rentorium.test', 'Admin@2026')
         self.stdout.write(f'  {len(profiles)} profiles plus a superuser')
 
-        # listings
+        # ---------------------------------------------------- listings --
         owners = [profiles[e] for _, e, r, _, _ in PEOPLE if r == 'owner']
         img_dir = Path(settings.BASE_DIR) / 'static' / 'img'
         stock = sorted(img_dir.glob('property-*.jpg'))
         listings = []
+
+        # Any file already sitting in media/pics makes Django rename the next
+        # upload with a random suffix, so a re-seed used to leave the database
+        # pointing at names that only exist on the machine that ran it. Clear
+        # the folder first and every seed produces the same filenames.
+        pics_dir = Path(settings.MEDIA_ROOT) / 'pics'
+        if pics_dir.exists():
+            for old in pics_dir.glob('*'):
+                if old.is_file():
+                    try:
+                        old.unlink()
+                    except OSError:
+                        pass
 
         def attach_images(listing, start):
             if not stock:
@@ -254,6 +271,65 @@ class Command(BaseCommand):
                         position=n,
                     )
 
+        # A short stand-in for the ownership paper. It lives outside
+        # MEDIA_ROOT like a real one, so the demo exercises the checked
+        # document view rather than a public /media/ URL.
+        docs_dir = Path(settings.PRIVATE_MEDIA_ROOT) / 'property_documents'
+        if docs_dir.exists():
+            for old in docs_dir.glob('*'):
+                if old.is_file():
+                    try:
+                        old.unlink()
+                    except OSError:
+                        pass
+
+        def attach_document(listing):
+            """A one page PDF that says what it is, written by hand.
+
+            Building it here rather than shipping a binary keeps the repository
+            text only, and gives the demo something that actually renders in
+            the viewer on the papers page.
+            """
+            lines = [
+                ('DEED OF OWNERSHIP', 24, 700),
+                ('SAMPLE DOCUMENT - DEMONSTRATION DATA ONLY', 11, 668),
+                ('Property: ' + listing.Property_Name[:56], 12, 620),
+                ('Address: ' + listing.full_address[:56], 12, 596),
+                ('Holder: ' + listing.user.name, 12, 572),
+                ('Mutation and survey papers verified.', 12, 548),
+            ]
+
+            def esc(s):
+                for a, b in (('\\', ''), ('(', ''), (')', '')):
+                    s = s.replace(a, b)
+                return s.encode('ascii', 'replace').decode('ascii')
+
+            text = 'BT\n' + ''.join(
+                '/F1 %d Tf 1 0 0 1 60 %d Tm (%s) Tj\n' % (size, y, esc(t))
+                for t, size, y in lines) + 'ET\n'
+            stream = text.encode()
+            objs = [
+                b'<</Type/Catalog/Pages 2 0 R>>',
+                b'<</Type/Pages/Kids[3 0 R]/Count 1>>',
+                b'<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]'
+                b'/Resources<</Font<</F1 5 0 R>>>>/Contents 4 0 R>>',
+                b'<</Length %d>>\nstream\n%s\nendstream' % (len(stream), stream),
+                b'<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>',
+            ]
+            out = bytearray(b'%PDF-1.4\n')
+            offsets = []
+            for i, body in enumerate(objs, start=1):
+                offsets.append(len(out))
+                out += b'%d 0 obj\n' % i + body + b'\nendobj\n'
+            start = len(out)
+            out += b'xref\n0 %d\n0000000000 65535 f \n' % (len(objs) + 1)
+            for off in offsets:
+                out += b'%010d 00000 n \n' % off
+            out += (b'trailer<</Size %d/Root 1 0 R>>\nstartxref\n%d\n%%%%EOF\n'
+                    % (len(objs) + 1, start))
+            listing.Property_Documents.save(
+                f'{listing.pk}-ownership.pdf', ContentFile(bytes(out)), save=True)
+
         def finish(listing, i, extras):
             listing.status = AllProperty.Status.APPROVED
             listing.needs_approval = False
@@ -265,6 +341,7 @@ class Command(BaseCommand):
             listing.save()
             listing.amenities.set([amenities[a] for a in extras if a in amenities])
             attach_images(listing, i)
+            attach_document(listing)
             AgentAction.objects.create(
                 agent=agent, property=listing,
                 action=AgentAction.Action.APPROVED,
@@ -379,7 +456,7 @@ class Command(BaseCommand):
         )
         self.stdout.write(f'  {len(listings)} live listings, 1 waiting, 1 sent back')
 
-        # the view history
+        # ---------------------------------------------- the view history --
         # view_count on its own left every chart on the site flat: the owner
         # dashboard, the agent stats page and the per listing analytics all
         # read PropertyView rows, not the counter. Seed the real rows and let
@@ -408,7 +485,7 @@ class Command(BaseCommand):
         AllProperty.objects.bulk_update(listings, ['view_count'])
         self.stdout.write(f'  {len(view_rows)} views over the last 30 days')
 
-        # reviews, saves, etc
+        # ------------------------------------------- reviews, saves, etc --
         renters = [profiles[e] for _, e, r, _, _ in PEOPLE if r == 'renter']
         for i, listing in enumerate(listings[:5]):
             for j, renter in enumerate(renters[:2]):
@@ -426,7 +503,7 @@ class Command(BaseCommand):
             Reviews.objects.get_or_create(
                 user=author, defaults={'rating': rating, 'comment': comment})
 
-        # bookings
+        # ------------------------------------------------------ bookings --
         slots = [(1, 11), (2, 16), (3, 10), (5, 17)]
         for i, (days, hour) in enumerate(slots):
             listing = listings[i % len(listings)]
@@ -446,7 +523,7 @@ class Command(BaseCommand):
                 },
             )
 
-        # messaging
+        # ----------------------------------------------------- messaging --
         for i in range(3):
             listing = listings[i]
             renter = renters[i % len(renters)]
@@ -466,7 +543,7 @@ class Command(BaseCommand):
             thread.last_message_at = now - timedelta(hours=3 * i + 1)
             thread.save(update_fields=['last_message_at'])
 
-        # enquiries
+        # ----------------------------------------------------- enquiries --
         Contact.objects.get_or_create(
             subject='Listing stuck in review',
             defaults={
@@ -486,13 +563,104 @@ class Command(BaseCommand):
             },
         )
 
-        # notifications
+        # ------------------------------------------------ recent searches --
+        # So the suggestion box under the search field has something to show
+        # the moment a demo account signs in.
+        searchers = [profiles['rafid@rentorium.test'],
+                     profiles['tasnim@rentorium.test']]
+        history = [
+            ('gulshan', 'q=gulshan'),
+            ('3 bedroom', 'q=3+bedroom&property_type=residential'),
+            ('office mohakhali', 'q=office+mohakhali&property_type=commercial'),
+            ('dhanmondi lake', 'q=dhanmondi+lake'),
+            ('katha', 'q=katha&property_type=land'),
+        ]
+        for who in searchers:
+            for n, (term, qs) in enumerate(history):
+                row = RecentSearch.remember(
+                    who, term, qs,
+                    AllProperty.objects.live().filter(
+                        Q(Property_Name__icontains=term.split()[0])
+                        | Q(Area__icontains=term.split()[0])).count(),
+                )
+                if row:
+                    RecentSearch.objects.filter(pk=row.pk).update(
+                        searched_at=now - timedelta(hours=3 + n * 14))
+
+        # ------------------------------------------------------- reports --
+        # One open report for the agent queue, one already dealt with, so the
+        # page shows both halves of the workflow.
+        live_rows = list(AllProperty.objects.live().order_by('pk'))
+        if len(live_rows) >= 2:
+            open_report = PropertyReport.objects.create(
+                property=live_rows[1],
+                reporter=profiles['rafid@rentorium.test'],
+                reason=PropertyReport.Reason.TAKEN,
+                detail='I called the number on Tuesday and the owner said it was '
+                       'let two weeks ago. It is still showing as available.',
+            )
+            PropertyReport.objects.filter(pk=open_report.pk).update(
+                created_at=now - timedelta(days=1, hours=4))
+
+            closed = PropertyReport.objects.create(
+                property=live_rows[0],
+                reporter=profiles['tasnim@rentorium.test'],
+                reason=PropertyReport.Reason.WRONG,
+                detail='The floor plan in the third photo does not look like the '
+                       'same flat as the first two.',
+                status=PropertyReport.Status.DISMISSED,
+                handled_by=agent,
+                handled_at=now - timedelta(days=4),
+                outcome='Checked with the owner: all three photos are the same '
+                        'flat, taken before and after painting.',
+            )
+            PropertyReport.objects.filter(pk=closed.pk).update(
+                created_at=now - timedelta(days=5))
+            AgentAction.objects.create(
+                agent=agent, property=live_rows[0],
+                action=AgentAction.Action.REPORT_DISMISSED,
+                reason='Photos check out against the owner’s own copies.',
+            )
+
+        # -------------------------------------------------- notifications --
         for profile in profiles.values():
             Notification.push(
-                profile, 'Welcome to Rentorium',
-                'Your demo account is ready. Have a look around.',
-                '/', Notification.Kind.SYSTEM,
+                profile, f'Welcome to {settings.SITE_NAME}',
+                'Your account is ready. Finish your profile so owners know who '
+                'they are speaking to.',
+                '/account/edit-profile', Notification.Kind.SYSTEM,
             )
+
+        # ------------------------------------------------- realistic dates --
+        # created_at on reviews, decisions and enquiries is auto_now_add, so
+        # without this every one of them is stamped with the moment the seed
+        # ran. A page of reviews all written today reads as fake.
+        for n, pk in enumerate(PropertyReview.objects.order_by('pk')
+                               .values_list('pk', flat=True)):
+            PropertyReview.objects.filter(pk=pk).update(
+                created_at=now - timedelta(days=5 + n * 11, hours=(n * 7) % 24),
+                updated_at=now - timedelta(days=5 + n * 11),
+            )
+        for n, pk in enumerate(Reviews.objects.order_by('pk')
+                               .values_list('pk', flat=True)):
+            Reviews.objects.filter(pk=pk).update(
+                date=now - timedelta(days=9 + n * 19, hours=(n * 5) % 24))
+        for n, pk in enumerate(AgentAction.objects.order_by('pk')
+                               .values_list('pk', flat=True)):
+            AgentAction.objects.filter(pk=pk).update(
+                created_at=now - timedelta(days=n, hours=(n * 3) % 20 + 1))
+        for n, pk in enumerate(Contact.objects.order_by('pk')
+                               .values_list('pk', flat=True)):
+            Contact.objects.filter(pk=pk).update(
+                created_at=now - timedelta(days=2 + n * 4))
+        for n, pk in enumerate(Message.objects.order_by('pk')
+                               .values_list('pk', flat=True)):
+            Message.objects.filter(pk=pk).update(
+                created_at=now - timedelta(hours=6 + n * 5))
+        for n, pk in enumerate(Notification.objects.order_by('pk')
+                               .values_list('pk', flat=True)):
+            Notification.objects.filter(pk=pk).update(
+                created_at=now - timedelta(hours=1 + n * 9))
 
         self.stdout.write(self.style.SUCCESS('\nDemo data ready.\n'))
         self.stdout.write('  Agent      agent@rentorium.test / Agent@2026')

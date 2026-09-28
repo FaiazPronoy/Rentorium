@@ -1,5 +1,9 @@
+import csv
+
+from django.conf import settings
 from django.contrib import messages
-from django.http import Http404
+from django.core.mail import send_mail
+from django.http import Http404, HttpResponse
 from django.db.models import Avg, Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -10,10 +14,31 @@ from authentication.models import Notification, UserProfile
 from basic.models import Contact
 from property.views import safe_back
 from property.models import (
-    AllProperty, Booking, Conversation, Favourite, PropertyReview, PropertyView,
+    AllProperty, Booking, Conversation, Favourite, PropertyReport,
+    PropertyReview, PropertyView,
 )
 
 from .models import AgentAction
+
+
+def _send_reply(enquiry):
+    """Emails an agent's answer back to whoever wrote in."""
+    if not enquiry.reply or not enquiry.email:
+        return False
+    body = (
+        f'Hello {enquiry.name},\n\n'
+        f'{enquiry.reply}\n\n'
+        f'---\nYou wrote to us about: {enquiry.subject}\n\n'
+        f'{enquiry.message}\n\n'
+        f'- The {settings.SITE_NAME} team'
+    )
+    try:
+        return bool(send_mail(
+            f'Re: {enquiry.subject}', body,
+            settings.DEFAULT_FROM_EMAIL, [enquiry.email], fail_silently=True,
+        ))
+    except Exception:
+        return False
 
 
 def as_pk(raw):
@@ -53,6 +78,9 @@ def agent_dashboard(request):
         'approved': AllProperty.objects.filter(status=AllProperty.Status.APPROVED).count(),
         'rejected': AllProperty.objects.filter(status=AllProperty.Status.REJECTED).count(),
         'total': AllProperty.objects.count(),
+        'reports': PropertyReport.objects.filter(
+            status=PropertyReport.Status.OPEN).count(),
+        'suspended': UserProfile.objects.filter(is_suspended=True).count(),
     }
     me = profile_of(request)
 
@@ -297,12 +325,28 @@ def agent_users(request):
     role = request.GET.get('role')
     if role in dict(UserProfile.Role.choices):
         rows = rows.filter(role=role)
+    else:
+        role = ''
 
+    held = request.GET.get('held')
+    if held == 'suspended':
+        rows = rows.filter(is_suspended=True)
+    elif held == 'active':
+        rows = rows.filter(is_suspended=False)
+    else:
+        held = ''
+
+    total = rows.count()
     return render(request, 'agent_users.html', {
         'rows': rows[:200],
+        'total': total,
         'search': search,
         'role': role,
+        'held': held,
         'roles': UserProfile.Role.choices,
+        'counts': {
+            'suspended': UserProfile.objects.filter(is_suspended=True).count(),
+        },
         'active': 'agentusers',
     })
 
@@ -319,10 +363,17 @@ def agent_enquiries(request):
         if enquiry_id is None:
             raise Http404('No such enquiry.')
         enquiry = get_object_or_404(Contact, pk=enquiry_id)
-        enquiry.reply = (request.POST.get('reply') or '')[:4000]
+        enquiry.reply = (request.POST.get('reply') or '').strip()[:4000]
         enquiry.status = Contact.Status.ANSWERED
         enquiry.save(update_fields=['reply', 'status'])
-        messages.success(request, 'Marked as answered.')
+        # Writing the reply into the database and calling it answered was the
+        # whole of it before: the person who wrote in never heard back.
+        sent = _send_reply(enquiry)
+        messages.success(
+            request,
+            'Reply sent to {}.'.format(enquiry.email) if sent
+            else 'Saved as answered, but the email could not be sent.'
+        )
         return redirect('agent_enquiries')
 
     return render(request, 'agent_enquiries.html', {
@@ -335,3 +386,335 @@ def agent_enquiries(request):
         },
         'active': 'agentenquiries',
     })
+
+
+# bulk actions
+
+MAX_BULK = 50
+
+
+@agent_required
+@post_required
+def bulk_decide(request):
+    """Approve or send back several listings at once.
+
+    The queue often fills with a dozen listings from the same estate, and
+    deciding them one page load at a time is what made agents batch their
+    work. Everything still goes through `_decide`, so each one is logged and
+    each owner is still told individually.
+    """
+    ids = request.POST.getlist('picked')
+    action = request.POST.get('bulk_action')
+    reason = (request.POST.get('bulk_reason') or '').strip()[:200]
+
+    picked = [pk for pk in (as_pk(i) for i in ids) if pk is not None][:MAX_BULK]
+    if not picked:
+        messages.error(request, 'Tick the listings you want to act on first.')
+        return redirect('agent_dashboard')
+
+    if action == 'approve':
+        decision = (AgentAction.Action.APPROVED, AllProperty.Status.APPROVED, '')
+        done_word = 'approved and now live'
+    elif action == 'reject':
+        if not reason:
+            messages.error(request, 'Sending listings back needs a reason the '
+                                    'owners can act on.')
+            return redirect('agent_dashboard')
+        decision = (AgentAction.Action.REJECTED, AllProperty.Status.REJECTED, reason)
+        done_word = 'sent back with your note'
+    else:
+        messages.error(request, 'Pick approve or send back.')
+        return redirect('agent_dashboard')
+
+    # Only ever act on what is actually still waiting: a listing another agent
+    # decided while this page was open must not be silently overruled.
+    rows = list(AllProperty.objects.filter(
+        pk__in=picked, status=AllProperty.Status.PENDING))
+    for listing in rows:
+        _decide(request, listing, decision[0], decision[1], decision[2])
+
+    skipped = len(picked) - len(rows)
+    note = f' {skipped} had already been decided.' if skipped else ''
+    if rows:
+        messages.success(request, f'{len(rows)} listing'
+                                  f'{"" if len(rows) == 1 else "s"} {done_word}.{note}')
+    else:
+        messages.info(request, f'Nothing to do.{note}')
+    return redirect('agent_dashboard')
+
+
+# reports
+
+@agent_required
+def agent_reports(request):
+    """The queue of listings people have flagged."""
+    rows = (PropertyReport.objects
+            .select_related('property', 'property__user', 'reporter', 'handled_by'))
+
+    status = request.GET.get('status', PropertyReport.Status.OPEN)
+    if status in dict(PropertyReport.Status.choices):
+        rows = rows.filter(status=status)
+    else:
+        status = ''
+
+    reason = request.GET.get('reason')
+    if reason in dict(PropertyReport.Reason.choices):
+        rows = rows.filter(reason=reason)
+    else:
+        reason = ''
+
+    return render(request, 'agent_reports.html', {
+        'rows': rows[:200],
+        'status': status,
+        'reason': reason,
+        'statuses': PropertyReport.Status.choices,
+        'reasons': PropertyReport.Reason.choices,
+        'counts': {
+            'open': PropertyReport.objects.filter(
+                status=PropertyReport.Status.OPEN).count(),
+            'upheld': PropertyReport.objects.filter(
+                status=PropertyReport.Status.UPHELD).count(),
+            'dismissed': PropertyReport.objects.filter(
+                status=PropertyReport.Status.DISMISSED).count(),
+        },
+        'active': 'agentreports',
+    })
+
+
+@agent_required
+@post_required
+def resolve_report(request, report_id):
+    """Uphold a report (which pulls the listing) or dismiss it."""
+    report = get_object_or_404(
+        PropertyReport.objects.select_related('property'), pk=report_id)
+    if report.status != PropertyReport.Status.OPEN:
+        messages.info(request, 'That report has already been dealt with.')
+        return safe_back(request, reverse('agent_reports'))
+
+    me = profile_of(request)
+    outcome = (request.POST.get('outcome') or '').strip()[:200]
+    uphold = request.POST.get('decision') == 'uphold'
+
+    report.status = (PropertyReport.Status.UPHELD if uphold
+                     else PropertyReport.Status.DISMISSED)
+    report.handled_by = me
+    report.handled_at = timezone.now()
+    report.outcome = outcome
+    report.save(update_fields=['status', 'handled_by', 'handled_at', 'outcome'])
+
+    AgentAction.objects.create(
+        agent=me, property=report.property,
+        action=(AgentAction.Action.REPORT_UPHELD if uphold
+                else AgentAction.Action.REPORT_DISMISSED),
+        reason=outcome or report.get_reason_display(),
+    )
+
+    if uphold:
+        # An upheld report takes the listing off the site and tells the owner
+        # what to fix, using the same path as a normal rejection.
+        if report.property.status != AllProperty.Status.REJECTED:
+            _decide(request, report.property, AgentAction.Action.REJECTED,
+                    AllProperty.Status.REJECTED,
+                    outcome or f'Reported: {report.get_reason_display().lower()}')
+        # Every other open report on the same listing is now settled too.
+        PropertyReport.objects.filter(
+            property=report.property, status=PropertyReport.Status.OPEN
+        ).update(status=PropertyReport.Status.UPHELD, handled_by=me,
+                 handled_at=timezone.now(),
+                 outcome=outcome or 'Handled with an earlier report.')
+        messages.success(request, 'Report upheld and the listing taken down.')
+    else:
+        messages.success(request, 'Report dismissed. The listing stays up.')
+
+    if report.reporter:
+        Notification.push(
+            report.reporter,
+            'Thanks for the report' if not uphold else 'We acted on your report',
+            ('We looked at "{}" and left it up.'.format(
+                report.property.Property_Name)
+             if not uphold else
+             'We took "{}" down after your report.'.format(
+                 report.property.Property_Name)),
+            kind=Notification.Kind.SYSTEM,
+        )
+    return safe_back(request, reverse('agent_reports'))
+
+
+# accounts
+
+@agent_required
+@post_required
+def suspend_user(request, profile_id):
+    target = get_object_or_404(UserProfile, pk=profile_id)
+    me = profile_of(request)
+
+    if target == me:
+        messages.error(request, 'You cannot suspend your own account.')
+        return safe_back(request, reverse('agent_users'))
+    if target.is_agent:
+        messages.error(request, 'An agent account cannot be suspended from here.')
+        return safe_back(request, reverse('agent_users'))
+    if target.is_suspended:
+        messages.info(request, f'{target.name} is already suspended.')
+        return safe_back(request, reverse('agent_users'))
+
+    reason = (request.POST.get('reason') or '').strip()[:200]
+    if not reason:
+        messages.error(request, 'Say why. The person is told the reason.')
+        return safe_back(request, reverse('agent_users'))
+
+    hidden = target.properties.filter(is_archived=False).count()
+    target.suspend(by=me, reason=reason)
+    AgentAction.objects.create(
+        agent=me, subject=target, action=AgentAction.Action.SUSPENDED, reason=reason,
+    )
+    Notification.push(
+        target, 'Your account has been suspended', reason,
+        kind=Notification.Kind.ALERT,
+    )
+    messages.success(
+        request,
+        f'{target.name} is suspended'
+        + (f' and {hidden} listing{"" if hidden == 1 else "s"} taken off the site.'
+           if hidden else '.'),
+    )
+    return safe_back(request, reverse('agent_users'))
+
+
+@agent_required
+@post_required
+def lift_suspension(request, profile_id):
+    target = get_object_or_404(UserProfile, pk=profile_id)
+    if not target.is_suspended:
+        messages.info(request, f'{target.name} is not suspended.')
+        return safe_back(request, reverse('agent_users'))
+
+    me = profile_of(request)
+    back = target.properties.filter(is_archived=True).count()
+    target.lift_suspension(by=me)
+    AgentAction.objects.create(
+        agent=me, subject=target, action=AgentAction.Action.LIFTED,
+        reason=(request.POST.get('reason') or '')[:200],
+    )
+    Notification.push(
+        target, 'Your account is active again',
+        'An agent lifted the suspension. Everything you had listed is back.',
+        kind=Notification.Kind.SYSTEM,
+    )
+    messages.success(
+        request,
+        f'{target.name} can sign in again'
+        + (f', and {back} listing{"" if back == 1 else "s"} are back on the site.'
+           if back else '.'),
+    )
+    return safe_back(request, reverse('agent_users'))
+
+
+# csv export
+
+def _csv(name, header, rows):
+    """A download, streamed straight out of the queryset."""
+    stamp = timezone.localdate().isoformat()
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="rentorium-{name}-{stamp}.csv"'
+    # Excel opens a UTF-8 file as Latin-1 unless it sees the byte order mark,
+    # which turns every Bengali name and every ৳ into mojibake.
+    response.write('﻿')
+    writer = csv.writer(response)
+    writer.writerow(header)
+    writer.writerows(rows)
+    return response
+
+
+EXPORTS = ('listings', 'users', 'enquiries', 'reports', 'log')
+
+
+@agent_required
+def agent_export(request, what):
+    if what not in EXPORTS:
+        raise Http404('Nothing to export by that name.')
+
+    if what == 'listings':
+        rows = (AllProperty.objects.select_related('user')
+                .annotate(saves=Count('favourited_by', distinct=True),
+                          reviews_n=Count('reviews', distinct=True))
+                .order_by('pk'))
+        status = request.GET.get('status')
+        if status in dict(AllProperty.Status.choices):
+            rows = rows.filter(status=status)
+        return _csv('listings', [
+            'ID', 'Title', 'Type', 'Listed for', 'Status', 'Featured',
+            'Price', 'Service charge', 'Area', 'City', 'Size (sq ft)',
+            'Owner', 'Owner email', 'Views', 'Saves', 'Reviews',
+            'Created', 'Approved',
+        ], [[
+            r.pk, r.Property_Name, r.get_Property_type_display(),
+            r.get_Property_on_display(), r.get_status_display(),
+            'yes' if r.is_featured else 'no',
+            r.Price, r.service_charge, r.Area, r.City,
+            r.Total_area_in_sqft or '',
+            r.user.name if r.user else '', r.user.email if r.user else '',
+            r.view_count, r.saves, r.reviews_n,
+            timezone.localtime(r.created_at).strftime('%Y-%m-%d %H:%M'),
+            timezone.localtime(r.approved_at).strftime('%Y-%m-%d %H:%M')
+            if r.approved_at else '',
+        ] for r in rows])
+
+    if what == 'users':
+        rows = (UserProfile.objects.select_related('user')
+                .annotate(listings=Count('properties', distinct=True),
+                          bookings=Count('bookings_made', distinct=True))
+                .order_by('pk'))
+        return _csv('users', [
+            'ID', 'Name', 'Email', 'Phone', 'Role', 'Verified', 'Suspended',
+            'Suspended reason', 'Listings', 'Viewings booked', 'Joined',
+            'Last login',
+        ], [[
+            r.pk, r.name, r.email, r.contact_no, r.get_role_display(),
+            'yes' if r.is_verified else 'no',
+            'yes' if r.is_suspended else 'no', r.suspended_reason,
+            r.listings, r.bookings,
+            timezone.localtime(r.created_at).strftime('%Y-%m-%d'),
+            timezone.localtime(r.user.last_login).strftime('%Y-%m-%d %H:%M')
+            if r.user and r.user.last_login else '',
+        ] for r in rows])
+
+    if what == 'enquiries':
+        rows = Contact.objects.order_by('pk')
+        return _csv('enquiries', [
+            'ID', 'Name', 'Email', 'Subject', 'Message', 'Status', 'Reply',
+            'Received',
+        ], [[
+            r.pk, r.name, r.email, r.subject, r.message,
+            r.get_status_display(), r.reply,
+            timezone.localtime(r.created_at).strftime('%Y-%m-%d %H:%M'),
+        ] for r in rows])
+
+    if what == 'reports':
+        rows = (PropertyReport.objects
+                .select_related('property', 'reporter', 'handled_by').order_by('pk'))
+        return _csv('reports', [
+            'ID', 'Listing ID', 'Listing', 'Reason', 'Detail', 'Reported by',
+            'Status', 'Handled by', 'Outcome', 'Reported', 'Handled',
+        ], [[
+            r.pk, r.property_id, r.property.Property_Name,
+            r.get_reason_display(), r.detail,
+            r.reporter.name if r.reporter else 'removed account',
+            r.get_status_display(),
+            r.handled_by.name if r.handled_by else '', r.outcome,
+            timezone.localtime(r.created_at).strftime('%Y-%m-%d %H:%M'),
+            timezone.localtime(r.handled_at).strftime('%Y-%m-%d %H:%M')
+            if r.handled_at else '',
+        ] for r in rows])
+
+    rows = AgentAction.objects.select_related('agent', 'property', 'subject').order_by('pk')
+    return _csv('moderation-log', [
+        'ID', 'When', 'Agent', 'Action', 'Listing', 'Account', 'Reason',
+    ], [[
+        r.pk, timezone.localtime(r.created_at).strftime('%Y-%m-%d %H:%M'),
+        r.agent.name if r.agent else 'removed agent',
+        r.get_action_display(),
+        r.property.Property_Name if r.property else '',
+        r.subject.name if r.subject else '',
+        r.reason,
+    ] for r in rows])

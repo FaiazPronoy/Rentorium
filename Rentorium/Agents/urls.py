@@ -15,4 +15,13 @@ urlpatterns = [
     path('log/', views.agent_log, name='agent_log'),
     path('users/', views.agent_users, name='agent_users'),
     path('enquiries/', views.agent_enquiries, name='agent_enquiries'),
+
+    # moderation at scale
+    path('bulk/', views.bulk_decide, name='bulk_decide'),
+    path('reports/', views.agent_reports, name='agent_reports'),
+    path('reports/<int:report_id>/resolve/', views.resolve_report, name='resolve_report'),
+    path('users/<int:profile_id>/suspend/', views.suspend_user, name='suspend_user'),
+    path('users/<int:profile_id>/reinstate/', views.lift_suspension,
+         name='lift_suspension'),
+    path('export/<str:what>.csv', views.agent_export, name='agent_export'),
 ]
