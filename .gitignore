@@ -16,3 +16,6 @@ Rentorium/static_root/
 .vscode/
 .idea/
 *.log
+
+# browser check screenshots
+tools/shots/

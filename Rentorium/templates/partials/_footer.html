@@ -3,7 +3,7 @@
     <div class="cols">
       <div>
         <a class="brand" href="{% url 'home' %}">
-          <span class="brand-mark">R</span>{{ SITE_NAME }}
+          <svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor"><path d="M3 3h22v22h-9M10 25H3V3" stroke-width="2.4"/><path d="M10 25a6 6 0 0 1 6-6v6" stroke-width="1.5"/><path d="M9 3h10" stroke-width="5" class="brand-window"/></svg>{{ SITE_NAME }}
         </a>
         <p class="tiny" style="max-width:34ch;color:rgba(255,255,255,.62)">
           {{ SITE_TAGLINE }} Every listing is checked by a member of our team before
@@ -43,9 +43,12 @@
         </div>
       </div>
     </div>
-    <div class="bottom">
-      <span>&copy; {% now "Y" %} {{ SITE_LEGAL_NAME }}. All rights reserved.</span>
-      <span>{{ SITE_ADDRESS }}</span>
+    {% comment %} Like the title block in the corner of every drawing. {% endcomment %}
+    <div class="title-block">
+      <div><b>Project</b><span>{{ SITE_NAME }}, property in Bangladesh</span></div>
+      <div><b>Drawn for</b><span>CSE471, BRAC University</span></div>
+      <div><b>Data</b><span>Demo listings</span></div>
+      <div><b>Year</b><span>{% now "Y" %}</span></div>
     </div>
   </div>
 </footer>

@@ -44,7 +44,7 @@ class UserProfile(models.Model):
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.RENTER)
     is_agent = models.BooleanField(default=False)          # mirrors role
     is_verified = models.BooleanField(default=False)
-    avatar_color = models.CharField(max_length=7, default='#009C6B')
+    avatar_color = models.CharField(max_length=7, default='#1D4E9E')
 
     # --- moderation -------------------------------------------------------
     # A suspended person keeps their account and their data; they simply

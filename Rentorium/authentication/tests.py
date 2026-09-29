@@ -224,3 +224,32 @@ class DashboardTests(TestCase):
         r = self.client.get(reverse('dashboard'))
         self.assertEqual(r.status_code, 200)
         self.assertEqual(sum(c['value'] for c in r.context['chart']), 0)
+
+
+class DemoKeyTests(TestCase):
+    """The sign in page hangs a key for each demo person, but only for the
+    ones that exist here, so a fresh install shows none."""
+
+    def test_no_keys_on_an_empty_database(self):
+        self.assertEqual(self.client.get(reverse('signin')).context['demo'], [])
+
+    def test_a_key_signs_in_as_that_person(self):
+        from authentication.demo import DEMO_PASSWORD
+        user = User.objects.create_user(username='rafid@rentorium.test',
+                                        email='rafid@rentorium.test', password=DEMO_PASSWORD)
+        profile = user.UserProfile
+        profile.name = 'Rafid Hasan'
+        profile.save()
+
+        keys = self.client.get(reverse('signin')).context['demo']
+        self.assertEqual([(k['role'], k['name']) for k in keys], [('Renter', 'Rafid')])
+
+        r = self.client.post(reverse('signin'),
+                             {'username': keys[0]['email'], 'password': keys[0]['password']})
+        self.assertRedirects(r, '/')
+
+    def test_a_suspended_demo_person_gets_no_key(self):
+        from authentication.demo import DEMO_PASSWORD
+        User.objects.create_user(username='faiaz@rentorium.test', email='faiaz@rentorium.test',
+                                 password=DEMO_PASSWORD, is_active=False)
+        self.assertEqual(self.client.get(reverse('signin')).context['demo'], [])

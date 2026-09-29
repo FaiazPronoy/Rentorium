@@ -224,8 +224,8 @@ def agent_stats(request):
             'label': label,
             'count': rows.count(),
             'avg_price': rows.aggregate(v=Avg('Price'))['v'] or 0,
-            'colour': {'residential': '#009C6B', 'commercial': '#0FB5AE',
-                       'land': '#2E8FB8'}[key],
+            'colour': {'residential': '#1D4E9E', 'commercial': '#0E6E86',
+                       'land': '#B98600'}[key],
         })
 
     by_area = (live.values('Area')

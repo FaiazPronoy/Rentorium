@@ -7,6 +7,7 @@ Everything it makes is deterministic, so the screenshots and the marking run
 look the same every time. Use --wipe to start from scratch.
 """
 import random
+from authentication.demo import AGENT_PASSWORD, DEMO_PASSWORD
 from datetime import timedelta
 from pathlib import Path
 
@@ -192,14 +193,14 @@ class Command(BaseCommand):
         self.stdout.write(f'  {len(FAQS)} FAQs')
 
         # -------------------------------------------------------- users --
-        colours = ['#46552F', '#A4552F', '#232719', '#6E5A7D', '#B07A2A', '#4C6B7A']
+        colours = ['#1D4E9E', '#A4552F', '#0B2545', '#6E5A7D', '#7A5A00', '#0E6E86']
         profiles = {}
 
         agent_user, created = User.objects.get_or_create(
             username='agent@rentorium.test',
             defaults={'email': 'agent@rentorium.test'})
         if created:
-            agent_user.set_password('Agent@2026')
+            agent_user.set_password(AGENT_PASSWORD)
             agent_user.save()
         agent = agent_user.UserProfile
         agent.name = 'Tahmid Karim'
@@ -208,7 +209,7 @@ class Command(BaseCommand):
         agent.is_agent = True
         agent.is_verified = True
         agent.contact_no = '01700000000'
-        agent.avatar_color = '#232719'
+        agent.avatar_color = '#0B2545'
         agent.bio = 'Agent at Rentorium. I check every listing before it goes live.'
         agent.save()
         profiles['agent'] = agent
@@ -217,7 +218,7 @@ class Command(BaseCommand):
             user, created = User.objects.get_or_create(
                 username=email, defaults={'email': email})
             if created:
-                user.set_password('Rentorium@2026')
+                user.set_password(DEMO_PASSWORD)
                 user.save()
             profile = user.UserProfile
             profile.name = name

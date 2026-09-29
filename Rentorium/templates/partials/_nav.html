@@ -1,8 +1,15 @@
 <nav class="nav no-print">
   <div class="nav-inner">
-    <a class="brand" href="{% url 'home' %}">
-      <span class="brand-mark">R</span>{{ SITE_NAME }}
+    <a class="brand" href="{% url 'home' %}" aria-label="{{ SITE_NAME }}, home">
+      <svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor"><path d="M3 3h22v22h-9M10 25H3V3" stroke-width="2.4"/><path d="M10 25a6 6 0 0 1 6-6v6" stroke-width="1.5"/><path d="M9 3h10" stroke-width="5" class="brand-window"/></svg>{{ SITE_NAME }}
     </a>
+
+    <form class="nav-search" method="get" action="{% url 'property_list' %}" role="search">
+      {% icon "search" %}
+      <label class="sr-only" for="navSearch">Search listings</label>
+      <input id="navSearch" type="search" name="q" placeholder="Search an area, road or landmark"
+             value="{{ request.GET.q|default:'' }}" autocomplete="off">
+    </form>
 
     <button class="nav-toggle" onclick="toggleNav()" aria-label="Open the menu"
             aria-controls="navLinks">{% icon "menu" %}</button>
@@ -78,3 +85,18 @@
     </div>
   </div>
 </nav>
+
+{% comment %} The ways people look for a place, one tap each. {% endcomment %}
+<div class="rail no-print">
+  <div class="rail-inner">
+    {% with on=request.GET.property_on kind=request.GET.property_type %}
+    <a href="{% url 'property_list' %}?property_on=rent" class="{% if on == 'rent' %}on{% endif %}">To rent</a>
+    <a href="{% url 'property_list' %}?property_on=sale" class="{% if on == 'sale' %}on{% endif %}">To buy</a>
+    <a href="{% url 'property_list' %}?property_type=residential" class="{% if kind == 'residential' %}on{% endif %}">Residential</a>
+    <a href="{% url 'property_list' %}?property_type=commercial" class="{% if kind == 'commercial' %}on{% endif %}">Commercial</a>
+    <a href="{% url 'property_list' %}?property_type=land" class="{% if kind == 'land' %}on{% endif %}">Land</a>
+    <a href="{% url 'compare' %}" class="{% if active == 'compare' %}on{% endif %}">Compare{% if compare_count %} ({{ compare_count }}){% endif %}</a>
+    {% endwith %}
+    <span class="rail-note">Every listing checked against its ownership paper</span>
+  </div>
+</div>

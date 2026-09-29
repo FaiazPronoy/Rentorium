@@ -2,14 +2,15 @@
 
 **A Property Rental & Sales Platform** · Django 5, SQLite
 
-🔗 **Live demo:** https://faiazpronoy.pythonanywhere.com · 📦 **[All versions](../../releases)**
+**Live demo:** https://faiazpronoy.pythonanywhere.com · **[All versions](../../releases)**
 
 | | |
 |---|---|
-| **v2.0**: current | Rebuilt solo: new interface, agent console, private ownership documents, 177 tests. |
-| **v1.0**: [see release](../../releases/tag/v1.0) | The original CSE471 group submission at BRAC University, built on a Bootstrap template. |
+| **v2.0**, current | Rebuilt solo: a blueprint interface, agent console, private ownership documents, 180 tests. |
+| **v1.0**, [see release](../../releases/tag/v1.0) | The original CSE471 group submission at BRAC University, built on a Bootstrap template. |
 
-**Try it:** sign in as a renter with `rafid@rentorium.test` / `Rentorium@2026`, or as the agent with `agent@rentorium.test` / `Agent@2026`.
+**Try it:** the sign in page has a key for each demo person, a renter, an owner
+and the agent. Take one off the rack and you are in; nothing to type.
 
 ---
 
@@ -19,7 +20,19 @@ viewing, message the owner, and let an agent keep the whole thing honest.
 Django 5 and SQLite. Two Python dependencies, no build step, no front end
 framework: the interface is hand written CSS and plain JavaScript, and every
 icon is inline SVG. The only external request is the web font, which falls back
-to a system serif and sans pair, so the site works the same offline.
+to the system sans, so the site works the same offline.
+
+### What it looks like
+
+A property platform drawn as a plan. The page sits on drafting paper with a
+fine grid, linework is blueprint blue, and trace paper yellow marks things up:
+the dimension line under the headline, the window in the logo, the tag on a
+key. In the dark the whole site turns into an actual blueprint, white lines on
+deep blue. The logo is the plan of one room with its door swing; the footer is
+the title block every drawing carries. Headings are Archivo set wide, plan
+labels are the same family condensed, and sizes and prices use DM Mono. The
+header puts the search where people start, with a rail underneath for the ways
+they look: to rent, to buy, residential, commercial, land, compare.
 
 ---
 
@@ -36,7 +49,11 @@ python manage.py seed_demo       # fills it with realistic demo data
 python manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>.
+Open <http://127.0.0.1:8000/>. On Windows, `RUN-Rentorium.bat` next to this
+folder does all of the above in one double-click.
+
+The sign in page offers these as keys; the passwords are here for anyone
+signing in by hand.
 
 | Role | Sign in with |
 |---|---|
@@ -107,7 +124,7 @@ I came back to this after the course finished. Three access control checks were
 missing, and each now has a test that fails if the check is removed again.
 
 - **Anyone signed in could read anyone's ownership papers.** The check was
-  `if request.user.UserProfile.is_agent or property_instance.user_id`: a
+  `if request.user.UserProfile.is_agent or property_instance.user_id`, a
   primary key is always truthy, so the condition was always true. Permission
   now lives on the model in `can_documents_be_seen_by`, and the file itself is
   stored outside `MEDIA_ROOT` so it has no guessable URL.
@@ -119,7 +136,7 @@ missing, and each now has a test that fails if the check is removed again.
 
 Other things that were broken:
 
-- `LandProperty.Road_size_in_sqft = models.IntegerField`: no brackets, so the
+- `LandProperty.Road_size_in_sqft = models.IntegerField`, no brackets, so the
   column was never created.
 - The context processor called `.get()` with no guard, so a user without a
   profile row took the whole site down. A signal now creates profiles.
@@ -228,12 +245,12 @@ cd Rentorium
 python manage.py test
 ```
 
-**122 tests, all passing.** They cover:
+**180 tests, all passing.** They cover:
 
 - models: slugs, status transitions, price per square foot, subtype resolution,
   and the unique constraints
 - access control, from both sides: a stranger is refused, the owner and the
-  agent are let in: for documents, editing, deleting, conversations and the
+  agent are let in, for documents, editing, deleting, conversations and the
   agent console
 - private documents: the file has no public URL, and only the document view
   hands it over
@@ -247,12 +264,22 @@ python manage.py test
 - agent: approving, rejecting without a reason, withdrawing an approval, the
   decision history surviving three changes, GET refusals
 - the dashboard and the saved searches pages
+- the demo keys: none on an empty database, none for a suspended account, and
+  each one signs in as its person
+
+`tools/browser_checks.py` (Playwright, using the Edge that comes with Windows)
+opens every page a visitor, a renter, an owner and the agent can reach, in
+light and dark, and fails on any status other than 200, any console error,
+any text below WCAG AA contrast, or sideways scrolling at 390 px. It also
+takes each key off the rack, tries the password eye, and checks that the
+header search and the rail both filter. Run it against
+`runserver 127.0.0.1:8020` on a seeded database.
 
 ---
 
 ## Known limitations
 
-- Tests cover the server side only; there are none for the JavaScript.
+- The JavaScript is covered by the browser check, not by unit tests.
 - No rate limiting on registration, only on sign in.
 - Email is console-only unless SMTP settings are supplied.
 - Images are resized on upload but not served in multiple sizes.

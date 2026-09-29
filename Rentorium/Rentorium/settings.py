@@ -196,11 +196,11 @@ SUPPORT_EMAIL = env('SUPPORT_EMAIL', EMAIL_HOST_USER)
 
 # app config
 SITE_NAME = 'Rentorium'
-SITE_LEGAL_NAME = 'Rentorium Technologies Limited'
+SITE_LEGAL_NAME = 'Rentorium, a CSE471 project at BRAC University'
 SITE_TAGLINE = 'Property in Bangladesh, without the guesswork.'
-SITE_ADDRESS = 'Level 7, 12 North Avenue, Gulshan 2, Dhaka 1212'
-SITE_PHONE = '+880 9612 000 200'
-SITE_EMAIL = 'hello@rentorium.com.bd'
+SITE_ADDRESS = 'BRAC University, Merul Badda, Dhaka'
+SITE_PHONE = '+880 1700 000 000'
+SITE_EMAIL = 'hello@rentorium.test'
 SITE_HOURS = 'Saturday to Thursday, 9am to 7pm'
 CURRENCY_SIGN = '৳'
 PROPERTIES_PER_PAGE = 9

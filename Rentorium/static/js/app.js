@@ -613,26 +613,6 @@
   }
 
   /* ---------------------------------------------------------------- *
-     The load veil. Markup sits at the top of the body and is only ever
-     visible with scripting on; this lifts it as soon as the document is
-     ready, and the stylesheet lifts it anyway after three seconds so a
-     script that never arrives cannot leave the page behind a sheet.
-   * ---------------------------------------------------------------- */
-  function wireVeil() {
-    var v = document.getElementById('veil');
-    if (!v) return;
-    function lift() {
-      v.classList.add('gone');
-      setTimeout(function () { if (v.parentNode) v.parentNode.removeChild(v); }, 700);
-    }
-    /* long enough to read as a deliberate transition, short enough not to
-       be a wait; if the page is still loading, hold until it is not. */
-    if (document.readyState === 'complete') setTimeout(lift, 260);
-    else window.addEventListener('load', function () { setTimeout(lift, 200); });
-    setTimeout(lift, 2200);   /* never hold the page hostage to one image */
-  }
-
-  /* ---------------------------------------------------------------- *
      Hero stage: photographs crossfade, each drifting while it shows.
    * ---------------------------------------------------------------- */
   function wireStage() {
@@ -1073,8 +1053,7 @@
     wireNavShadow(); wireProgress(); wireMenus(); wireModals(); wireConfirm();
     wirePasswordEyes(); wireFavourites(); wireCompare(); wireStrength();
     wireFilters(); wireOnce(); wireToasts(); wirePreview(); wireThread();
-    wirePriceHint(); wireGallery(); wireCounters(); wireImageFade();
-    wireVeil(); wireStage(); wireSays(); wireToTop();
+    wirePriceHint(); wireGallery(); wireCounters(); wireImageFade(); wireStage(); wireSays(); wireToTop();
     wireSuggest(); wireBulk();
     markReveal(); wireReveal();
   }

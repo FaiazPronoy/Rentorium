@@ -13,6 +13,7 @@ from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 
 from .decorators import login_required_message, post_required, profile_of
+from .demo import demo_keys
 from .forms import ChangePasswordForm, EditProfileForm, SignInForm, SignUpForm
 from .models import LoginAttempt, Notification, UserProfile
 
@@ -109,7 +110,7 @@ def signin(request):
                 )
                 login(request, user)
                 request.session.cycle_key()
-                messages.success(request, f'Welcome back, {user.UserProfile.first_name}.')
+                messages.success(request, f'Signed in. Hello, {user.UserProfile.first_name}.')
                 return redirect(_safe_next(request, '/'))
 
             LoginAttempt.objects.create(
@@ -136,6 +137,7 @@ def signin(request):
                 return render(request, 'signin.html', {
                     'form': form, 'locked': False,
                     'next': _safe_next(request, ''),
+                    'demo': demo_keys(),
                 })
 
             left = MAX_LOGIN_FAILURES - failures - 1
@@ -146,6 +148,7 @@ def signin(request):
         'form': form,
         'locked': locked,
         'next': _safe_next(request, ''),
+        'demo': demo_keys(),
     })
 
 
