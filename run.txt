@@ -1,6 +1,10 @@
 Rentorium quick start
 =====================
 
+On Windows, double-click RUN-Rentorium.bat. It does everything below.
+
+By hand:
+
     python -m venv .venv
     .venv\Scripts\activate            (Windows)
     source .venv/bin/activate         (macOS or Linux)

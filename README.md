@@ -49,7 +49,7 @@ python manage.py seed_demo       # fills it with realistic demo data
 python manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>. On Windows, `RUN-Rentorium.bat` next to this
+Open <http://127.0.0.1:8000/>. On Windows, `RUN-Rentorium.bat` in this
 folder does all of the above in one double-click.
 
 The sign in page offers these as keys; the passwords are here for anyone
