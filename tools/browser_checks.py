@@ -85,7 +85,7 @@ CONTRAST_JS = r"""
     const cs = getComputedStyle(el);
     const box = el.getBoundingClientRect();
     if (cs.visibility === 'hidden' || cs.display === 'none' || box.width === 0 || box.height === 0) continue;
-    if (el.closest('[aria-hidden="true"], .sr-only, [hidden], option, script, style, .menu-panel, .stage, .pcard-media, .hero-photo, .cat, .cat-tile')) continue;
+    if (el.closest('[aria-hidden="true"], .sr-only, [hidden], option, script, style, .menu-panel, .stage, .pcard-media, .hero-photo, .cat-tile, .auth-photo')) continue;
     if (parseFloat(cs.opacity) === 0) continue;
     const fg = parse(cs.color);
     const bg = background(el);

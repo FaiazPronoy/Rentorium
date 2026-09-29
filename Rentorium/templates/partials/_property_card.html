@@ -2,10 +2,8 @@
 {% comment %}
 One property card. Expects `p`. Optional: `compare_ids`.
 
-Kept deliberately short: photo, price, one line of title, one line of
-address, three facts. The earlier version stacked six rows of chrome into a
-300px box, which is what made a wall of them look cluttered rather than
-considered.
+The photograph is the card. Underneath, in the order people read a listing:
+what and where, the rating, a few facts, then the price.
 {% endcomment %}
 <article class="pcard">
   <a class="pcard-media" href="{{ p.get_absolute_url }}" aria-label="{{ p.Property_Name }}">
@@ -27,6 +25,14 @@ considered.
   </a>
 
   <div class="pcard-tools">
+    <form method="post" action="{% url 'toggle_compare' p.pk %}" data-compare>
+      {% csrf_token %}
+      <button class="icon-btn {% if p.pk in compare_ids %}on{% endif %}" type="submit"
+              title="{% if p.pk in compare_ids %}In your comparison{% else %}Add to comparison{% endif %}">
+        {% icon "compare" %}
+        <span class="sr" data-compare-label>{% if p.pk in compare_ids %}Comparing{% else %}Compare{% endif %}</span>
+      </button>
+    </form>
     {% if is_logged_in %}
       <form method="post" action="{% url 'toggle_favourite' p.pk %}" data-fav>
         {% csrf_token %}
@@ -37,29 +43,19 @@ considered.
         </button>
       </form>
     {% endif %}
-    <form method="post" action="{% url 'toggle_compare' p.pk %}" data-compare>
-      {% csrf_token %}
-      <button class="icon-btn {% if p.pk in compare_ids %}on{% endif %}" type="submit"
-              title="{% if p.pk in compare_ids %}In your comparison{% else %}Add to comparison{% endif %}">
-        {% icon "compare" %}
-        <span class="sr" data-compare-label>{% if p.pk in compare_ids %}Comparing{% else %}Compare{% endif %}</span>
-      </button>
-    </form>
   </div>
 
   <div class="pcard-body">
-    <div class="pcard-top">
-      <span class="pcard-price">{{ CURRENCY_SIGN }}&nbsp;{{ p.Price|money }}<small>{{ p.price_label }}</small></span>
+    <div class="between" style="gap:.6rem;flex-wrap:nowrap">
+      <a class="pcard-title" href="{{ p.get_absolute_url }}">{{ p.Property_Name }}</a>
       {% if p.rating %}<span class="rating-pill">{% icon "star" %} {{ p.rating }}</span>{% endif %}
     </div>
-
-    <a class="pcard-title" href="{{ p.get_absolute_url }}">{{ p.Property_Name }}</a>
     <div class="pcard-loc">{{ p.Area }}, {{ p.City }}{% if p.landmark %} &middot; {{ p.landmark }}{% endif %}</div>
-
     <div class="pcard-facts">
       {% for value, label in p.headline_facts|slice:':3' %}
         <span><b>{{ value }}</b>&nbsp;{{ label }}</span>
       {% endfor %}
     </div>
+    <div class="pcard-price">{{ CURRENCY_SIGN }}&nbsp;{{ p.Price|money }}<small>{{ p.price_label }}</small></div>
   </div>
 </article>

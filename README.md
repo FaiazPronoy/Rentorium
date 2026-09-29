@@ -24,15 +24,16 @@ to the system sans, so the site works the same offline.
 
 ### What it looks like
 
-A property platform drawn as a plan. The page sits on drafting paper with a
-fine grid, linework is blueprint blue, and trace paper yellow marks things up:
-the dimension line under the headline, the window in the logo, the tag on a
-key. In the dark the whole site turns into an actual blueprint, white lines on
-deep blue. The logo is the plan of one room with its door swing; the footer is
-the title block every drawing carries. Headings are Archivo set wide, plan
-labels are the same family condensed, and sizes and prices use DM Mono. The
-header puts the search where people start, with a rail underneath for the ways
-they look: to rent, to buy, residential, commercial, land, compare.
+A home is a warm thing, so the site is too. Warm white paper, a deep wine for
+anything you press, brass for ratings and the small moments of praise, and the
+photographs doing most of the talking. The home page opens on a large photo
+with the search sitting on it; listing cards are the photo first, with the
+name, area, a few facts and the price underneath and a heart to save it. The
+header keeps the search in the middle, with a row of icons under it for the
+ways people look: to rent, to buy, homes, offices, land, compare. Signing in
+is a photograph on one side and the form on the other, with a card for each
+demo person. Type is Plus Jakarta Sans, with Instrument Serif in italics for a
+word or two that deserves it. At night the brass takes the lead.
 
 ---
 

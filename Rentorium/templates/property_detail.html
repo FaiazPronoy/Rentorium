@@ -45,7 +45,7 @@
       <h1 class="mb0">{{ listing.Property_Name }}</h1>
       <p class="muted mb0" style="display:flex;align-items:center;gap:.4rem;margin-top:.3rem">
         {% icon "pin" %}<span>{{ listing.full_address }}{% if listing.landmark %}
-          &middot; near {{ listing.landmark }}{% endif %}</span>
+          &middot; {{ listing.landmark }}{% endif %}</span>
       </p>
     </div>
     <div class="price-block">

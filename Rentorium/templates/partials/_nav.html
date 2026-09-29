@@ -1,13 +1,13 @@
 <nav class="nav no-print">
   <div class="nav-inner">
     <a class="brand" href="{% url 'home' %}" aria-label="{{ SITE_NAME }}, home">
-      <svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor"><path d="M3 3h22v22h-9M10 25H3V3" stroke-width="2.4"/><path d="M10 25a6 6 0 0 1 6-6v6" stroke-width="1.5"/><path d="M9 3h10" stroke-width="5" class="brand-window"/></svg>{{ SITE_NAME }}
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 4l8.5 6.5V20a1 1 0 0 1-1 1H15v-6h-6v6H4.5a1 1 0 0 1-1-1z"/></svg>{{ SITE_NAME }}
     </a>
 
     <form class="nav-search" method="get" action="{% url 'property_list' %}" role="search">
       {% icon "search" %}
       <label class="sr-only" for="navSearch">Search listings</label>
-      <input id="navSearch" type="search" name="q" placeholder="Search an area, road or landmark"
+      <input id="navSearch" type="search" name="q" placeholder="Where do you want to live?"
              value="{{ request.GET.q|default:'' }}" autocomplete="off">
     </form>
 
@@ -16,7 +16,6 @@
 
     <div class="nav-links" id="navLinks">
       <a href="{% url 'property_list' %}" class="{% if active == 'browse' %}active{% endif %}">Browse</a>
-      <a href="{% url 'property_type' %}" class="{% if active == 'types' %}active{% endif %}">Categories</a>
 
       {% if is_logged_in %}
         <a href="{% url 'favourites' %}" class="{% if active == 'favourites' %}active{% endif %}">Saved</a>
@@ -30,6 +29,23 @@
            title="Notifications" aria-label="Notifications">
           {% icon "bell" %}{% if unread_notifications %}<span class="dot">{{ unread_notifications }}</span>{% endif %}
         </a>
+      {% else %}
+        <a href="{% url 'about' %}" class="{% if active == 'about' %}active{% endif %}">About</a>
+      {% endif %}
+
+      <button id="themeBtn" onclick="toggleTheme()" title="Switch between light and dark"
+              aria-label="Switch between light and dark">
+        {% icon "moon" "i-moon" %}{% icon "sun" "i-sun" %}
+      </button>
+
+      {% if is_logged_in %}
+        {% if is_agent %}
+          <a class="btn btn-deep btn-sm" href="{% url 'agent_dashboard' %}">
+            {% icon "shield-check" %} Console</a>
+        {% else %}
+          <a class="btn btn-ghost btn-sm" href="{% url 'add_property' %}">
+            {% icon "plus" %} List your place</a>
+        {% endif %}
 
         <div class="menu">
           <button type="button" aria-haspopup="true">
@@ -62,25 +78,8 @@
           </div>
         </div>
       {% else %}
-        <a href="{% url 'about' %}" class="{% if active == 'about' %}active{% endif %}">About</a>
         <a href="{% url 'signin' %}?next={{ request.path|urlencode }}">Sign in</a>
-      {% endif %}
-
-      <button id="themeBtn" onclick="toggleTheme()" title="Switch between light and dark"
-              aria-label="Switch between light and dark">
-        {% icon "moon" "i-moon" %}{% icon "sun" "i-sun" %}
-      </button>
-
-      {% if is_logged_in %}
-        {% if is_agent %}
-          <a class="btn btn-deep btn-sm" href="{% url 'agent_dashboard' %}">
-            {% icon "shield-check" %} Console</a>
-        {% else %}
-          <a class="btn btn-primary btn-sm" href="{% url 'add_property' %}">
-            {% icon "plus" %} List a property</a>
-        {% endif %}
-      {% else %}
-        <a class="btn btn-primary btn-sm" href="{% url 'signup' %}">Get started</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'signup' %}">Join free</a>
       {% endif %}
     </div>
   </div>
@@ -90,13 +89,14 @@
 <div class="rail no-print">
   <div class="rail-inner">
     {% with on=request.GET.property_on kind=request.GET.property_type %}
-    <a href="{% url 'property_list' %}?property_on=rent" class="{% if on == 'rent' %}on{% endif %}">To rent</a>
-    <a href="{% url 'property_list' %}?property_on=sale" class="{% if on == 'sale' %}on{% endif %}">To buy</a>
-    <a href="{% url 'property_list' %}?property_type=residential" class="{% if kind == 'residential' %}on{% endif %}">Residential</a>
-    <a href="{% url 'property_list' %}?property_type=commercial" class="{% if kind == 'commercial' %}on{% endif %}">Commercial</a>
-    <a href="{% url 'property_list' %}?property_type=land" class="{% if kind == 'land' %}on{% endif %}">Land</a>
-    <a href="{% url 'compare' %}" class="{% if active == 'compare' %}on{% endif %}">Compare{% if compare_count %} ({{ compare_count }}){% endif %}</a>
+    <a href="{% url 'property_list' %}?property_on=rent" class="{% if on == 'rent' %}on{% endif %}">{% icon "key" %}To rent</a>
+    <a href="{% url 'property_list' %}?property_on=sale" class="{% if on == 'sale' %}on{% endif %}">{% icon "tag" %}To buy</a>
+    <a href="{% url 'property_list' %}?property_type=residential" class="{% if kind == 'residential' %}on{% endif %}">{% icon "home" %}Residential</a>
+    <a href="{% url 'property_list' %}?property_type=commercial" class="{% if kind == 'commercial' %}on{% endif %}">{% icon "building" %}Commercial</a>
+    <a href="{% url 'property_list' %}?property_type=land" class="{% if kind == 'land' %}on{% endif %}">{% icon "land" %}Land</a>
+    <a href="{% url 'property_type' %}" class="{% if active == 'types' %}on{% endif %}">{% icon "sliders" %}All categories</a>
+    <a href="{% url 'compare' %}" class="{% if active == 'compare' %}on{% endif %}">{% icon "compare" %}Compare{% if compare_count %} ({{ compare_count }}){% endif %}</a>
     {% endwith %}
-    <span class="rail-note">Every listing checked against its ownership paper</span>
+    <span class="rail-note">{% icon "shield-check" %} Every listing checked by a person</span>
   </div>
 </div>
