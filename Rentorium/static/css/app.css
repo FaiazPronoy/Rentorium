@@ -1742,6 +1742,7 @@ img[data-fade].ready{opacity:1;transform:none}
   justify-content:center;padding:.5rem .9rem;
   border-right:1px solid var(--border)}
 .findbar .cell:nth-last-child(2){border-right:0}
+.findbar .cell-wide{flex:1.5}
 .findbar label{
   font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);margin-bottom:.05rem}
@@ -1756,6 +1757,7 @@ img[data-fade].ready{opacity:1;transform:none}
 @media (max-width:560px){
   .findbar{flex-wrap:wrap;max-width:none}
   .findbar .cell{flex:1 1 45%;border-right:0;border-bottom:1px solid var(--border)}
+  .findbar .cell-wide{flex-basis:100%}
   .findbar .go{width:100%;padding-block:.8rem}
 }
 
