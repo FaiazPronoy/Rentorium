@@ -13,11 +13,11 @@
       <a class="cat-tile" style="min-height:300px"
          href="{% url 'property_list' %}?property_type={{ g.key }}">
         {% if g.key == 'residential' %}
-          <img src="{% static 'img/carousel-1.jpg' %}" alt="" loading="lazy">
+          <img src="{% static 'img/photos/tile-homes.jpg' %}" alt="" loading="lazy">
         {% elif g.key == 'commercial' %}
-          <img src="{% static 'img/carousel-2.jpg' %}" alt="" loading="lazy">
+          <img src="{% static 'img/photos/tile-work.jpg' %}" alt="" loading="lazy">
         {% else %}
-          <img src="{% static 'img/about.jpg' %}" alt="" loading="lazy">
+          <img src="{% static 'img/photos/tile-land.jpg' %}" alt="" loading="lazy">
         {% endif %}
         <div class="feature-ico">{{ g.key|type_icon }}</div>
         <div>

@@ -3,7 +3,7 @@ Fills an empty database with believable demo data.
 
     python manage.py seed_demo
 
-Everything it makes is deterministic, so the screenshots and the marking run
+Everything it makes is deterministic, so the screenshots and the browser checks run
 look the same every time. Use --wipe to start from scratch.
 """
 import random
@@ -44,10 +44,11 @@ AMENITIES = [
 
 FAQS = [
     ('How long does approval take?',
-     'An agent usually reviews a new listing within a day. You get a notification the '
-     'moment it goes live, or the moment it comes back with something to fix.'),
+     'Usually less than a day. One of our agents reads every new listing, and you get a '
+     'notification the moment it goes live, or the moment it needs a small fix.'),
     ('Does it cost anything to list a property?',
-     'No. Listing, messaging and bookings are all free.'),
+     'No. Listing, messaging and booking viewings are all free, for owners and for '
+     'people looking.'),
     ('Who can see my ownership papers?',
      'Only you and a verified agent. They are never shown on the public listing page, '
      'and the URL is checked on every request, not just hidden from the page.'),
@@ -80,86 +81,119 @@ PEOPLE = [
 RESIDENTIAL = [
     ('Bright 3 bedroom flat near Gulshan 2 circle', 'Gulshan', 'Dhaka', 'rent', 78000, 1650,
      3, 3, 2, 'full', 'Beside Gulshan Society Mosque',
-     'A corner flat on the seventh floor with windows on two sides, so it stays bright '
-     'all day and cool in the evening. Two lifts, a standby generator and a guard on '
-     'the gate. Ten minutes on foot to Gulshan 2 circle.'),
+     'A corner flat on the seventh floor, with windows on two sides, so the sun '
+     'finds you in the morning and the breeze finds you in the evening. It comes '
+     'furnished down to the curtains. Two lifts, a standby generator, a guard on '
+     'the gate, and Gulshan 2 circle is a ten minute walk.'),
     ('Quiet 2 bedroom in Dhanmondi, lake side', 'Dhanmondi', 'Dhaka', 'rent', 42000, 1100,
      2, 2, 1, 'semi', 'Two roads from Dhanmondi Lake',
-     'A small, well kept building on a residential road, away from the traffic. The '
-     'living room looks out over the lake road. Good for a small family or two '
-     'people sharing.'),
+     'A small, well kept building on a residential road, far enough from Satmasjid '
+     'Road that you hear birds instead of horns. The living room looks out towards '
+     'the lake. Right for a small family, or two friends who want their own rooms.'),
     ('Family duplex in Bashundhara block C', 'Bashundhara R/A', 'Dhaka', 'sale', 21500000, 2800,
      4, 4, 3, 'unfurnished', 'Near Apollo Hospital',
-     'A duplex across the fifth and sixth floors, with its own stair between them. '
-     'Four bedrooms, a separate drawing room and a servant quarter. Fitted kitchen, '
-     'never used.'),
-    ('Studio near Banani 11, furnished', 'Banani', 'Dhaka', 'rent', 28000, 520,
+     'Two floors, the fifth and the sixth, joined by a staircase of their own. Four '
+     'bedrooms, a separate drawing room for guests and a servant quarter. The '
+     'kitchen was fitted last year and has never been cooked in.'),
+    ('Furnished studio off Banani road 11', 'Banani', 'Dhaka', 'rent', 28000, 520,
      1, 1, 1, 'full', 'Off Banani road 11',
-     'A furnished studio in a newer building. Bed, wardrobe, desk, fridge and an air '
-     'conditioner are all included. Suits one person working nearby.'),
-    ('Spacious 3 bed in Uttara sector 7', 'Uttara', 'Dhaka', 'rent', 35000, 1400,
+     'Everything you need and nothing you do not: bed, wardrobe, desk, fridge and '
+     'an air conditioner, all included. The building is new and the road is '
+     'quiet. Made for one person who works nearby and wants to walk to the office.'),
+    ('Spacious 3 bedroom in Uttara sector 7', 'Uttara', 'Dhaka', 'rent', 35000, 1400,
      3, 2, 2, 'semi', 'Near Rajlakshmi complex',
-     'Third floor, south facing, with a long balcony that runs across two rooms. '
-     'The building has a lift, a generator and covered parking.'),
-    ('Two bedroom in Mirpur DOHS', 'Mirpur', 'Dhaka', 'rent', 32000, 1150,
+     'South facing on the third floor, with a long balcony that runs past two '
+     'rooms. Lift, generator and covered parking. The metro station is close '
+     'enough that the drive to Motijheel stops being a daily argument.'),
+    ('Two bedroom flat inside Mirpur DOHS', 'Mirpur', 'Dhaka', 'rent', 32000, 1150,
      2, 2, 1, 'unfurnished', 'Inside Mirpur DOHS',
-     'A calm, secure neighbourhood with a park two minutes away. The flat is on the '
-     'fourth floor with a lift, and there is a water reserve tank for the dry months.'),
+     'A calm, gated neighbourhood with a park two minutes away, where children '
+     'still play cricket in the evening. Fourth floor with a lift, and a water '
+     'reserve tank so the dry months are not a worry.'),
 ]
 
 COMMERCIAL = [
     ('Office floor in Mohakhali, 2400 sq ft', 'Mohakhali', 'Dhaka', 'rent', 145000, 2400,
      'office', 'Beside Rawa convention hall',
-     'An open floor with a small partitioned meeting room, ready to move into. Two '
-     'lifts, a full building generator and parking for six cars.'),
+     'An open, light filled floor with a glass meeting room already built. Plug in '
+     'and start on Monday. Two lifts, a generator for the whole building and '
+     'parking for six cars.'),
     ('Ground floor shop on Dhanmondi road 27', 'Dhanmondi', 'Dhaka', 'rent', 95000, 800,
-     'shop', 'On road 27, main road facing',
-     'Main road frontage with a wide glass front, on one of the busiest retail roads '
-     'in the city. Suits a showroom, a café or a clinic.'),
+     'shop', 'On road 27, facing the main road',
+     'Wide glass frontage on one of the busiest shopping roads in the city, so '
+     'the shop sells itself to everyone walking past. Suits a boutique, a café '
+     'or a clinic.'),
     ('Warehouse space in Badda', 'Badda', 'Dhaka', 'rent', 60000, 3200,
      'warehouse', 'Off Progoti Sharani',
-     'A single span shed with a roller shutter wide enough for a covered van, and a '
-     'small office at the front. Truck access from the main road.'),
+     'One clear span with a roller shutter wide enough for a covered van, and a '
+     'small office at the front for the paperwork. Trucks can come straight in '
+     'from the main road.'),
 ]
 
 LAND = [
     ('5 katha plot in Bashundhara block J', 'Bashundhara R/A', 'Dhaka', 'sale', 32000000, 3600,
      'residential_plot', 'Two roads from the main gate',
-     'A ready to build corner plot on a 40 foot road, with the boundary wall already '
-     'up. All the paperwork is clean and in one name.'),
+     'A corner plot on a 40 foot road, ready to build on, with the boundary wall '
+     'already up. The papers are clean and in one name, which in this city is '
+     'rarer than it should be.'),
     ('Commercial plot facing Motijheel main road', 'Motijheel', 'Dhaka', 'sale', 78000000, 5200,
      'commercial_plot', 'Near Dilkusha',
-     'A rare main road plot in the old commercial district, suitable for an office '
-     'building. Sold with the survey and mutation papers.'),
+     'Main road frontage in the old business district, the kind of plot that '
+     'almost never comes up. Suits an office tower. Sold with the survey and '
+     'mutation papers.'),
 ]
 
+# which photographs go with which listing, from static/img/photos
+PHOTOS = {
+    'residential': [
+        ['gulshan-1', 'gulshan-2', 'gulshan-3', 'gulshan-4'],
+        ['dhanmondi-1', 'dhanmondi-2', 'dhanmondi-3', 'dhanmondi-4'],
+        ['duplex-1', 'extra-4', 'duplex-3', 'duplex-4'],
+        ['studio-1', 'studio-2', 'studio-3', 'studio-4'],
+        ['uttara-1', 'uttara-2', 'uttara-3', 'uttara-4'],
+        ['mirpur-1', 'mirpur-2', 'mirpur-3', 'mirpur-4'],
+    ],
+    'commercial': [
+        ['office-1', 'office-2', 'office-3', 'office-4'],
+        ['shop-1', 'shop-2', 'shop-3'],
+        ['warehouse-1', 'warehouse-2'],
+    ],
+    'land': [
+        ['plot-1', 'plot-2', 'plot-3'],
+        ['cityplot-1', 'cityplot-2', 'cityplot-3'],
+    ],
+    'pending': ['extra-1', 'extra-2', 'extra-3'],
+}
+
 REVIEWS = [
-    (5, 'Exactly as described', 'The photos were honest, the owner turned up on time for '
-     'the viewing, and the flat was cleaner than I expected. Moved in a week later.'),
-    (4, 'Good place, small lift', 'Really happy with the flat itself. The building lift is '
-     'a bit slow at peak hours, which is the only thing I would mention.'),
-    (5, 'Owner was straight with us', 'No hidden service charge, no last minute change to '
-     'the deposit. Everything was what the listing said it was.'),
-    (4, 'Bright and quiet', 'The road is calmer than I thought it would be for that area. '
-     'Good natural light in the mornings.'),
-    (3, 'Fine, but the water pressure', 'The place is decent for the price. Water pressure '
-     'on the upper floors drops in the evening, worth asking about.'),
+    (5, 'Exactly like the photos', 'The pictures were honest, the owner came on time for '
+     'the viewing, and the flat was cleaner than we expected. We moved in a week later.'),
+    (4, 'Lovely flat, slow lift', 'Really happy with the flat itself. The lift crawls a '
+     'bit around office hours, and that is honestly the only complaint.'),
+    (5, 'No surprises', 'No hidden service charge and no last minute change to the '
+     'advance. What the listing said is exactly what we signed.'),
+    (4, 'Bright and quiet', 'The road is calmer than I expected for the area, and the '
+     'morning light in the bedroom is the best part of my day.'),
+    (3, 'Nice place, ask about water', 'Good value for the rent. Water pressure on the top '
+     'floors drops in the evening though, so ask the owner about it.'),
 ]
 
 SITE_REVIEWS = [
-    (5, 'I found a flat in four days. Being able to see which listings an agent had '
-        'actually checked made the difference.'),
-    (5, 'Booking a viewing without five phone calls is the whole reason I used this. '
-        'The owner confirmed the slot in an hour.'),
-    (4, 'Good filters. I would like a map view, but the area filter got me close enough.'),
-    (5, 'I list two flats here. The dashboard tells me how many people looked and how '
-        'many saved it, which no other site bothers to show.'),
-    (4, 'Straightforward and quick. The photos being required really helps.'),
+    (5, 'Found our flat in four days. Knowing a real person had checked every listing '
+        'meant we stopped wasting Fridays on places that did not exist.'),
+    (5, 'I booked a viewing without making five phone calls. The owner confirmed the '
+        'time within an hour, which honestly shocked me.'),
+    (5, 'The map made it easy. I could see which flats were near my office before I '
+        'even opened them.'),
+    (5, 'I rent out two flats here. The dashboard shows how many people looked and how '
+        'many saved them, and no other site bothers to tell you that.'),
+    (4, 'Quick and simple. Photos being required means you know what you are walking '
+        'into before you go.'),
 ]
 
 
 class Command(BaseCommand):
-    help = 'Fills the database with demo data for screenshots and marking.'
+    help = 'Fills the database with demo data for screenshots and trying it out.'
 
     def add_arguments(self, parser):
         parser.add_argument('--wipe', action='store_true',
@@ -243,8 +277,7 @@ class Command(BaseCommand):
 
         # ---------------------------------------------------- listings --
         owners = [profiles[e] for _, e, r, _, _ in PEOPLE if r == 'owner']
-        img_dir = Path(settings.BASE_DIR) / 'static' / 'img'
-        stock = sorted(img_dir.glob('property-*.jpg'))
+        photo_dir = Path(settings.BASE_DIR) / 'static' / 'img' / 'photos'
         listings = []
 
         # Any file already sitting in media/pics makes Django rename the next
@@ -260,11 +293,11 @@ class Command(BaseCommand):
                     except OSError:
                         pass
 
-        def attach_images(listing, start):
-            if not stock:
-                return
-            for n in range(3):
-                path = stock[(start + n) % len(stock)]
+        def attach_images(listing, names):
+            for n, name in enumerate(names):
+                path = photo_dir / f'{name}.jpg'
+                if not path.exists():
+                    continue
                 with path.open('rb') as fh:
                     PropertyImage.objects.create(
                         property=listing,
@@ -331,7 +364,7 @@ class Command(BaseCommand):
             listing.Property_Documents.save(
                 f'{listing.pk}-ownership.pdf', ContentFile(bytes(out)), save=True)
 
-        def finish(listing, i, extras):
+        def finish(listing, i, extras, photos):
             listing.status = AllProperty.Status.APPROVED
             listing.needs_approval = False
             listing.Approval_by_Agent = agent.name
@@ -341,7 +374,7 @@ class Command(BaseCommand):
             listing.view_count = random.randint(24, 380)
             listing.save()
             listing.amenities.set([amenities[a] for a in extras if a in amenities])
-            attach_images(listing, i)
+            attach_images(listing, photos)
             attach_document(listing)
             AgentAction.objects.create(
                 agent=agent, property=listing,
@@ -378,7 +411,7 @@ class Command(BaseCommand):
                 has_lift=True, Has_Pool=(i == 2), Has_Garden=(i == 2),
                 Year=(now - timedelta(days=365 * (3 + i))).date(),
             )
-            finish(listing, i, pools[i % len(pools)])
+            finish(listing, i, pools[i % len(pools)], PHOTOS['residential'][i])
 
         for j, row in enumerate(COMMERCIAL):
             (title, area, city, on, price, sqft, use, landmark, description) = row
@@ -396,7 +429,8 @@ class Command(BaseCommand):
                 Has_conference_room=(use == 'office'), has_generator=True,
                 Year=(now - timedelta(days=365 * 6)).date(),
             )
-            finish(listing, i, ['Lift', 'Generator', 'Parking', 'CCTV', 'Security guard'])
+            finish(listing, i, ['Lift', 'Generator', 'Parking', 'CCTV', 'Security guard'],
+                   PHOTOS['commercial'][j])
 
         for k, row in enumerate(LAND):
             (title, area, city, on, price, sqft, kind, landmark, description) = row
@@ -410,15 +444,16 @@ class Command(BaseCommand):
                 Land_type=kind, Road_size_in_sqft=40 - k * 10, Is_fenced=(k == 0),
                 has_water_connection=True, has_gas_connection=(k == 0),
             )
-            finish(listing, i, ['Water reserve', 'Gas line'])
+            finish(listing, i, ['Water reserve', 'Gas line'], PHOTOS['land'][k])
 
         # one still waiting, so the agent queue is not empty
         pending = ResidentialProperty(
             user=owners[0],
             Property_Name='Newly finished 2 bedroom in Banani DOHS',
             Property_Description=(
-                'Handed over last month, nobody has lived in it yet. Two bedrooms, an '
-                'open kitchen and a balcony that catches the afternoon sun.'
+                'Handed over last month and nobody has lived in it yet, so you would be '
+                'the first. Two bedrooms, an open kitchen and a balcony that catches the '
+                'afternoon sun.'
             ),
             Property_type='residential', Property_on='rent', Price=46000,
             Total_area_in_sqft=1180, service_charge=4000, security_deposit_months=2,
@@ -432,7 +467,7 @@ class Command(BaseCommand):
         pending.created_at = now - timedelta(hours=6)
         pending.save()
         pending.amenities.set([amenities['Lift'], amenities['Generator']])
-        attach_images(pending, 2)
+        attach_images(pending, PHOTOS['pending'])
 
         # one that was sent back, so the owner view shows that state too
         rejected = ResidentialProperty(

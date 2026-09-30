@@ -18,6 +18,7 @@ from authentication.decorators import (
 )
 from authentication.models import Notification
 
+from .geo import place
 from .templatetags.property_filters import money
 from .forms import (
     FORM_FOR_TYPE, BookingForm, MessageForm, PropertyFilterForm,
@@ -191,12 +192,32 @@ def property_list(request):
     page = paginate(request, results)
     annotate_saved(page, profile)
 
+    view_mode = request.GET.get('view')
+    if view_mode not in ('list', 'map'):
+        view_mode = 'grid'
+
+    # The map shows every match, not one page of them: a map with pins
+    # missing because they fell on page three would be misleading.
+    map_points = []
+    if view_mode == 'map':
+        for p in results.with_cards()[:300]:
+            lat, lng = place(p)
+            cover = p.cover_image
+            map_points.append({
+                'lat': lat, 'lng': lng, 'title': p.Property_Name,
+                'url': p.get_absolute_url(), 'area': p.Area,
+                'price': f'{settings.CURRENCY_SIGN} {money(p.Price)}',
+                'unit': p.price_label, 'on': p.Property_on,
+                'img': cover.url if cover else '',
+            })
+
     return render(request, 'property_list.html', {
         'filtered_properties': page,
         'filter_form': form,
         'total': total,
         'querystring': query_without_page(request),
-        'view_mode': 'list' if request.GET.get('view') == 'list' else 'grid',
+        'view_mode': view_mode,
+        'map_points': json.dumps(map_points),
         'compare_ids': request.session.get('compare', []),
         'active': 'browse',
     })
@@ -254,8 +275,22 @@ def property_detail(request, pk, slug=None):
     if not photos and listing.Property_Pictures:
         photos = [listing.Property_Pictures.url]
 
+    lat, lng = place(listing)
+    price = float(listing.Price)
+    move_in = None
+    if listing.is_rental:
+        # what the first visit to the owner costs: the advance, and the first
+        # month with its service charge
+        move_in = {
+            'advance': price * listing.security_deposit_months,
+            'first_month': listing.monthly_total,
+            'total': price * listing.security_deposit_months + listing.monthly_total,
+        }
+
     return render(request, 'property_detail.html', {
         'listing': listing,
+        'pin': {'lat': lat, 'lng': lng},
+        'move_in': move_in,
         'photos': photos,
         'photos_json': json.dumps(photos),
         'facts': _detail_facts(listing, specific),

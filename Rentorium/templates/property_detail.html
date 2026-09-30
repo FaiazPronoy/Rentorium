@@ -3,6 +3,10 @@
 {% block title %}{{ listing.Property_Name }} &middot; {{ SITE_NAME }}{% endblock %}
 {% block description %}{{ listing.Property_Description|truncatewords:28 }}{% endblock %}
 {% block og_title %}{{ listing.Property_Name }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+{% endblock %}
 
 {% block body %}
 <main class="wrap section">
@@ -99,8 +103,7 @@
       {% if listing.Property_Description %}
         <div class="card" style="margin-bottom:1.3rem">
           <div class="card-title">About this place</div>
-          <p style="white-space:pre-line;margin-bottom:0;font-size:1.02rem">
-            {{ listing.Property_Description }}</p>
+          <p class="prose-one" style="white-space:pre-line;margin-bottom:0;font-size:1.02rem;text-align:justify;hyphens:auto">{{ listing.Property_Description }}</p>
         </div>
       {% endif %}
 
@@ -127,12 +130,52 @@
             <span class="v" style="font-size:1.15rem">{{ CURRENCY_SIGN }}
               {{ listing.monthly_total|floatformat:0|intcomma }}</span></div>
           {% if listing.security_deposit_months %}
-            <div class="kv"><span class="k">Security deposit</span>
+            <div class="kv"><span class="k">Advance</span>
               <span class="v">{{ listing.security_deposit_months }}
                 month{{ listing.security_deposit_months|pluralize }} of rent</span></div>
           {% endif %}
+          {% if move_in %}
+            <div class="movein">
+              <div class="tiny muted">To get the keys, bring about</div>
+              <div class="v">{{ CURRENCY_SIGN }} {{ move_in.total|floatformat:0|intcomma }}</div>
+              <div class="tiny muted">{% if move_in.advance %}{{ CURRENCY_SIGN }} {{ move_in.advance|floatformat:0|intcomma }} advance, plus {% endif %}the
+                first month's rent and service charge.</div>
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="card emi" style="margin-bottom:1.3rem" data-emi data-price="{{ listing.Price|floatformat:0 }}"
+             data-sign="{{ CURRENCY_SIGN }}">
+          <div class="card-title">What the monthly instalment could be</div>
+          <p class="small muted">Rough numbers for a home loan, so you know where you stand
+            before you talk to a bank. Change any box.</p>
+          <div class="row-in">
+            <div class="field mb0"><label for="emiDown">Down payment (%)</label>
+              <input id="emiDown" type="number" min="0" max="90" step="5" value="30"></div>
+            <div class="field mb0"><label for="emiRate">Interest a year (%)</label>
+              <input id="emiRate" type="number" min="1" max="25" step="0.25" value="9"></div>
+            <div class="field mb0"><label for="emiYears">Years</label>
+              <input id="emiYears" type="number" min="1" max="30" step="1" value="20"></div>
+          </div>
+          <div class="emi-out">
+            <div><div class="k">Every month, roughly</div>
+              <div class="v" data-emi-out>&nbsp;</div></div>
+            <div class="k" data-emi-loan></div>
+          </div>
         </div>
       {% endif %}
+
+      <div class="card" style="margin-bottom:1.3rem">
+        <div class="between" style="margin-bottom:.8rem">
+          <div class="card-title mb0">Where it is</div>
+          <a class="tiny" href="{% url 'property_list' %}?area={{ listing.Area|urlencode }}&view=map">
+            More in {{ listing.Area }} on the map</a>
+        </div>
+        <div class="minimap" id="miniMap" data-lat="{{ pin.lat }}" data-lng="{{ pin.lng }}"
+             data-label="{{ listing.Area }}"></div>
+        <p class="tiny muted" style="margin:.6rem 0 0">The circle shows the neighbourhood.
+          The owner shares the exact address once your viewing is confirmed.</p>
+      </div>
 
       <!-- reviews -->
       <div class="card" style="margin-bottom:1.3rem">
@@ -186,7 +229,7 @@
 
       {% if similar %}
         <div class="section-head" style="margin-top:2.2rem">
-          <h2 class="mb0">Similar places nearby</h2>
+          <h2 class="mb0">You might also like</h2>
         </div>
         <div class="plist">
           {% for p in similar %}{% include 'partials/_property_card.html' %}{% endfor %}
@@ -445,4 +488,9 @@
     </div>
   {% endif %}
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 {% endblock %}

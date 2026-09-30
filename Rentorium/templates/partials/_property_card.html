@@ -2,27 +2,40 @@
 {% comment %}
 One property card. Expects `p`. Optional: `compare_ids`.
 
-The photograph is the card. Underneath, in the order people read a listing:
-what and where, the rating, a few facts, then the price.
+The photographs are the card: swipe through them on a phone, or use the
+arrows on a laptop, without opening the listing. Underneath, in the order
+people read a listing: what and where, the rating, a few facts, the price.
 {% endcomment %}
 <article class="pcard">
-  <a class="pcard-media" href="{{ p.get_absolute_url }}" aria-label="{{ p.Property_Name }}">
-    {% if p.cover_image %}
-      <img src="{{ p.cover_image.url }}" alt="{{ p.Property_Name }}" loading="lazy">
-    {% else %}
-      <span class="placeholder">{% icon "image" %}</span>
-    {% endif %}
+  <div class="pcard-media" data-strip>
+    {% with shots=p.images.all %}
+      {% if shots %}
+        <a class="pc-strip" href="{{ p.get_absolute_url }}" aria-label="{{ p.Property_Name }}">
+          {% for shot in shots|slice:":5" %}
+            <img src="{{ shot.image.url }}" alt="{% if forloop.first %}{{ p.Property_Name }}{% else %}{{ p.Property_Name }}, photo {{ forloop.counter }}{% endif %}"
+                 loading="lazy">
+          {% endfor %}
+        </a>
+        {% if shots|length > 1 %}
+          <button class="pc-nav pc-prev" type="button" aria-label="Previous photo">{% icon "chevron-left" %}</button>
+          <button class="pc-nav pc-next" type="button" aria-label="Next photo">{% icon "chevron-right" %}</button>
+          <span class="pc-dots" aria-hidden="true">{% for shot in shots|slice:":5" %}<i{% if forloop.first %} class="on"{% endif %}></i>{% endfor %}</span>
+        {% endif %}
+      {% elif p.cover_image %}
+        <a class="pc-strip" href="{{ p.get_absolute_url }}" aria-label="{{ p.Property_Name }}">
+          <img src="{{ p.cover_image.url }}" alt="{{ p.Property_Name }}" loading="lazy"></a>
+      {% else %}
+        <a class="pc-strip" href="{{ p.get_absolute_url }}" aria-label="{{ p.Property_Name }}">
+          <span class="placeholder">{% icon "image" %}</span></a>
+      {% endif %}
+    {% endwith %}
 
     <span class="pcard-tags">
       <span class="badge {% if p.Property_on == 'rent' %}badge-rent{% else %}badge-sale{% endif %}">
         {% if p.Property_on == 'rent' %}To rent{% else %}For sale{% endif %}</span>
       {% if p.status == 'rented' %}<span class="badge badge-fail">Taken</span>{% endif %}
     </span>
-
-    {% if p.images.count > 1 %}
-      <span class="pcard-count">{% icon "camera" %} {{ p.images.count }}</span>
-    {% endif %}
-  </a>
+  </div>
 
   <div class="pcard-tools">
     <form method="post" action="{% url 'toggle_compare' p.pk %}" data-compare>
@@ -38,7 +51,7 @@ what and where, the rating, a few facts, then the price.
         {% csrf_token %}
         <button class="icon-btn pcard-fav {% if p.is_saved %}on{% endif %}" type="submit"
                 aria-pressed="{% if p.is_saved %}true{% else %}false{% endif %}"
-                title="{% if p.is_saved %}Saved{% else %}Save this property{% endif %}">
+                title="{% if p.is_saved %}Saved{% else %}Save this place{% endif %}">
           {% icon "heart" %}
         </button>
       </form>
@@ -50,7 +63,7 @@ what and where, the rating, a few facts, then the price.
       <a class="pcard-title" href="{{ p.get_absolute_url }}">{{ p.Property_Name }}</a>
       {% if p.rating %}<span class="rating-pill">{% icon "star" %} {{ p.rating }}</span>{% endif %}
     </div>
-    <div class="pcard-loc">{{ p.Area }}, {{ p.City }}{% if p.landmark %} &middot; {{ p.landmark }}{% endif %}</div>
+    <div class="pcard-loc">{% icon "pin" %} {{ p.Area }}, {{ p.City }}{% if p.landmark %} &middot; {{ p.landmark }}{% endif %}</div>
     <div class="pcard-facts">
       {% for value, label in p.headline_facts|slice:':3' %}
         <span><b>{{ value }}</b>&nbsp;{{ label }}</span>

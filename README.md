@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **v2.0**, current | Rebuilt solo: a blueprint interface, agent console, private ownership documents, 180 tests. |
-| **v1.0**, [see release](../../releases/tag/v1.0) | The original CSE471 group submission at BRAC University, built on a Bootstrap template. |
+| **v2.0**, current | Rebuilt solo: a warm, photo-first interface, agent console, private ownership documents, 180 tests. |
+| **v1.0**, [see release](../../releases/tag/v1.0) | The first version, built as a team on a Bootstrap template. |
 
 **Try it:** the sign in page has a key for each demo person, a renter, an owner
 and the agent. Take one off the rack and you are in; nothing to type.
@@ -19,21 +19,21 @@ viewing, message the owner, and let an agent keep the whole thing honest.
 
 Django 5 and SQLite. Two Python dependencies, no build step, no front end
 framework: the interface is hand written CSS and plain JavaScript, and every
-icon is inline SVG. The only external request is the web font, which falls back
-to the system sans, so the site works the same offline.
+icon is inline SVG. The outside requests are the web fonts, which fall back to
+the system sans, and Leaflet with OpenStreetMap tiles on the pages with a map;
+without a connection those pages say so and everything else works the same.
 
 ### What it looks like
 
-A home is a warm thing, so the site is too. Warm white paper, a deep wine for
-anything you press, brass for ratings and the small moments of praise, and the
-photographs doing most of the talking. The home page opens on a large photo
-with the search sitting on it; listing cards are the photo first, with the
-name, area, a few facts and the price underneath and a heart to save it. The
-header keeps the search in the middle, with a row of icons under it for the
-ways people look: to rent, to buy, homes, offices, land, compare. Signing in
-is a photograph on one side and the form on the other, with a card for each
-demo person. Type is Plus Jakarta Sans, with Instrument Serif in italics for a
-word or two that deserves it. At night the brass takes the lead.
+Dhaka at golden hour. A warm peach page, a tangerine to berry sunset on
+everything you press, a deep plum for the evening bands, mint for anything a
+person has checked, and sunshine yellow for ratings. The home page opens with
+the search on one side and a stack of real rooms on the other, then three big
+doors in (a home, a place to work, land), neighbourhood tiles that show the
+lowest rent in each area, and a small calculator that turns your income into
+a comfortable rent. Listing cards let you swipe through the photos without
+opening them. Type is Outfit for headings and Be Vietnam Pro for reading. At
+night the page goes to plum and the sunset turns to coral.
 
 ---
 
@@ -69,7 +69,7 @@ and contact enquiries, so every page has something real on it.
 
 Settings that matter come from the environment: copy `.env.example` to `.env`
 and fill it in. With no SMTP settings, mail is printed to the console, which is
-what you want while marking.
+what you want while trying it out.
 
 ---
 
@@ -81,6 +81,16 @@ what you want while marking.
   range, minimum size, furnishing, bedrooms, bathrooms, business use, land type
   and amenities, with seven sort orders. Amenities combine with AND, not OR, so
   ticking two really does narrow it down.
+- **See it on a map.** Every match as a price pin over OpenStreetMap, placed in its
+  neighbourhood rather than on the building, so the exact address stays with
+  the owner until a viewing is agreed.
+- **Swipe through the photos on a card**, on a phone or with the arrows on a
+  laptop, without opening the listing.
+- **Know what it costs before you call.** A rental shows the advance, the
+  service charge and the total you need to get the keys; a sale works out a
+  monthly instalment from your down payment, rate and years.
+- **What can I afford?** A slider on the home page turns a monthly income into
+  a comfortable rent and links straight to places under it.
 - **Save a search** and come straight back to the same filters.
 - **Save properties** to a shortlist, with the heart updating without a page reload.
 - **Compare up to four side by side** on price, size, price per square foot,
@@ -246,7 +256,7 @@ cd Rentorium
 python manage.py test
 ```
 
-**180 tests, all passing.** They cover:
+**187 tests, all passing.** They cover:
 
 - models: slugs, status transitions, price per square foot, subtype resolution,
   and the unique constraints
@@ -267,14 +277,29 @@ python manage.py test
 - the dashboard and the saved searches pages
 - the demo keys: none on an empty database, none for a suspended account, and
   each one signs in as its person
+- the map: a pin for every match, the filters applied to it, the same spot for a
+  listing every time; the move in total on a rental; the neighbourhood tiles
 
 `tools/browser_checks.py` (Playwright, using the Edge that comes with Windows)
 opens every page a visitor, a renter, an owner and the agent can reach, in
 light and dark, and fails on any status other than 200, any console error,
 any text below WCAG AA contrast, or sideways scrolling at 390 px. It also
 takes each key off the rack, tries the password eye, and checks that the
-header search and the rail both filter. Run it against
+header search and the rail both filter, that the arrows on a card move to the
+next photo, that the map has a pin for every listing, that the rent helper
+follows its slider, and that a sale listing works out an instalment. Run it against
 `runserver 127.0.0.1:8020` on a seeded database.
+
+---
+
+## Photographs
+
+Every photograph is released under CC0, so it is free to use for anything
+without asking and without credit. They came from
+[StockSnap](https://stocksnap.io) and the public domain collection on
+[rawpixel](https://www.rawpixel.com/category/53/public-domain), found through
+[Openverse](https://openverse.org), and live in `static/img/photos`. The demo
+listings use them; a real listing uses whatever its owner uploads.
 
 ---
 
@@ -284,3 +309,5 @@ header search and the rail both filter. Run it against
 - No rate limiting on registration, only on sign in.
 - Email is console-only unless SMTP settings are supplied.
 - Images are resized on upload but not served in multiple sizes.
+- Map pins are placed by neighbourhood, not geocoded from the address, on purpose;
+  a real deployment that wanted street level pins would need a geocoding service.

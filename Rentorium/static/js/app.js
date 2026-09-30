@@ -1049,13 +1049,144 @@
   /* ---------------------------------------------------------------- *
      Go
    * ---------------------------------------------------------------- */
+  /* ---------------------------------------------------------------- *
+     Money, the way it is said here: 42,000 and 1.2 lakh
+   * ---------------------------------------------------------------- */
+  function taka(n) {
+    n = Math.round(n);
+    if (n >= 10000000) return (n / 10000000).toFixed(2).replace(/\.?0+$/, '') + ' crore';
+    if (n >= 100000) return (n / 100000).toFixed(2).replace(/\.?0+$/, '') + ' lakh';
+    return n.toLocaleString('en-IN');
+  }
+
+  /* ---------------------------------------------------------------- *
+     Photo strips on the cards: swipe on a phone, arrows on a laptop
+   * ---------------------------------------------------------------- */
+  function wireStrips() {
+    $$('[data-strip]').forEach(function (media) {
+      var strip = $('.pc-strip', media);
+      var dots = $$('.pc-dots i', media);
+      if (!strip || dots.length < 2) return;
+      function at() { return Math.round(strip.scrollLeft / strip.clientWidth); }
+      function go(i) {
+        i = Math.max(0, Math.min(dots.length - 1, i));
+        strip.scrollTo({ left: i * strip.clientWidth, behavior: reduced ? 'auto' : 'smooth' });
+      }
+      strip.addEventListener('scroll', function () {
+        var i = at();
+        dots.forEach(function (d, n) { d.classList.toggle('on', n === i); });
+      }, { passive: true });
+      var prev = $('.pc-prev', media), next = $('.pc-next', media);
+      if (prev) prev.addEventListener('click', function () { go(at() - 1); });
+      if (next) next.addEventListener('click', function () { go(at() + 1 >= dots.length ? 0 : at() + 1); });
+    });
+  }
+
+  /* ---------------------------------------------------------------- *
+     What can I afford: a third of the income, rounded to the thousand
+   * ---------------------------------------------------------------- */
+  function wireAfford() {
+    var box = $('[data-afford]');
+    if (!box) return;
+    var slider = $('input[type=range]', box);
+    var income = $('[data-afford-income]', box);
+    var rent = $('[data-afford-rent]', box);
+    var link = $('[data-afford-link]', box);
+    var sign = income.textContent.trim().split(' ')[0];
+    function update() {
+      var v = Number(slider.value);
+      var r = Math.round(v / 3 / 1000) * 1000;
+      income.textContent = sign + ' ' + taka(v);
+      rent.textContent = sign + ' ' + taka(r);
+      link.href = box.getAttribute('data-list') + '?property_on=rent&max_price=' + r;
+    }
+    slider.addEventListener('input', update);
+    update();
+  }
+
+  /* ---------------------------------------------------------------- *
+     EMI on a sale listing, the standard reducing balance formula
+   * ---------------------------------------------------------------- */
+  function wireEmi() {
+    var box = $('[data-emi]');
+    if (!box) return;
+    var price = Number(box.getAttribute('data-price')) || 0;
+    var sign = box.getAttribute('data-sign');
+    var down = $('#emiDown', box), rate = $('#emiRate', box), years = $('#emiYears', box);
+    var out = $('[data-emi-out]', box), loanOut = $('[data-emi-loan]', box);
+    function update() {
+      var loan = price * (1 - Math.min(90, Math.max(0, Number(down.value) || 0)) / 100);
+      var r = (Number(rate.value) || 0) / 12 / 100;
+      var n = Math.max(1, Number(years.value) || 1) * 12;
+      var emi = r ? loan * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1) : loan / n;
+      out.textContent = sign + ' ' + taka(emi);
+      loanOut.textContent = 'on a loan of ' + sign + ' ' + taka(loan);
+    }
+    [down, rate, years].forEach(function (el) { el.addEventListener('input', update); });
+    update();
+  }
+
+  /* ---------------------------------------------------------------- *
+     Maps. Leaflet loads after this file, so these wait for the page.
+   * ---------------------------------------------------------------- */
+  function tiles(map) {
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+  }
+  function escapeHtml(t) {
+    return String(t).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function wireMaps() {
+    var L = window.L;
+    var el = document.getElementById('map');
+    if (el && L) {
+      var points = JSON.parse(el.getAttribute('data-points') || '[]');
+      var map = L.map(el, { scrollWheelZoom: false });
+      tiles(map);
+      var bounds = [];
+      points.forEach(function (p) {
+        var icon = L.divIcon({
+          className: '', iconSize: null,
+          html: '<span class="map-pin ' + (p.on === 'sale' ? 'sale' : '') + '">' + escapeHtml(p.price) + '</span>'
+        });
+        var pop = '<a class="map-pop" href="' + escapeHtml(p.url) + '">' +
+          (p.img ? '<img src="' + escapeHtml(p.img) + '" alt="">' : '') +
+          '<span><b>' + escapeHtml(p.title) + '</b><span>' + escapeHtml(p.area) + '</span>' +
+          '<em>' + escapeHtml(p.price) + ' ' + escapeHtml(p.unit) + '</em></span></a>';
+        L.marker([p.lat, p.lng], { icon: icon }).addTo(map).bindPopup(pop);
+        bounds.push([p.lat, p.lng]);
+      });
+      if (bounds.length) map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 });
+      else map.setView([23.8103, 90.4125], 12);
+    } else if (el) {
+      el.innerHTML = '<div class="map-fallback">The map could not load. Check your connection, or use the grid view.</div>';
+    }
+    var mini = document.getElementById('miniMap');
+    if (mini && L) {
+      var ll = [Number(mini.getAttribute('data-lat')), Number(mini.getAttribute('data-lng'))];
+      var m = L.map(mini, { scrollWheelZoom: false }).setView(ll, 14);
+      tiles(m);
+      L.circle(ll, { radius: 650, color: '#C8341B', weight: 2, fillColor: '#FF7A45', fillOpacity: .18 }).addTo(m);
+    } else if (mini) {
+      mini.innerHTML = '<div class="map-fallback">The map could not load right now.</div>';
+    }
+  }
+
   function boot() {
     wireNavShadow(); wireProgress(); wireMenus(); wireModals(); wireConfirm();
     wirePasswordEyes(); wireFavourites(); wireCompare(); wireStrength();
     wireFilters(); wireOnce(); wireToasts(); wirePreview(); wireThread();
     wirePriceHint(); wireGallery(); wireCounters(); wireImageFade(); wireStage(); wireSays(); wireToTop();
-    wireSuggest(); wireBulk();
+    wireSuggest(); wireBulk(); wireStrips(); wireAfford(); wireEmi();
     markReveal(); wireReveal();
+    if (document.getElementById('map') || document.getElementById('miniMap')) {
+      if (document.readyState === 'complete') wireMaps();
+      else window.addEventListener('load', wireMaps);
+    }
   }
 
   if (document.readyState === 'loading') {

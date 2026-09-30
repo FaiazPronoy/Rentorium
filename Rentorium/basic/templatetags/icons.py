@@ -22,6 +22,13 @@ ICONS = {
             '<path d="M9.5 21v-6.5h5V21"/>',
     'search': '<circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4-4"/>',
     'menu': '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    'map': '<path d="M9 4.5 3.5 6.5v13L9 17.5l6 2 5.5-2v-13L15 6.5z"/><path d="M9 4.5v13M15 6.5v13"/>',
+    'grid': '<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/>'
+            '<rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
+    'list': '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/>'
+            '<circle cx="4.8" cy="17.5" r="1"/>',
+    'wallet': '<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><rect x="4" y="8" width="16.5" height="11" rx="2.5"/>'
+              '<path d="M16 13.5h.01"/>',
     'close': '<path d="M6 6l12 12M18 6 6 18"/>',
     'chevron-down': '<path d="m6 9.5 6 6 6-6"/>',
     'chevron-left': '<path d="m14.5 5.5-6.5 6.5 6.5 6.5"/>',

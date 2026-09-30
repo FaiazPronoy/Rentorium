@@ -810,3 +810,58 @@ class ReportListingTests(TestCase):
         self.client.login(username='owner@test.com', password=PASSWORD)
         r = self.client.get(self.listing.get_absolute_url())
         self.assertNotContains(r, 'Something wrong with this listing?')
+
+
+class MapAndMoneyTests(TestCase):
+    """The map, the move in total and the home page neighbourhood tiles."""
+
+    def setUp(self):
+        _, self.owner = make_user('owner@example.com', 'Owner', UserProfile.Role.OWNER)
+        self.flat = make_listing(self.owner, Price=40000, service_charge=3000,
+                                 security_deposit_months=2)
+        self.plot = make_listing(self.owner, Property_Name='A plot in Uttara', Area='Uttara',
+                                 Property_on='sale', Price=9000000)
+
+    def test_the_map_gets_a_pin_for_every_match(self):
+        import json
+        response = self.client.get(reverse('property_list'), {'view': 'map'})
+        points = json.loads(response.context['map_points'])
+        self.assertEqual({p['title'] for p in points},
+                         {self.flat.Property_Name, self.plot.Property_Name})
+
+    def test_the_map_follows_the_filters(self):
+        import json
+        response = self.client.get(reverse('property_list'), {'view': 'map', 'area': 'Uttara'})
+        points = json.loads(response.context['map_points'])
+        self.assertEqual([p['title'] for p in points], [self.plot.Property_Name])
+
+    def test_the_grid_does_not_build_map_points(self):
+        response = self.client.get(reverse('property_list'))
+        self.assertEqual(response.context['map_points'], '[]')
+
+    def test_a_pin_lands_near_its_area_and_in_the_same_place_every_time(self):
+        from property.geo import AREA_CENTRES, SPREAD, place
+        lat, lng = place(self.flat)
+        centre = AREA_CENTRES['Gulshan']
+        self.assertLessEqual(abs(lat - centre[0]), SPREAD)
+        self.assertLessEqual(abs(lng - centre[1]), SPREAD)
+        self.assertEqual(place(self.flat), (lat, lng))
+
+    def test_moving_in_costs_the_advance_and_the_first_month(self):
+        response = self.client.get(self.flat.get_absolute_url())
+        move_in = response.context['move_in']
+        self.assertEqual(move_in['advance'], 80000)
+        self.assertEqual(move_in['first_month'], 43000)
+        self.assertEqual(move_in['total'], 123000)
+
+    def test_a_sale_has_no_move_in_total(self):
+        response = self.client.get(self.plot.get_absolute_url())
+        self.assertIsNone(response.context['move_in'])
+        self.assertContains(response, 'data-emi')
+
+    def test_the_home_page_shows_each_area_with_its_lowest_rent(self):
+        make_listing(self.owner, Property_Name='A cheaper flat', Price=25000)
+        tiles = {t['name']: t for t in self.client.get(reverse('home')).context['area_tiles']}
+        self.assertEqual(tiles['Gulshan']['n'], 2)
+        self.assertEqual(tiles['Gulshan']['from_rent'], 25000)
+        self.assertIsNone(tiles['Uttara']['from_rent'])

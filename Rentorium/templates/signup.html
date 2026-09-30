@@ -8,10 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..600&family=Instrument+Serif:ital@0;1&display=swap">
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@500..800&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@600&text=%E0%A7%B3&display=swap">
 <link rel="stylesheet" href="{% static 'css/app.css' %}?v={{ ASSET_VERSION }}">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%237A2840'/><path d='M7 14.5 16 7.5l9 7V24a1 1 0 0 1-1 1h-5v-6h-6v6H8a1 1 0 0 1-1-1z' fill='none' stroke='white' stroke-width='2.2' stroke-linejoin='round'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23D23A1C'/><path d='M7 14.5 16 7.5l9 7V24a1 1 0 0 1-1 1h-5v-6h-6v6H8a1 1 0 0 1-1-1z' fill='none' stroke='white' stroke-width='2.2' stroke-linejoin='round'/></svg>">
 <script>(function(){document.documentElement.classList.add('js');
  try{var t=localStorage.getItem('rent-theme');
  if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
@@ -20,10 +20,10 @@
 <body>
 <div class="auth">
   <aside class="auth-photo">
-    <img src="{% static 'img/about.jpg' %}" alt="">
+    <img src="{% static 'img/photos/owners.jpg' %}" alt="">
     <a class="brand" href="{% url 'home' %}"><svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 4l8.5 6.5V20a1 1 0 0 1-1 1H15v-6h-6v6H4.5a1 1 0 0 1-1-1z"/></svg>{{ SITE_NAME }}</a>
-    <blockquote>Every listing here was read by a person before it went live.</blockquote>
-    <p>Join free. Save places, book viewings, or list your own.</p>
+    <blockquote>No brokers. No fake photos. No wasted Fridays.</blockquote>
+    <p>Every listing here was checked by a real person before it went live.</p>
   </aside>
 
   <div class="auth-side">
@@ -31,8 +31,8 @@
 
   <div class="auth-card auth-wide">
     <div class="auth-logo">
-      <h1>Create your account</h1>
-      <p>It takes a minute, and listing a property is free.</p>
+      <h1>Join <em>free</em></h1>
+      <p>One minute, and you can save places, book viewings or list your own.</p>
     </div>
 
     {% if form.errors %}

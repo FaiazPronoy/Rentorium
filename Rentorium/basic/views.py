@@ -6,6 +6,8 @@ from django.db.models import Avg, Count
 from django.shortcuts import redirect, render
 
 from authentication.decorators import login_required_message, post_required, profile_of
+from django.db.models import Min
+
 from property.models import AllProperty
 
 from .forms import ContactForm, ReviewForm
@@ -46,9 +48,29 @@ def home(request):
         'areas': (live.values('Area')
                       .annotate(n=Count('id'))
                       .order_by('-n')[:10]),
+        'area_tiles': _area_tiles(live),
         'active': 'home',
     }
     return render(request, 'index.html', context)
+
+
+def _area_tiles(live):
+    """The busiest neighbourhoods, each with a photo and its lowest rent."""
+    tiles = []
+    rows = (live.values('Area').annotate(n=Count('id'))
+                .order_by('-n', 'Area')[:6])
+    for row in rows:
+        here = live.filter(Area=row['Area'])
+        cheapest_rent = here.filter(Property_on='rent').aggregate(v=Min('Price'))['v']
+        sample = here.prefetch_related('images').order_by('-is_featured', '-created_at').first()
+        cover = sample.cover_image if sample else None
+        tiles.append({
+            'name': row['Area'],
+            'n': row['n'],
+            'from_rent': cheapest_rent,
+            'img': cover.url if cover else '',
+        })
+    return tiles
 
 
 # flat pages

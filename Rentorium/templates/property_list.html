@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load property_filters %}
 {% block title %}Browse properties &middot; {{ SITE_NAME }}{% endblock %}
+{% block head %}{% if view_mode == 'map' %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+{% endif %}{% endblock %}
 
 {% block body %}
 <main>
@@ -12,10 +16,11 @@
         <span class="sep">/</span>
         <span>Browse</span>
       </nav>
-      <div class="eyebrow">Every listing checked before it is published</div>
-      <h1 class="mb0">Browse properties</h1>
-      <p class="muted mb0">{{ total }} listing{{ total|pluralize }}
-        {% if filter_form.active_count %}match your filters{% else %}available right now{% endif %}.</p>
+      <div class="eyebrow">{% icon "shield-check" %} Every one checked by a person</div>
+      <h1 class="mb0">{% if filter_form.active_count %}Places that fit what you want{% else %}Find your next place{% endif %}</h1>
+      <p class="muted mb0">{{ total }} place{{ total|pluralize }}
+        {% if filter_form.active_count %}match your filters{% else %}live right now{% endif %}.
+        Swipe the photos on any card, or open the map to see what is near you.</p>
     </div>
   </div>
 
@@ -27,10 +32,14 @@
         {% icon "filter" %} Filters
         {% if filter_form.active_count %}<span class="badge badge-ok">{{ filter_form.active_count }}</span>{% endif %}
       </button>
-      <a class="btn btn-sm {% if view_mode == 'grid' %}btn-primary{% else %}btn-ghost{% endif %}"
-         href="?{% url_replace view='' %}" aria-label="Grid view">{% icon "floors" %} Grid</a>
-      <a class="btn btn-sm {% if view_mode == 'list' %}btn-primary{% else %}btn-ghost{% endif %}"
-         href="?{% url_replace view='list' %}" aria-label="List view">{% icon "menu" %} List</a>
+      <nav class="viewswitch" aria-label="How to show the results">
+        <a class="{% if view_mode == 'grid' %}on{% endif %}" href="?{% url_replace view='' %}"
+           {% if view_mode == 'grid' %}aria-current="page"{% endif %}>{% icon "grid" %} Grid</a>
+        <a class="{% if view_mode == 'list' %}on{% endif %}" href="?{% url_replace view='list' %}"
+           {% if view_mode == 'list' %}aria-current="page"{% endif %}>{% icon "list" %} List</a>
+        <a class="{% if view_mode == 'map' %}on{% endif %}" href="?{% url_replace view='map' %}"
+           {% if view_mode == 'map' %}aria-current="page"{% endif %}>{% icon "map" %} Map</a>
+      </nav>
     </div>
   </div>
 
@@ -39,6 +48,7 @@
     <!-- ============ filters ============ -->
     <aside class="col filter-panel" id="filterPanel">
       <form class="card sticky-side" method="get" id="filterForm">
+        {% if view_mode != 'grid' %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
         <div class="between" style="margin-bottom:1rem">
           <div class="card-title mb0">Filters</div>
           <div class="btn-group">
@@ -119,7 +129,15 @@
 
     <!-- ============ results ============ -->
     <div class="col" style="flex:1 1 520px">
-      {% if filtered_properties %}
+      {% if view_mode == 'map' %}
+        <div class="mapwrap">
+          <div id="map" data-points="{{ map_points }}"></div>
+          <noscript><div class="map-fallback">The map needs JavaScript. The grid view shows
+            every listing without it.</div></noscript>
+        </div>
+        <p class="tiny muted" style="margin-top:.7rem">Pins show the neighbourhood, not the
+          building. Owners share the exact address once a viewing is agreed.</p>
+      {% elif filtered_properties %}
         <div class="plist {% if view_mode == 'list' %}as-list{% endif %}">
           {% for p in filtered_properties %}
             {% include 'partials/_property_card.html' %}
@@ -129,8 +147,9 @@
       {% else %}
         <div class="card empty">
           <div class="big">{% icon "search" %}</div>
-          <h3>Nothing matches those filters</h3>
-          <p class="muted">Try widening the price range, or clearing a filter or two.</p>
+          <h3>Nothing quite fits, yet</h3>
+          <p class="muted">Try a slightly wider budget, or drop a filter or two. New places go
+            live every week, so saving this search is worth it too.</p>
           <a class="btn btn-primary" href="{% url 'property_list' %}">Clear all filters</a>
         </div>
       {% endif %}
@@ -168,3 +187,8 @@
   </div>
 {% endif %}
 {% endblock %}
+
+{% block scripts %}{% if view_mode == 'map' %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+{% endif %}{% endblock %}

@@ -179,7 +179,7 @@ DATA_UPLOAD_MAX_NUMBER_FILES = 20
 
 # email
 # With no SMTP settings configured, mail is printed to the console, which is
-# what you want while marking or developing.
+# what you want while developing.
 if env('EMAIL_HOST_USER'):
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = env('EMAIL_HOST', 'smtp.gmail.com')
@@ -196,7 +196,7 @@ SUPPORT_EMAIL = env('SUPPORT_EMAIL', EMAIL_HOST_USER)
 
 # app config
 SITE_NAME = 'Rentorium'
-SITE_LEGAL_NAME = 'Rentorium, a CSE471 project at BRAC University'
+SITE_LEGAL_NAME = 'Rentorium'
 SITE_TAGLINE = 'Property in Bangladesh, without the guesswork.'
 SITE_ADDRESS = 'BRAC University, Merul Badda, Dhaka'
 SITE_PHONE = '+880 1700 000 000'

@@ -85,14 +85,24 @@ CONTRAST_JS = r"""
     const cs = getComputedStyle(el);
     const box = el.getBoundingClientRect();
     if (cs.visibility === 'hidden' || cs.display === 'none' || box.width === 0 || box.height === 0) continue;
-    if (el.closest('[aria-hidden="true"], .sr-only, [hidden], option, script, style, .menu-panel, .stage, .pcard-media, .hero-photo, .cat-tile, .auth-photo')) continue;
+    if (el.closest('[aria-hidden="true"], .sr-only, [hidden], option, script, style, .menu-panel, .stage, .pcard-media, .hero-photo, .cat-tile, .auth-photo, .door, .area-tile, .collage img, .mapwrap, .minimap')) continue;
     if (parseFloat(cs.opacity) === 0) continue;
-    const fg = parse(cs.color);
-    const bg = background(el);
-    if (!fg || !bg) continue;
     const size = parseFloat(cs.fontSize), weight = parseInt(cs.fontWeight, 10);
     const need = (size >= 24 || (size >= 18.66 && weight >= 700)) ? 3 : 4.5;
-    const r = ratio(fg.a < 1 ? over(fg, bg) : fg, bg);
+    // gradient text: each colour in the gradient has to pass on its own
+    const clipped = (cs.backgroundClip || cs.webkitBackgroundClip || '').includes('text');
+    const bg = background(clipped ? el.parentElement : el);
+    if (!bg) continue;
+    let r;
+    if (clipped) {
+      const solid = stops(cs.backgroundImage);
+      if (!solid.length) continue;
+      r = Math.min(...solid.map(c => ratio(c, bg)));
+    } else {
+      const fg = parse(cs.color);
+      if (!fg) continue;
+      r = ratio(fg.a < 1 ? over(fg, bg) : fg, bg);
+    }
     checked++;
     if (r < need) bad.push({text: text.slice(0, 40), ratio: Math.round(r * 100) / 100, need, cls: el.className || el.tagName});
   }
@@ -198,6 +208,43 @@ def main():
         check("To rent on the rail shows only places to rent",
               tags and all(t.strip() == "To rent" for t in tags), tags[:4])
         check("and marks itself as the one in use", "on" in (page.locator(".rail a", has_text="To rent").get_attribute("class") or ""))
+
+        # the arrows on a card move through its photos
+        page.goto(BASE + "/property/browse")
+        page.wait_for_load_state("networkidle")
+        card = page.locator(".pcard").first
+        card.hover()
+        card.locator(".pc-next").click()
+        page.wait_for_timeout(700)
+        moved = card.locator(".pc-strip").evaluate("s => s.scrollLeft > 0")
+        check("the arrow on a card shows its next photo", moved)
+
+        # the map puts one pin on it for every listing that matches
+        total = page.locator(".plist .pcard").count()
+        page.goto(BASE + "/property/browse?view=map")
+        page.wait_for_load_state("networkidle")
+        try:
+            page.wait_for_selector(".map-pin", timeout=15000)
+            pins = page.locator(".map-pin").count()
+        except Exception:
+            pins = 0
+        check("the map shows a pin for every listing", pins >= total > 0, (pins, total))
+
+        # the rent helper follows the slider and links to the right budget
+        page.goto(BASE + "/")
+        page.wait_for_load_state("networkidle")
+        page.evaluate("""() => { const r = document.querySelector('[data-afford] input[type=range]');
+                                 r.value = 150000; r.dispatchEvent(new Event('input')); }""")
+        href = page.locator("[data-afford-link]").get_attribute("href") or ""
+        check("the rent helper suggests a third of the income", "max_price=50000" in href, href)
+
+        # a sale listing works out a monthly instalment
+        page.goto(BASE + "/property/browse?property_on=sale")
+        page.wait_for_load_state("networkidle")
+        page.locator(".pcard-title").first.click()
+        page.wait_for_load_state("networkidle")
+        emi = page.locator("[data-emi-out]").inner_text().strip()
+        check("a sale listing shows a monthly instalment", any(ch.isdigit() for ch in emi), emi)
         ctx.close()
 
         browser.close()
