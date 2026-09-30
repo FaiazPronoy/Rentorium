@@ -47,6 +47,14 @@ _public_hosts = [h for h in ALLOWED_HOSTS
 CSRF_TRUSTED_ORIGINS = [f'https://{h}' for h in _public_hosts]
 
 if not DEBUG:
+    # a live site on the development key would sign everyone's session with
+    # a string that is in this repository, so refuse to start instead
+    if SECRET_KEY.startswith('dev-only-key') or len(SECRET_KEY) < 40:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            'Set DJANGO_SECRET_KEY to a long random value before turning DEBUG off.')
+    # hosts that already force HTTPS at the proxy can switch this off
+    SECURE_SSL_REDIRECT = env_bool('DJANGO_SSL_REDIRECT', True)
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     SESSION_COOKIE_SECURE = True
