@@ -311,3 +311,13 @@ listings use them; a real listing uses whatever its owner uploads.
 - Images are resized on upload but not served in multiple sizes.
 - Map pins are placed by neighbourhood, not geocoded from the address, on purpose;
   a real deployment that wanted street level pins would need a geocoding service.
+
+## Authors
+
+Built by **Faiaz Abrar Zaman Pronoy** (lead developer) and **Sinthia Khandoker**.
+
+## Licence
+
+Copyright 2026 Faiaz Abrar Zaman Pronoy and Sinthia Khandoker. All rights
+reserved. You are welcome to read the code and run it to try it out, but not to
+copy it, hand it in as your own or publish it. See [LICENSE](LICENSE).

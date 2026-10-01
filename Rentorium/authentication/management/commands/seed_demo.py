@@ -84,7 +84,8 @@ RESIDENTIAL = [
      'A corner flat on the seventh floor, with windows on two sides, so the sun '
      'finds you in the morning and the breeze finds you in the evening. It comes '
      'furnished down to the curtains. Two lifts, a standby generator, a guard on '
-     'the gate, and Gulshan 2 circle is a ten minute walk.'),
+     'the gate, and Gulshan 2 circle is a ten minute walk. Ask for Kashem bhai, '
+     'the caretaker who has been here since the building went up.'),
     ('Quiet 2 bedroom in Dhanmondi, lake side', 'Dhanmondi', 'Dhaka', 'rent', 42000, 1100,
      2, 2, 1, 'semi', 'Two roads from Dhanmondi Lake',
      'A small, well kept building on a residential road, far enough from Satmasjid '

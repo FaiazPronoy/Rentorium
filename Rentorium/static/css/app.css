@@ -1,3 +1,4 @@
+/*! Rentorium. Copyright 2026 Faiaz Abrar Zaman Pronoy and Sinthia Khandoker. All rights reserved. See LICENSE. */
 /* =====================================================================
    Rentorium
    Dhaka at golden hour: a warm peach page, a tangerine to berry sunset for
@@ -1016,7 +1017,7 @@ main > section.band:last-child + .compare-bar + .foot,.band-dark + .foot{border-
   color:var(--text-2);transition:all var(--t-fast)}
 .foot .social a:hover{background:var(--surface);color:var(--text);transform:translateY(-2px);text-decoration:none}
 .foot .bottom{border-top:1px solid var(--border);padding-top:1.4rem;display:flex;justify-content:space-between;gap:1rem;
-  flex-wrap:wrap;font-size:.88rem;color:var(--muted)}
+  flex-wrap:wrap;font-size:.88rem;color:var(--muted);padding-right:60px}
 
 /* 20. Utility, print, preferences ------------------------------------ */
 .skip-link{position:absolute;left:-9999px;top:0;z-index:300;padding:.7rem 1.1rem;background:var(--text);color:var(--surface);

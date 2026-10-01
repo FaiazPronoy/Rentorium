@@ -1,3 +1,4 @@
+/*! Rentorium. Copyright 2026 Faiaz Abrar Zaman Pronoy and Sinthia Khandoker. All rights reserved. See LICENSE. */
 /* =====================================================================
    Rentorium front end.
    Plain JavaScript, no library, no build step. Everything here is an
