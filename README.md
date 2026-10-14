@@ -1,323 +1,139 @@
 # Rentorium
 
-**A Property Rental & Sales Platform** · Django 5, SQLite
-
-**Live demo:** https://faiazpronoy.pythonanywhere.com · **[All versions](../../releases)**
+**A platform to rent or buy homes, offices and land in Bangladesh.**
+Search listings, see them on a map, book a viewing and message the owner,
+while an agent checks every listing before it goes live.
 
 | | |
 |---|---|
-| **v2.0**, current | Rebuilt solo: a warm, photo-first interface, agent console, private ownership documents, 180 tests. |
-| **v1.0**, [see release](../../releases/tag/v1.0) | The first version, built as a team on a Bootstrap template. |
-
-**Try it:** the sign in page has a key for each demo person, a renter, an owner
-and the agent. Take one off the rack and you are in; nothing to type.
-
----
-
-A property rental and sales platform for Bangladesh: search listings, book a
-viewing, message the owner, and let an agent keep the whole thing honest.
-
-Django 5 and SQLite. Two Python dependencies, no build step, no front end
-framework: the interface is hand written CSS and plain JavaScript, and every
-icon is inline SVG. The outside requests are the web fonts, which fall back to
-the system sans, and Leaflet with OpenStreetMap tiles on the pages with a map;
-without a connection those pages say so and everything else works the same.
-
-### What it looks like
-
-Dhaka at golden hour. A warm peach page, a tangerine to berry sunset on
-everything you press, a deep plum for the evening bands, mint for anything a
-person has checked, and sunshine yellow for ratings. The home page opens with
-the search on one side and a stack of real rooms on the other, then three big
-doors in (a home, a place to work, land), neighbourhood tiles that show the
-lowest rent in each area, and a small calculator that turns your income into
-a comfortable rent. Listing cards let you swipe through the photos without
-opening them. Type is Outfit for headings and Be Vietnam Pro for reading. At
-night the page goes to plum and the sunset turns to coral.
+| **Course** | CSE471: System Analysis and Design, BRAC University |
+| **Type** | Group project |
+| **Made by** | Faiaz Abrar Zaman Pronoy and Sinthia Khandoker |
+| **Live demo** | https://faiazpronoy.pythonanywhere.com |
+| **Versions** | [All releases](../../releases) |
 
 ---
 
-## Running it
+## Features
+
+**For people looking for a place**
+- Search by area, price, size, rooms, furnishing, amenities and more, with 7 sort orders
+- See every result as a price pin on a map
+- Swipe through a listing's photos right on its card
+- See the full move-in cost for a rental, or a monthly instalment for a sale
+- "What can I afford?" slider that turns your income into a comfortable rent
+- Save searches and properties, and compare up to 4 side by side
+- Book a viewing on a date and time you pick
+- Message the owner, and review a place you have seen
+
+**For owners**
+- A guided form that only asks for what each type of property needs
+- Up to 8 photos with a chosen cover photo
+- Upload the ownership paper privately
+- A dashboard with views, saves, enquiries and visit requests
+- Hide a listing, or mark it rented or sold
+
+**For the agent**
+- An approval queue with photos, details and the ownership paper on one screen
+- Approve, or send back with a reason the owner can read
+- Verify ownership papers, which gives the owner a verified badge
+- Feature a listing on the home page
+- Platform stats, charts and a full decision log
+
+**Also**
+- Notifications for every booking, message and decision
+- Light and dark mode
+- Works on phones
+
+---
+
+## Built with
+
+| Part | Tools |
+|---|---|
+| Backend | Python, Django 5 |
+| Database | SQLite |
+| Frontend | Django templates, hand-written CSS and plain JavaScript (no framework) |
+| Map | Leaflet with OpenStreetMap |
+| Images | Pillow, to resize uploads |
+| Tests | Django's test runner, Playwright |
+
+Fonts: Outfit and Be Vietnam Pro. Icons are inline SVG.
+
+---
+
+## Demo logins
+
+The sign in page has a one-tap key for each person.
+
+| Role | Email | Password |
+|---|---|---|
+| Agent | `agent@rentorium.test` | `Agent@2026` |
+| Owner | `faiaz@rentorium.test` | `Rentorium@2026` |
+| Renter | `rafid@rentorium.test` | `Rentorium@2026` |
+| Django admin | `admin` (at `/admin/`) | `Admin@2026` |
+
+---
+
+## Run it
+
+You need **Python 3.10+**.
+
+- **Windows:** double-click `RUN-Rentorium.bat`. It does everything below.
+- **By hand:**
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+.venv\Scripts\activate
 pip install -r requirements.txt
-
 cd Rentorium
 python manage.py migrate
-python manage.py seed_demo       # fills it with realistic demo data
+python manage.py seed_demo
 python manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>. On Windows, `RUN-Rentorium.bat` in this
-folder does all of the above in one double-click.
-
-The sign in page offers these as keys; the passwords are here for anyone
-signing in by hand.
-
-| Role | Sign in with |
-|---|---|
-| Agent | `agent@rentorium.test` / `Agent@2026` |
-| Owner | `faiaz@rentorium.test` / `Rentorium@2026` |
-| Renter | `rafid@rentorium.test` / `Rentorium@2026` |
-| Django admin | `admin` / `Admin@2026` at `/admin/` |
-
-`seed_demo` creates 11 live listings with photos, one waiting for approval, one
-sent back for changes, plus reviews, bookings, conversations, saved properties
-and contact enquiries, so every page has something real on it.
-
-Settings that matter come from the environment: copy `.env.example` to `.env`
-and fill it in. With no SMTP settings, mail is printed to the console, which is
-what you want while trying it out.
-
----
-
-## What it does
-
-### For someone looking for a place
-
-- **Search that means something.** Keyword, rent or buy, type, city, area, price
-  range, minimum size, furnishing, bedrooms, bathrooms, business use, land type
-  and amenities, with seven sort orders. Amenities combine with AND, not OR, so
-  ticking two really does narrow it down.
-- **See it on a map.** Every match as a price pin over OpenStreetMap, placed in its
-  neighbourhood rather than on the building, so the exact address stays with
-  the owner until a viewing is agreed.
-- **Swipe through the photos on a card**, on a phone or with the arrows on a
-  laptop, without opening the listing.
-- **Know what it costs before you call.** A rental shows the advance, the
-  service charge and the total you need to get the keys; a sale works out a
-  monthly instalment from your down payment, rate and years.
-- **What can I afford?** A slider on the home page turns a monthly income into
-  a comfortable rent and links straight to places under it.
-- **Save a search** and come straight back to the same filters.
-- **Save properties** to a shortlist, with the heart updating without a page reload.
-- **Compare up to four side by side** on price, size, price per square foot,
-  rooms, rating and amenity count.
-- **Book a viewing.** Pick a date and time; the owner accepts, declines with a
-  reason, or suggests another slot.
-- **Message the owner** in a thread tied to that one property.
-- **Review a place** you have seen. One review per person per property.
-
-### For someone with a place to let
-
-- **Guided listing flow**: pick residential, commercial or land, then fill in only
-  the fields that type actually needs.
-- **A photo gallery** of up to eight images, with a chosen cover photo.
-- **A private document upload** for the ownership paper.
-- **Your own dashboard**: views, saves, enquiries, visit requests, and a fourteen
-  day view chart across every listing you own.
-- **Per listing analytics**: a thirty day view chart, who saved it, how many
-  enquiries and visits it produced.
-- **Status control**: hide a listing, mark it rented or sold, or send it back
-  into the queue.
-
-### For the agent
-
-- **An approval queue** with the photos, the description, the owner's history and
-  the ownership paper all on one screen.
-- **Approve, send back with a written reason, or withdraw an approval.** The owner
-  is notified either way, and sees exactly what to fix.
-- **Verify ownership papers**, which puts a verified badge on the owner.
-- **Feature a listing** onto the front page.
-- **Platform stats**: listings, users, views, bookings, enquiries, saves,
-  ratings, a fourteen day view chart, a six month sign up chart, and breakdowns
-  by type and by area.
-- **A permanent decision log** and a user directory.
-- **The contact form queue**, with replies that land in the person's notifications.
-
----
-
-## What I fixed on the second pass
-
-I came back to this after the course finished. Three access control checks were
-missing, and each now has a test that fails if the check is removed again.
-
-- **Anyone signed in could read anyone's ownership papers.** The check was
-  `if request.user.UserProfile.is_agent or property_instance.user_id`, a
-  primary key is always truthy, so the condition was always true. Permission
-  now lives on the model in `can_documents_be_seen_by`, and the file itself is
-  stored outside `MEDIA_ROOT` so it has no guessable URL.
-- **Anyone signed in could edit or delete anyone's listing.** `update_property`
-  and `delete_property` fetched the row by id and never asked whose it was.
-- **Secrets were committed.** `settings.py` held a live Gmail app password and a
-  Stripe key in plain text. Both now come from the environment. (If you are
-  reading this from the old history: those credentials have been rotated.)
-
-Other things that were broken:
-
-- `LandProperty.Road_size_in_sqft = models.IntegerField`, no brackets, so the
-  column was never created.
-- The context processor called `.get()` with no guard, so a user without a
-  profile row took the whole site down. A signal now creates profiles.
-- `property_detail` passed `vars(instance)` into the template context.
-- Agent decisions overwrote one text column, so the history was lost. Each
-  decision is now its own `AgentAction` row.
-- `ContactForm` was a `forms.Form` with a `Meta` pointing at a model, which does
-  nothing, and the view read `request.POST` directly.
-- Search paging repeated some listings and skipped others, because the filter
-  form was only bound when the query string was non-empty.
-- A cancelled viewing could be accepted again through the accept URL.
-- The owner dashboard crashed on Windows: the chart labels used
-  `strftime('%-d')`, which only exists on glibc.
-
----
-
-## How it is kept safe now
-
-- **Passwords** go through Django's hasher with the full validator set plus a
-  house rule: eight characters, one capital, one small, one digit, one symbol.
-- **Six wrong sign in attempts** lock an address for fifteen minutes, and every
-  attempt is recorded and shown back to the user on their profile.
-- **State changes go through POST**, with a `@post_required` decorator and
-  Django's CSRF protection on the forms.
-- **Authorisation lives on the model**, not scattered through the views:
-  `can_be_seen_by`, `can_be_edited_by`, `can_documents_be_seen_by`.
-- **The `next` parameter is checked** so a sign in link cannot bounce you to
-  another site.
-- **The search box cannot reach the ORM as a field name.** Every filter goes
-  through a form first, so an unknown value simply does not filter.
-- **The contact form has a honeypot** and real validation.
-- **Uploads are limited** by size and by extension.
-
----
-
-## The data model
-
-Twenty models. The decisions worth explaining:
-
-- **`AllProperty` with three subtypes.** Multi table inheritance:
-  the shared columns live in one table, and residential, commercial and land
-  each add their own. `listing.specific` returns whichever subtype row exists.
-- **Money is `DecimalField`**, so a price is never quietly rounded.
-- **One `status` field** instead of a free text `Approval_by_Agent` column and a
-  `needs_approval` flag that could disagree with each other. `save()` keeps the
-  two older columns in step so nothing that reads them breaks.
-- **A database constraint stops double bookings.** Not a check in a view, an
-  actual partial unique index:
-
-```python
-models.UniqueConstraint(
-    fields=['property', 'visit_date', 'visit_time'],
-    condition=Q(status='accepted'),
-    name='one_accepted_visit_per_slot',
-)
-```
-
-- **One review per person per property**, and **one saved copy per person per
-  property**, both enforced by unique constraints rather than by hoping.
-- **`PropertyView`** records one row per person per property per day, which is
-  what makes the analytics charts mean anything.
-- **Indexes** on status and date, type and listing intent, area and city, price
-  and slug.
-
-```
-User 1───1 UserProfile
-UserProfile 1───* AllProperty ───┬── ResidentialProperty
-                                 ├── CommercialProperty
-                                 └── LandProperty
-AllProperty 1───* PropertyImage, PropertyReview, Booking, Conversation,
-                   Favourite, PropertyView, AgentAction
-AllProperty *───* Amenity
-Conversation 1───* Message
-UserProfile 1───* Notification, SavedSearch, LoginAttempt
-```
-
----
-
-## Layout
-
-```
-Rentorium/
-├── manage.py
-├── Rentorium/            settings, urls, wsgi, asgi
-├── authentication/       profiles, roles, notifications, sign in log, guards
-│   ├── decorators.py     login_required_message, agent_required, post_required
-│   └── management/commands/seed_demo.py
-├── property/             listings, search, images, favourites, reviews,
-│                         bookings, messaging, saved searches, analytics
-├── basic/                home, about, FAQs, terms, testimonials, contact
-├── Agents/               approval queue, decision log, platform stats
-├── templates/            43 pages plus shared partials
-└── static/
-    ├── css/app.css       the whole design system, light and dark
-    └── js/app.js         plain JavaScript, no library
-```
-
-The four apps and the original URL names are kept, so old links still work.
+Open <http://127.0.0.1:8000>. Settings come from `.env` (copy `.env.example`).
 
 ---
 
 ## Tests
 
-```bash
-cd Rentorium
-python manage.py test
+- `python manage.py test` runs **187 tests**
+- They cover search, bookings, messages, who can edit or delete what, and who can see ownership papers
+- `tools/browser_checks.py` opens every page in light and dark mode and checks contrast and phone width
+
+---
+
+## Folder layout
+
+```
+Rentorium/
+  property/        listings, search, map, bookings, reviews
+  authentication/  sign up, sign in, profiles, demo data
+  Agents/          the agent's approval queue and stats
+  basic/           home, about, contact pages
+  templates/       the HTML pages
+  static/          CSS, JavaScript and photos
+tools/             browser checks
 ```
 
-**187 tests, all passing.** They cover:
-
-- models: slugs, status transitions, price per square foot, subtype resolution,
-  and the unique constraints
-- access control, from both sides: a stranger is refused, the owner and the
-  agent are let in, for documents, editing, deleting, conversations and the
-  agent console
-- private documents: the file has no public URL, and only the document view
-  hands it over
-- bookings: past dates, out of hours, the same slot twice, who may accept, who
-  may cancel, the database constraint itself, and that a cancelled visit cannot
-  be accepted afterwards
-- search: every filter, amenities combining with AND, ordering, a junk filter
-  value, and that page one and page two never repeat a listing
-- auth: weak passwords, duplicate email and NID, the six attempt lockout, the
-  open redirect on `next`, deleting an account
-- agent: approving, rejecting without a reason, withdrawing an approval, the
-  decision history surviving three changes, GET refusals
-- the dashboard and the saved searches pages
-- the demo keys: none on an empty database, none for a suspended account, and
-  each one signs in as its person
-- the map: a pin for every match, the filters applied to it, the same spot for a
-  listing every time; the move in total on a rental; the neighbourhood tiles
-
-`tools/browser_checks.py` (Playwright, using the Edge that comes with Windows)
-opens every page a visitor, a renter, an owner and the agent can reach, in
-light and dark, and fails on any status other than 200, any console error,
-any text below WCAG AA contrast, or sideways scrolling at 390 px. It also
-takes each key off the rack, tries the password eye, and checks that the
-header search and the rail both filter, that the arrows on a card move to the
-next photo, that the map has a pin for every listing, that the rent helper
-follows its slider, and that a sale listing works out an instalment. Run it against
-`runserver 127.0.0.1:8020` on a seeded database.
-
 ---
 
-## Photographs
+## Photos
 
-Every photograph is released under CC0, so it is free to use for anything
-without asking and without credit. They came from
-[StockSnap](https://stocksnap.io) and the public domain collection on
+Every photo is CC0 (free to use), from [StockSnap](https://stocksnap.io) and
 [rawpixel](https://www.rawpixel.com/category/53/public-domain), found through
-[Openverse](https://openverse.org), and live in `static/img/photos`. The demo
-listings use them; a real listing uses whatever its owner uploads.
+[Openverse](https://openverse.org).
 
 ---
-
-## Known limitations
-
-- The JavaScript is covered by the browser check, not by unit tests.
-- No rate limiting on registration, only on sign in.
-- Email is console-only unless SMTP settings are supplied.
-- Images are resized on upload but not served in multiple sizes.
-- Map pins are placed by neighbourhood, not geocoded from the address, on purpose;
-  a real deployment that wanted street level pins would need a geocoding service.
 
 ## Authors
 
-Built by **Faiaz Abrar Zaman Pronoy** (lead developer) and **Sinthia Khandoker**.
+- **Faiaz Abrar Zaman Pronoy** (ফাইয়াজ আবরার জামান প্রনয়), lead developer
+- **Sinthia Khandoker** (সিনথিয়া খন্দকার)
 
 ## Licence
 
-Copyright 2026 Faiaz Abrar Zaman Pronoy and Sinthia Khandoker. All rights
-reserved. You are welcome to read the code and run it to try it out, but not to
-copy it, hand it in as your own or publish it. See [LICENSE](LICENSE).
+Copyright 2026 Faiaz Abrar Zaman Pronoy and Sinthia Khandoker. All rights reserved.
+You may read the code and run it to try it out. You may not copy it, hand it in
+as your own work, or publish it. See [LICENSE](LICENSE).
