@@ -8,9 +8,9 @@ while an agent checks every listing before it goes live.
 |---|---|
 | **Course** | CSE471: System Analysis and Design, BRAC University |
 | **Type** | Group project |
-| **Made by** | Faiaz Abrar Zaman Pronoy and Sinthia Khandoker |
+| **Made by** | Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Jahirul Islam Zishan |
 | **Live demo** | https://faiazpronoy.pythonanywhere.com |
-| **Versions** | [All releases](../../releases) |
+| **Versions** | [v1.0, the first version, and v2.0, the rebuild](../../releases) |
 
 ---
 
@@ -131,9 +131,10 @@ Every photo is CC0 (free to use), from [StockSnap](https://stocksnap.io) and
 
 - **Faiaz Abrar Zaman Pronoy** (ফাইয়াজ আবরার জামান প্রনয়), lead developer
 - **Sinthia Khandoker** (সিনথিয়া খন্দকার)
+- **Jahirul Islam Zishan** (জহিরুল ইসলাম জিশান)
 
 ## Licence
 
-Copyright 2026 Faiaz Abrar Zaman Pronoy and Sinthia Khandoker. All rights reserved.
+Copyright 2024-2026 Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Jahirul Islam Zishan. All rights reserved.
 You may read the code and run it to try it out. You may not copy it, hand it in
 as your own work, or publish it. See [LICENSE](LICENSE).
