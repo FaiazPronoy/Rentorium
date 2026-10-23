@@ -96,6 +96,20 @@ Open <http://127.0.0.1:8000>. Settings come from `.env` (copy `.env.example`).
 
 ---
 
+## Settings
+
+Copy `Rentorium/.env.example` to `Rentorium/.env` (the launcher does this for you). The `.env` file is never committed.
+
+| Variable | What it is |
+|---|---|
+| `DJANGO_SECRET_KEY` | Django's secret key. With DEBUG off the site refuses to start on the placeholder. |
+| `DJANGO_DEBUG` | Off unless set to `True`, so a server that misses it stays safe |
+| `DJANGO_ALLOWED_HOSTS` | Host names the site answers to |
+| `DJANGO_SSL_REDIRECT` | Send HTTP to HTTPS when DEBUG is off (default on) |
+| `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` and the rest | Optional. Left empty, mail is printed to the console. |
+
+---
+
 ## Tests
 
 - `python manage.py test` runs **187 tests**
