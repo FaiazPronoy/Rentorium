@@ -1,9 +1,9 @@
 """
 Django settings for Rentorium.
 
-Secrets are read from the environment, with development friendly defaults, so
-nothing sensitive is ever committed. Copy .env.example to .env and fill it in
-for anything that has to be real.
+Secrets are read from the environment, so nothing sensitive is ever committed.
+DEBUG is off unless .env turns it on, so a server that misses a setting stays
+safe. Copy .env.example to .env for local work; it turns DEBUG on.
 """
 import os
 from pathlib import Path
@@ -32,7 +32,7 @@ def env_bool(key, default=False):
 
 # security
 SECRET_KEY = env('DJANGO_SECRET_KEY', 'dev-only-key-change-me-before-deploying')
-DEBUG = env_bool('DJANGO_DEBUG', True)
+DEBUG = env_bool('DJANGO_DEBUG', False)
 ALLOWED_HOSTS = [h for h in env('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',') if h]
 
 # Behind a host that terminates TLS for us (PythonAnywhere, Render and the

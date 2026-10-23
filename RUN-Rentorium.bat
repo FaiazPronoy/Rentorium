@@ -120,6 +120,12 @@ REM  3. Database.
 REM ------------------------------------------------------------------
 cd "Rentorium"
 
+REM local settings: DEBUG on and the demo key. A server sets its own.
+if not exist ".env" (
+  echo       Writing a local .env from .env.example ...
+  copy /y ".env.example" ".env" >nul
+)
+
 set "FRESH=0"
 if not exist "db.sqlite3" set "FRESH=1"
 
