@@ -1,5 +1,7 @@
 # Rentorium
 
+[![Tests](https://github.com/FaiazPronoy/Rentorium/actions/workflows/tests.yml/badge.svg)](https://github.com/FaiazPronoy/Rentorium/actions/workflows/tests.yml)
+
 **A platform to rent or buy homes, offices and land in Bangladesh.**
 Search listings, see them on a map, book a viewing and message the owner,
 while an agent checks every listing before it goes live.
@@ -11,6 +13,10 @@ while an agent checks every listing before it goes live.
 | **Made by** | Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Jahirul Islam Zishan |
 | **Live demo** | https://faiazpronoy.pythonanywhere.com |
 | **Versions** | [v1.0, the first version, and v2.0, the rebuild](../../releases) |
+
+| | |
+|---|---|
+| ![Home page](docs/home.jpg) | ![Listings on a map](docs/map.jpg) |
 
 ---
 
