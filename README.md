@@ -13,6 +13,7 @@ while an agent checks every listing before it goes live.
 | **Made by** | Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Jahirul Islam Zishan |
 | **Live demo** | https://faiazpronoy.pythonanywhere.com |
 | **Versions** | [v1.0, the first version, and v2.0, the rebuild](../../releases) |
+| **History** | Built in Summer 2024 for the course. Rebuilt and published here in October 2026. |
 
 | | |
 |---|---|
@@ -86,7 +87,7 @@ For Django's own admin at `/admin/`, make your own login with `python manage.py 
 
 You need **Python 3.10+**.
 
-- **Windows:** double-click `RUN-Rentorium.bat`. It does everything below.
+- **Windows:** double-click `RUN-Rentorium.bat`. It makes a virtual environment, installs the packages, loads the demo data and starts the server.
 - **By hand:**
 
 ```bash
@@ -125,7 +126,7 @@ Copy `Rentorium/.env.example` to `Rentorium/.env` (the launcher does this for yo
 
 ---
 
-## Folder layout
+## Project structure
 
 ```
 Rentorium/
@@ -148,11 +149,22 @@ Every photo is CC0 (free to use), from [StockSnap](https://stocksnap.io) and
 
 ---
 
-## Authors
+## Team
+
+Faiaz led the team: he turned the course's system analysis into the data
+model, gave each member a part of the site, and reviewed and merged their work.
 
 - **Faiaz Abrar Zaman Pronoy** (ফাইয়াজ আবরার জামান প্রনয়), lead developer
+  - The data model and the listing workflow from draft to live
+  - Search, filters and sort orders, and the map view
+  - The agent's approval queue, ownership paper checks and decision log
+  - Who can see and change what, the test suite and the live deploy
 - **Sinthia Khandoker** (সিনথিয়া খন্দকার)
+  - Viewing bookings and the owner dashboard
+  - Reviews, saved properties and the compare page
 - **Jahirul Islam Zishan** (জহিরুল ইসলাম জিশান)
+  - Messages and notifications
+  - The home, about and contact pages
 
 ## Licence
 
