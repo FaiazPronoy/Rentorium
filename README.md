@@ -77,7 +77,8 @@ The sign in page has a one-tap key for each person.
 | Agent | `agent@rentorium.test` | `Agent@2026` |
 | Owner | `faiaz@rentorium.test` | `Rentorium@2026` |
 | Renter | `rafid@rentorium.test` | `Rentorium@2026` |
-| Django admin | `admin` (at `/admin/`) | `Admin@2026` |
+
+For Django's own admin at `/admin/`, make your own login with `python manage.py createsuperuser`.
 
 ---
 

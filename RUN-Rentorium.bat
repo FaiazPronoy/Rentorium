@@ -152,7 +152,6 @@ echo.
 echo   Owner    faiaz@rentorium.test  /  Rentorium@2026
 echo   Agent    agent@rentorium.test  /  Agent@2026
 echo   Renter   rafid@rentorium.test  /  Rentorium@2026
-echo   Django admin at /admin/   admin / Admin@2026
 echo.
 echo   Press Ctrl+C in this window to stop.
 echo.

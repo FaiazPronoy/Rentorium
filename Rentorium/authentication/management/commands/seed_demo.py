@@ -272,9 +272,7 @@ class Command(BaseCommand):
             profile.save()
             profiles[email] = profile
 
-        if not User.objects.filter(username='admin').exists():
-            User.objects.create_superuser('admin', 'admin@rentorium.test', 'Admin@2026')
-        self.stdout.write(f'  {len(profiles)} profiles plus a superuser')
+        self.stdout.write(f'  {len(profiles)} profiles')
 
         # ---------------------------------------------------- listings --
         owners = [profiles[e] for _, e, r, _, _ in PEOPLE if r == 'owner']
@@ -703,4 +701,4 @@ class Command(BaseCommand):
         self.stdout.write('  Agent      agent@rentorium.test / Agent@2026')
         self.stdout.write('  Owner      faiaz@rentorium.test / Rentorium@2026')
         self.stdout.write('  Renter     rafid@rentorium.test / Rentorium@2026')
-        self.stdout.write('  Superuser  admin / Admin@2026')
+        self.stdout.write('  Django admin: run manage.py createsuperuser to make your own login')
