@@ -48,6 +48,7 @@ while an agent checks every listing before it goes live.
 - Platform stats, charts and a full decision log
 
 **Also**
+- Two-step sign in, if you want it: after your password, a 6 digit code sent to your email
 - Notifications for every booking, message and decision
 - Light and dark mode
 - Works on phones
@@ -78,6 +79,8 @@ The sign in page has a one-tap key for each person.
 | Agent | `agent@rentorium.test` | `Agent@2026` |
 | Owner | `faiaz@rentorium.test` | `Rentorium@2026` |
 | Renter | `rafid@rentorium.test` | `Rentorium@2026` |
+
+Two-step sign in stays off on the demo accounts, so they always open.
 
 For Django's own admin at `/admin/`, make your own login with `python manage.py createsuperuser`.
 
@@ -114,14 +117,14 @@ Copy `Rentorium/.env.example` to `Rentorium/.env` (the launcher does this for yo
 | `DJANGO_DEBUG` | Off unless set to `True`, so a server that misses it stays safe |
 | `DJANGO_ALLOWED_HOSTS` | Host names the site answers to |
 | `DJANGO_SSL_REDIRECT` | Send HTTP to HTTPS when DEBUG is off (default on) |
-| `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` and the rest | Optional. Left empty, mail is printed to the console. |
+| `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` and the rest | Optional. The Gmail address and app password that send password resets and two-step codes. Left empty, mail is printed to the console. |
 
 ---
 
 ## Tests
 
-- `python manage.py test` runs **187 tests**
-- They cover search, bookings, messages, who can edit or delete what, and who can see ownership papers
+- `python manage.py test` runs **198 tests**
+- They cover search, bookings, messages, two-step sign in, who can edit or delete what, and who can see ownership papers
 - `tools/browser_checks.py` opens every page in light and dark mode and checks contrast and phone width
 
 ---

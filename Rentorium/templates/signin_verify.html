@@ -1,0 +1,34 @@
+{% extends 'auth_base.html' %}
+{% block title %}Enter your code{% endblock %}
+{% block aside %}
+    <blockquote>One more step, and you are in.</blockquote>
+    <p>Two-step sign in keeps your listings and messages safe even if someone learns your password.</p>
+{% endblock %}
+{% block card %}
+<div class="auth-card">
+    <div class="auth-logo">
+      <h1>Check your <em>email</em></h1>
+      <p>We sent a 6 digit code to <b>{{ email }}</b>. It works once and expires in 10 minutes.</p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-ok{% elif message.tags == 'warning' %}alert-warn{% else %}alert-info{% endif %}"
+             style="margin-bottom:1rem">{% icon "info" %}<span>{{ message }}</span></div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" data-once>
+      {% csrf_token %}
+      {% include 'partials/_field.html' with field=form.code %}
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Sign in</button>
+    </form>
+
+    <form method="post" class="between" style="margin-top:1.1rem;font-size:.93rem">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="resend">
+      <button class="btn btn-ghost btn-sm" type="submit">Send a new code</button>
+      <a href="{% url 'signin' %}">Start again</a>
+    </form>
+  </div>
+{% endblock %}

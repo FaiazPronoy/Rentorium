@@ -16,12 +16,15 @@ from property.models import AllProperty, Booking, Conversation, PropertyView
 from property.views import annotate_saved
 
 from .decorators import login_required_message, post_required, profile_of
-from .demo import demo_keys
-from .forms import ChangePasswordForm, EditProfileForm, SignInForm, SignUpForm
-from .models import LoginAttempt, Notification, UserProfile
+from .demo import KEYS, demo_keys
+from .forms import ChangePasswordForm, EditProfileForm, EmailCodeForm, SignInForm, SignUpForm
+from .models import EmailCode, LoginAttempt, Notification, UserProfile
 
 MAX_LOGIN_FAILURES = 6
 LOCK_MINUTES = 15
+DEMO_EMAILS = {key[1] for key in KEYS}
+PENDING_USER = 'two_step_user'
+PENDING_NEXT = 'two_step_next'
 
 
 def client_ip(request):
@@ -79,6 +82,14 @@ def signup(request):
     return render(request, 'signup.html', {'form': form})
 
 
+def _complete_signin(request, user, target):
+    LoginAttempt.objects.create(username=user.username, ip=client_ip(request), successful=True)
+    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    request.session.cycle_key()
+    messages.success(request, f'Signed in. Hello, {user.UserProfile.first_name}.')
+    return redirect(target)
+
+
 def signin(request):
     if request.user.is_authenticated:
         messages.info(request, 'You are already signed in.')
@@ -102,13 +113,12 @@ def signin(request):
             form = SignInForm(request, data=request.POST)
             if form.is_valid():
                 user = form.get_user()
-                LoginAttempt.objects.create(
-                    username=username, ip=client_ip(request), successful=True
-                )
-                login(request, user)
-                request.session.cycle_key()
-                messages.success(request, f'Signed in. Hello, {user.UserProfile.first_name}.')
-                return redirect(_safe_next(request, '/'))
+                if user.UserProfile.two_step:
+                    request.session[PENDING_USER] = user.pk
+                    request.session[PENDING_NEXT] = _safe_next(request, '/')
+                    EmailCode.issue(user, EmailCode.Purpose.SIGN_IN)
+                    return redirect('signin_verify')
+                return _complete_signin(request, user, _safe_next(request, '/'))
 
             LoginAttempt.objects.create(
                 username=username, ip=client_ip(request), successful=False
@@ -144,6 +154,98 @@ def signin(request):
     })
 
 
+def signin_verify(request):
+    user = User.objects.filter(pk=request.session.get(PENDING_USER), is_active=True).first()
+    if user is None:
+        messages.info(request, 'Sign in again to get a new code.')
+        return redirect('signin')
+
+    form = EmailCodeForm(request.POST or None)
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        if EmailCode.can_resend(user, EmailCode.Purpose.SIGN_IN):
+            EmailCode.issue(user, EmailCode.Purpose.SIGN_IN)
+            messages.success(request, 'A new code is on its way.')
+        else:
+            messages.info(request, 'Please wait a minute before asking for another code.')
+        return redirect('signin_verify')
+
+    if request.method == 'POST' and form.is_valid():
+        result = EmailCode.redeem(user, EmailCode.Purpose.SIGN_IN, form.cleaned_data['code'])
+        if result == 'ok':
+            target = request.session.pop(PENDING_NEXT, '/')
+            request.session.pop(PENDING_USER, None)
+            return _complete_signin(request, user, target)
+        LoginAttempt.objects.create(username=user.username, ip=client_ip(request), successful=False)
+        locked = LoginAttempt.recent_failures(user.username, LOCK_MINUTES) >= MAX_LOGIN_FAILURES
+        if result == 'expired' or locked:
+            request.session.pop(PENDING_USER, None)
+            request.session.pop(PENDING_NEXT, None)
+            messages.error(request, 'That code has expired or was wrong too many times. Sign in again.')
+            return redirect('signin')
+        messages.error(request, 'That code is not right. Check the latest email and try again.')
+
+    return render(request, 'signin_verify.html', {
+        'form': form, 'email': _masked(user.email),
+    })
+
+
+def _masked(email):
+    name, _, domain = email.partition('@')
+    return f'{name[:2]}{"•" * min(max(len(name) - 2, 1), 6)}@{domain}'
+
+
+@login_required_message
+@post_required
+def two_step_on(request):
+    if request.user.username in DEMO_EMAILS:
+        messages.error(request, 'Two-step sign in stays off on demo accounts, so everyone can still try them.')
+    else:
+        EmailCode.issue(request.user, EmailCode.Purpose.TURN_ON)
+        messages.success(request, f'We sent a code to {_masked(request.user.email)}.')
+    return redirect(reverse('profile') + '#two-step')
+
+
+@login_required_message
+@post_required
+def two_step_confirm(request):
+    form = EmailCodeForm(request.POST)
+    result = EmailCode.redeem(request.user, EmailCode.Purpose.TURN_ON, form.cleaned_data['code']) \
+        if form.is_valid() else 'wrong'
+    if result == 'ok':
+        me = profile_of(request)
+        me.two_step = True
+        me.save(update_fields=['two_step'])
+        Notification.push(me, 'Two-step sign in is on',
+                          'Each sign in now asks for a code sent to your email.',
+                          reverse('profile'), Notification.Kind.ALERT)
+        messages.success(request, 'Two-step sign in is on.')
+    elif result == 'wrong':
+        messages.error(request, 'That code is not right.')
+    else:
+        messages.error(request, 'That code has expired. Ask for a new one.')
+    return redirect(reverse('profile') + '#two-step')
+
+
+@login_required_message
+@post_required
+def two_step_cancel(request):
+    EmailCode.objects.filter(user=request.user, purpose=EmailCode.Purpose.TURN_ON).delete()
+    return redirect(reverse('profile') + '#two-step')
+
+
+@login_required_message
+@post_required
+def two_step_off(request):
+    if request.user.check_password(request.POST.get('password', '')):
+        me = profile_of(request)
+        me.two_step = False
+        me.save(update_fields=['two_step'])
+        messages.success(request, 'Two-step sign in is off.')
+    else:
+        messages.error(request, 'That is not your password.')
+    return redirect(reverse('profile') + '#two-step')
+
+
 @login_required_message
 @post_required
 def signout(request):
@@ -169,6 +271,10 @@ def profile(request):
         'stats': stats,
         'recent_logins': LoginAttempt.objects.filter(
             username=request.user.username)[:6],
+        'code_form': EmailCodeForm(),
+        'setup_pending': EmailCode.latest(request.user, EmailCode.Purpose.TURN_ON) is not None,
+        'is_demo': request.user.username in DEMO_EMAILS,
+        'email': _masked(request.user.email),
         'active': 'profile',
     })
 

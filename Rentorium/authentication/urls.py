@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('signup', views.signup, name='signup'),
     path('signin', views.signin, name='signin'),
+    path('signin/verify', views.signin_verify, name='signin_verify'),
     path('signout', views.signout, name='signout'),
     path('profile', views.profile, name='profile'),
     path('edit-profile', views.edit_profile, name='edit_profile'),
@@ -12,6 +13,10 @@ urlpatterns = [
 
     path('dashboard/', views.dashboard, name='dashboard'),
     path('change-password/', views.change_password, name='change_password'),
+    path('two-step/on/', views.two_step_on, name='two_step_on'),
+    path('two-step/confirm/', views.two_step_confirm, name='two_step_confirm'),
+    path('two-step/cancel/', views.two_step_cancel, name='two_step_cancel'),
+    path('two-step/off/', views.two_step_off, name='two_step_off'),
     path('become-owner/', views.become_owner, name='become_owner'),
     path('people/<int:pk>/', views.public_profile, name='public_profile'),
     path('notifications/', views.notifications, name='notifications'),

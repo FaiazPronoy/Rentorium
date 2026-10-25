@@ -79,6 +79,43 @@
         </div>
       </div>
 
+      <div class="card" id="two-step" style="margin-bottom:1.2rem">
+        <div class="between">
+          <div class="card-title mb0">Two-step sign in</div>
+          {% if me.two_step %}<span class="badge badge-ok">on</span>{% else %}<span class="badge">off</span>{% endif %}
+        </div>
+        {% if me.two_step %}
+          <p class="tiny muted">Each sign in asks for your password and then a 6 digit code sent to {{ email }}.</p>
+          <form method="post" action="{% url 'two_step_off' %}">
+            {% csrf_token %}
+            <div class="field">
+              <label for="twoStepPassword">Type your password to turn it off</label>
+              <input type="password" name="password" id="twoStepPassword" required autocomplete="current-password">
+            </div>
+            <button class="btn btn-ghost btn-block btn-sm" type="submit">Turn off</button>
+          </form>
+        {% elif setup_pending %}
+          <p class="tiny muted">Enter the code we sent to {{ email }}.</p>
+          <form method="post" action="{% url 'two_step_confirm' %}">
+            {% csrf_token %}
+            {% include 'partials/_field.html' with field=code_form.code %}
+            <div class="between">
+              <button class="btn btn-primary btn-sm" type="submit">Turn on</button>
+              <button class="btn btn-ghost btn-sm" type="submit" formaction="{% url 'two_step_cancel' %}">Cancel</button>
+            </div>
+          </form>
+        {% elif is_demo %}
+          <p class="tiny muted">Demo accounts keep this off so everyone can still sign in to them.</p>
+        {% else %}
+          <p class="tiny muted">After your password, we email a 6 digit code to {{ email }}.
+            Someone who learns your password still cannot get in.</p>
+          <form method="post" action="{% url 'two_step_on' %}">
+            {% csrf_token %}
+            <button class="btn btn-primary btn-block btn-sm" type="submit">Turn on</button>
+          </form>
+        {% endif %}
+      </div>
+
       <div class="card" style="border-left:4px solid var(--danger)">
         <div class="card-title">Delete this account</div>
         <p class="tiny muted">

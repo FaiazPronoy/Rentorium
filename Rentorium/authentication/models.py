@@ -1,6 +1,9 @@
 import os
+import secrets
 
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.db import models
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -37,6 +40,8 @@ class UserProfile(models.Model):
     is_agent = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     avatar_color = models.CharField(max_length=7, default='#1D4E9E')
+
+    two_step = models.BooleanField(default=False)
 
     is_suspended = models.BooleanField(default=False)
     suspended_at = models.DateTimeField(null=True, blank=True)
@@ -215,3 +220,65 @@ class LoginAttempt(models.Model):
         return cls.objects.filter(
             username=username, successful=False, attempted_at__gte=since
         ).count()
+
+
+class EmailCode(models.Model):
+    class Purpose(models.TextChoices):
+        SIGN_IN = 'sign_in', 'Sign in'
+        TURN_ON = 'turn_on', 'Turn on two-step sign in'
+
+    LIFETIME = timezone.timedelta(minutes=10)
+    RESEND_AFTER = timezone.timedelta(minutes=1)
+    MAX_TRIES = 5
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='email_codes')
+    purpose = models.CharField(max_length=10, choices=Purpose.choices)
+    code_hash = models.CharField(max_length=128)
+    tries = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['user', 'purpose', '-created_at'])]
+
+    def __str__(self):
+        return f'{self.user} {self.purpose}'
+
+    @classmethod
+    def issue(cls, user, purpose):
+        cls.objects.filter(user=user, purpose=purpose, used_at__isnull=True).delete()
+        code = f'{secrets.randbelow(10 ** 6):06d}'
+        cls.objects.create(user=user, purpose=purpose, code_hash=make_password(code))
+        send_mail(
+            f'{code} is your Rentorium code',
+            f'Your Rentorium code is {code}. It expires in 10 minutes.\n\n'
+            f'Use it to {cls.Purpose(purpose).label.lower()}. If this was not you, change your password.',
+            None,
+            [user.email],
+        )
+
+    @classmethod
+    def latest(cls, user, purpose):
+        return cls.objects.filter(user=user, purpose=purpose, used_at__isnull=True).first()
+
+    @classmethod
+    def can_resend(cls, user, purpose):
+        last = cls.latest(user, purpose)
+        return last is None or timezone.now() - last.created_at >= cls.RESEND_AFTER
+
+    @classmethod
+    def redeem(cls, user, purpose, code):
+        entry = cls.latest(user, purpose)
+        if entry is None or timezone.now() - entry.created_at > cls.LIFETIME:
+            return 'expired'
+        if check_password(code.strip(), entry.code_hash):
+            entry.used_at = timezone.now()
+            entry.save(update_fields=['used_at'])
+            return 'ok'
+        entry.tries += 1
+        if entry.tries >= cls.MAX_TRIES:
+            entry.delete()
+            return 'expired'
+        entry.save(update_fields=['tries'])
+        return 'wrong'

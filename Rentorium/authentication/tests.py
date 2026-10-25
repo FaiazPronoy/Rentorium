@@ -1,8 +1,12 @@
+import re
+
 from django.contrib.auth.models import User
+from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
-from authentication.models import LoginAttempt, Notification, UserProfile
+from authentication.models import EmailCode, LoginAttempt, Notification, UserProfile
 
 PASSWORD = 'Rentorium@2026'
 
@@ -245,3 +249,106 @@ class DemoKeyTests(TestCase):
         User.objects.create_user(username='faiaz@rentorium.test', email='faiaz@rentorium.test',
                                  password=DEMO_PASSWORD, is_active=False)
         self.assertEqual(self.client.get(reverse('signin')).context['demo'], [])
+
+
+class TwoStepTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='faiaz@test.com', email='faiaz@test.com', password=PASSWORD)
+
+    def code(self):
+        return re.search(r'\b(\d{6})\b', mail.outbox[-1].subject).group(1)
+
+    def sign_in(self, **extra):
+        return self.client.post(reverse('signin'),
+                                {'username': 'faiaz@test.com', 'password': PASSWORD, **extra})
+
+    def turn_on(self):
+        self.client.force_login(self.user)
+        self.client.post(reverse('two_step_on'))
+        self.client.post(reverse('two_step_confirm'), {'code': self.code()})
+        self.client.logout()
+
+    def test_it_is_off_until_turned_on(self):
+        self.assertRedirects(self.sign_in(), '/')
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_turning_it_on_needs_the_emailed_code(self):
+        self.client.force_login(self.user)
+        self.client.post(reverse('two_step_on'))
+        self.assertEqual(mail.outbox[-1].to, ['faiaz@test.com'])
+        self.client.post(reverse('two_step_confirm'), {'code': '000000' if self.code() != '000000' else '111111'})
+        self.user.UserProfile.refresh_from_db()
+        self.assertFalse(self.user.UserProfile.two_step)
+        self.client.post(reverse('two_step_confirm'), {'code': self.code()})
+        self.user.UserProfile.refresh_from_db()
+        self.assertTrue(self.user.UserProfile.two_step)
+
+    def test_the_password_alone_does_not_sign_in(self):
+        self.turn_on()
+        self.assertRedirects(self.sign_in(), reverse('signin_verify'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_the_code_finishes_signing_in_and_keeps_next(self):
+        self.turn_on()
+        self.sign_in(next=reverse('property_list'))
+        r = self.client.post(reverse('signin_verify'), {'code': self.code()})
+        self.assertRedirects(r, reverse('property_list'))
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.user.pk)
+
+    def test_a_code_works_once(self):
+        self.turn_on()
+        self.sign_in()
+        code = self.code()
+        self.client.post(reverse('signin_verify'), {'code': code})
+        self.client.post(reverse('signout'))
+        self.sign_in()
+        mail.outbox.clear()
+        self.client.post(reverse('signin_verify'), {'code': code})
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_the_code_is_stored_hashed(self):
+        self.turn_on()
+        self.sign_in()
+        entry = EmailCode.objects.filter(user=self.user, purpose=EmailCode.Purpose.SIGN_IN).first()
+        self.assertNotIn(self.code(), entry.code_hash)
+
+    def test_an_old_code_is_refused(self):
+        self.turn_on()
+        self.sign_in()
+        EmailCode.objects.update(created_at=timezone.now() - timezone.timedelta(minutes=11))
+        r = self.client.post(reverse('signin_verify'), {'code': self.code()})
+        self.assertRedirects(r, reverse('signin'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_five_wrong_codes_end_the_attempt(self):
+        self.turn_on()
+        self.sign_in()
+        right = self.code()
+        wrong = '111111' if right != '111111' else '222222'
+        for _ in range(EmailCode.MAX_TRIES):
+            r = self.client.post(reverse('signin_verify'), {'code': wrong})
+        self.assertRedirects(r, reverse('signin'))
+        self.client.post(reverse('signin_verify'), {'code': right})
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_the_code_page_needs_a_password_first(self):
+        self.assertRedirects(self.client.get(reverse('signin_verify')), reverse('signin'))
+
+    def test_turning_it_off_needs_the_password(self):
+        self.turn_on()
+        self.client.force_login(self.user)
+        self.client.post(reverse('two_step_off'), {'password': 'Wrong@2026'})
+        self.user.UserProfile.refresh_from_db()
+        self.assertTrue(self.user.UserProfile.two_step)
+        self.client.post(reverse('two_step_off'), {'password': PASSWORD})
+        self.user.UserProfile.refresh_from_db()
+        self.assertFalse(self.user.UserProfile.two_step)
+
+    def test_demo_accounts_cannot_turn_it_on(self):
+        demo = User.objects.create_user(username='rafid@rentorium.test', email='rafid@rentorium.test',
+                                        password=PASSWORD)
+        self.client.force_login(demo)
+        self.client.post(reverse('two_step_on'))
+        self.assertEqual(len(mail.outbox), 0)
+

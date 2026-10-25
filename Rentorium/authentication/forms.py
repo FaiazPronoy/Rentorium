@@ -171,6 +171,16 @@ class EditProfileForm(forms.ModelForm):
         return picture
 
 
+class EmailCodeForm(forms.Form):
+    code = forms.RegexField(
+        regex=r'^\s*\d{6}\s*$', label='6 digit code',
+        error_messages={'invalid': 'The code is 6 digits.'},
+        widget=forms.TextInput(attrs={'inputmode': 'numeric', 'autocomplete': 'one-time-code',
+                                      'placeholder': '000000', 'maxlength': '6', 'class': 'code-input',
+                                      'autofocus': True}),
+    )
+
+
 class ChangePasswordForm(forms.Form):
     current_password = forms.CharField(widget=forms.PasswordInput)
     new_password = forms.CharField(widget=forms.PasswordInput)

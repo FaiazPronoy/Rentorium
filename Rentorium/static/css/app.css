@@ -162,6 +162,7 @@ strong,b{font-weight:700;color:var(--text)}
 .neg{color:var(--danger)}
 .center{text-align:center}
 .mb0{margin-bottom:0 !important}
+.code-input{font-size:1.5rem;letter-spacing:.45em;text-align:center;font-variant-numeric:tabular-nums}
 .nowrap{white-space:nowrap}
 .num{text-align:right;font-variant-numeric:tabular-nums}
 .mono{font-family:var(--f-num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
