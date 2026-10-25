@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from authentication.models import UserProfile
-from basic.models import Contact, Faq, Reviews
+from pages.models import Contact, Faq, Reviews
 
 PASSWORD = 'Rentorium@2026'
 

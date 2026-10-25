@@ -8,12 +8,6 @@ echo   RENTORIUM
 echo ==========================================
 echo.
 
-REM ------------------------------------------------------------------
-REM  0. Find a Python we can actually use.
-REM     The "py" launcher is tried first, because it finds a real
-REM     python.org install and skips a conda base environment, which
-REM     is usually too new for the pinned packages.
-REM ------------------------------------------------------------------
 set "PY="
 
 if not defined PY (
@@ -57,13 +51,6 @@ echo.
 set "VENV=%CD%\.venv"
 set "VPY=%VENV%\Scripts\python.exe"
 
-REM ------------------------------------------------------------------
-REM  1. The virtual environment.
-REM     A folder alone is not proof: if python.exe is not inside it the
-REM     environment is half built, activate.bat silently does nothing,
-REM     and every command afterwards runs against the wrong Python.
-REM     So the folder is thrown away and made again.
-REM ------------------------------------------------------------------
 if exist "%VENV%\" (
   if not exist "%VPY%" (
     echo [1/4] The old virtual environment is broken, rebuilding it ...
@@ -88,11 +75,6 @@ if not exist "%VPY%" (
   exit /b 1
 )
 
-REM ------------------------------------------------------------------
-REM  2. Packages. Every call uses the environment's own python.exe by
-REM     full path, never "python" off the PATH, so there is nothing for
-REM     activate.bat to get wrong.
-REM ------------------------------------------------------------------
 echo [2/4] Installing Django and Pillow ...
 "%VPY%" -m pip install --quiet --disable-pip-version-check --upgrade pip setuptools wheel
 "%VPY%" -m pip install --quiet --disable-pip-version-check -r "requirements.txt"
@@ -115,12 +97,8 @@ if errorlevel 1 (
 )
 "%VPY%" -c "import django,PIL;print('      Django '+django.get_version()+'   Pillow '+PIL.__version__)"
 
-REM ------------------------------------------------------------------
-REM  3. Database.
-REM ------------------------------------------------------------------
 cd "Rentorium"
 
-REM local settings: DEBUG on and the demo key. A server sets its own.
 if not exist ".env" (
   echo       Writing a local .env from .env.example ...
   copy /y ".env.example" ".env" >nul
@@ -142,9 +120,6 @@ if "%FRESH%"=="1" (
   "%VPY%" manage.py seed_demo
 )
 
-REM ------------------------------------------------------------------
-REM  4. Serve.
-REM ------------------------------------------------------------------
 echo [4/4] Starting the server ...
 echo.
 echo   Open  http://127.0.0.1:8000/
@@ -156,7 +131,6 @@ echo.
 echo   Press Ctrl+C in this window to stop.
 echo.
 
-REM open the browser a few seconds later, once the server is actually up
 start "" /min cmd /c "timeout /t 4 /nobreak >nul & start "" http://127.0.0.1:8000/"
 
 "%VPY%" manage.py runserver

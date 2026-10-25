@@ -63,8 +63,8 @@ INSTALLED_APPS = [
 
     'authentication',
     'property',
-    'basic',
-    'Agents',
+    'pages',
+    'agents',
 ]
 
 MIDDLEWARE = [
@@ -92,9 +92,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'basic.context_processors.site_context',
+                'pages.context_processors.site_context',
             ],
-            'builtins': ['basic.templatetags.icons'],
+            'builtins': ['pages.templatetags.icons'],
         },
     },
 ]

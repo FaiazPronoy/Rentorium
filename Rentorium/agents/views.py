@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from authentication.decorators import agent_required, post_required, profile_of
 from authentication.models import Notification, UserProfile
-from basic.models import Contact
+from pages.models import Contact
 from property.views import safe_back
 from property.models import (
     AllProperty, Booking, Conversation, Favourite, PropertyReport,

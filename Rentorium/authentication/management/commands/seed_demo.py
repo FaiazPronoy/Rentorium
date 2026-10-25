@@ -12,9 +12,9 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from Agents.models import AgentAction
+from agents.models import AgentAction
 from authentication.models import Notification, UserProfile
-from basic.models import Contact, Faq, Reviews
+from pages.models import Contact, Faq, Reviews
 from property.models import (
     AllProperty, Amenity, Booking, CommercialProperty, Conversation, Favourite,
     LandProperty, Message, PropertyImage, PropertyReport, PropertyReview,

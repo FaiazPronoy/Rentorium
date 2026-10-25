@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 
 
-class BasicConfig(AppConfig):
+class PagesConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'basic'
+    name = 'pages'
+    label = 'basic'

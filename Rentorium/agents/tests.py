@@ -2,9 +2,9 @@ from django.core.files.base import ContentFile
 from django.test import TestCase
 from django.urls import reverse
 
-from Agents.models import AgentAction
+from agents.models import AgentAction
 from authentication.models import Notification, UserProfile
-from basic.models import Contact
+from pages.models import Contact
 from property.models import AllProperty, PropertyReport
 from property.tests import PASSWORD, make_listing, make_user
 

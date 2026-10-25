@@ -132,8 +132,8 @@ Copy `Rentorium/.env.example` to `Rentorium/.env` (the launcher does this for yo
 Rentorium/
   property/        listings, search, map, bookings, reviews
   authentication/  sign up, sign in, profiles, demo data
-  Agents/          the agent's approval queue and stats
-  basic/           home, about, contact pages
+  agents/          the agent's approval queue and stats
+  pages/           home, about, contact and FAQ pages
   templates/       the HTML pages
   static/          CSS, JavaScript and photos
 tools/             browser checks

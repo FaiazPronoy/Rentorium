@@ -1,2 +1,2 @@
-Django>=5.0.2,<5.3
-pillow>=10.2
+Django>=5.2.18,<5.3
+pillow>=11.0

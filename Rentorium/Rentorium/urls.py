@@ -7,11 +7,11 @@ from django.urls import include, path
 from authentication.views import password_reset_confirm, signin
 
 urlpatterns = [
-    path('', include('basic.urls')),
+    path('', include('pages.urls')),
     path('admin/', admin.site.urls),
     path('account/', include('authentication.urls')),
     path('property/', include('property.urls')),
-    path('agents/', include('Agents.urls')),
+    path('agents/', include('agents.urls')),
 
     path('login/', signin, name='login'),
 
@@ -37,5 +37,5 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-handler404 = 'basic.views.handler404'
-handler500 = 'basic.views.handler500'
+handler404 = 'pages.views.handler404'
+handler500 = 'pages.views.handler500'
