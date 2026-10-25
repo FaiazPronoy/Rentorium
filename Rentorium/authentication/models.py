@@ -89,7 +89,6 @@ class UserProfile(models.Model):
         return self.role == self.Role.OWNER or self.properties.exists()
 
     def suspend(self, by=None, reason=''):
-        from property.models import AllProperty
         self.is_suspended = True
         self.suspended_at = timezone.now()
         self.suspended_reason = (reason or '')[:200]

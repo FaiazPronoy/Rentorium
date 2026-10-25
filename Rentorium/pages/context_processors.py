@@ -1,5 +1,7 @@
 from django.conf import settings
 
+from property.models import PropertyReport
+
 
 def site_context(request):
     compare = []
@@ -16,12 +18,7 @@ def site_context(request):
 
     open_reports = 0
     if profile is not None and profile.is_agent:
-        try:
-            from property.models import PropertyReport
-            open_reports = PropertyReport.objects.filter(
-                status=PropertyReport.Status.OPEN).count()
-        except Exception:
-            open_reports = 0
+        open_reports = PropertyReport.objects.filter(status=PropertyReport.Status.OPEN).count()
 
     return {
         'open_reports': open_reports,

@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import IntegrityError, transaction
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Sum
 from django.http import FileResponse, Http404, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -16,18 +16,19 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from authentication.decorators import (
     login_required_message, post_required, profile_of,
 )
-from authentication.models import Notification
+from authentication.models import Notification, UserProfile
 
-from .geo import place
-from .templatetags.property_filters import money
 from .forms import (
     FORM_FOR_TYPE, BookingForm, MessageForm, PropertyFilterForm,
     PropertyImageForm, PropertyReviewForm, PropertyTypeForm, SavedSearchForm,
 )
+from .geo import place
 from .models import (
-    AllProperty, Booking, Conversation, Favourite, Message, PropertyImage,
-    PropertyReport, PropertyReview, PropertyView, RecentSearch, SavedSearch,
+    AllProperty, Booking, CommercialProperty, Conversation, Favourite, LandProperty, Message,
+    PropertyImage, PropertyReport, PropertyReview, PropertyView, RecentSearch, ResidentialProperty,
+    SavedSearch,
 )
+from .templatetags.property_filters import money
 
 
 def safe_back(request, fallback):
@@ -301,7 +302,6 @@ def _detail_facts(listing, specific):
     if listing.available_from:
         facts.append(('Available from', listing.available_from.strftime('%d %b %Y')))
 
-    from .models import CommercialProperty, LandProperty, ResidentialProperty
     if isinstance(specific, ResidentialProperty):
         facts += [
             ('Bedrooms', specific.Bedrooms),
@@ -410,7 +410,6 @@ def _save_gallery(listing, files):
 
 
 def _notify_agents(title, body, link):
-    from authentication.models import UserProfile
     for agent in UserProfile.objects.filter(is_agent=True):
         Notification.push(agent, title, body, link, Notification.Kind.APPROVAL)
 
@@ -503,7 +502,6 @@ def posted_properties(request):
         'rented': AllProperty.objects.owned_by(me).filter(status='rented').count(),
     }
 
-    from django.db.models import Sum
     return render(request, 'posted_properties.html', {
         'filtered_properties': page,
         'filter_form': form,

@@ -1,6 +1,7 @@
 from functools import wraps
 
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.urls import reverse
 
@@ -13,7 +14,6 @@ def profile_of(request):
 
 
 def _suspended(request, profile):
-    from django.contrib.auth import logout
     logout(request)
     messages.error(
         request,

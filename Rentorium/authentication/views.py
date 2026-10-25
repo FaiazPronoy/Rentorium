@@ -5,12 +5,15 @@ from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.db import transaction
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Count, Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
+
+from property.models import AllProperty, Booking, Conversation, PropertyView
+from property.views import annotate_saved
 
 from .decorators import login_required_message, post_required, profile_of
 from .demo import demo_keys
@@ -153,7 +156,6 @@ def signout(request):
 @login_required_message
 def profile(request):
     me = profile_of(request)
-    from django.db.models import Sum
     stats = {
         'listings': me.properties.count(),
         'live': me.properties.filter(status='approved', is_archived=False).count(),
@@ -172,8 +174,6 @@ def profile(request):
 
 
 def public_profile(request, pk):
-    from property.views import annotate_saved
-
     person = get_object_or_404(UserProfile, pk=pk)
     listings = list(person.properties.live().with_cards()[:12])
     annotate_saved(listings, profile_of(request))
@@ -253,11 +253,7 @@ def delete_account(request):
 
 @login_required_message
 def dashboard(request):
-    from property.models import AllProperty, Booking, Conversation
-
     me = profile_of(request)
-    from django.db.models import Sum
-
     my_properties = me.properties.with_cards()
     view_total = me.properties.aggregate(n=Sum('view_count'))['n'] or 0
     save_total = me.properties.aggregate(n=Count('favourited_by'))['n'] or 0
@@ -281,7 +277,6 @@ def dashboard(request):
         Q(renter=me) | Q(owner=me)
     ).select_related('property', 'renter', 'owner')[:5]
 
-    from property.models import PropertyView
     since = timezone.localdate() - timezone.timedelta(days=13)
     rows = (PropertyView.objects
             .filter(property__user=me, viewed_on__gte=since)
