@@ -5,8 +5,6 @@ from .models import Contact, Reviews
 
 
 class ReviewForm(forms.ModelForm):
-    """A review of Rentorium itself."""
-
     class Meta:
         model = Reviews
         fields = ['rating', 'comment']
@@ -26,9 +24,7 @@ class ReviewForm(forms.ModelForm):
 
 
 class ContactForm(forms.ModelForm):
-    """The contact form. A ModelForm this time, so it actually validates."""
-
-    website = forms.CharField(required=False, widget=forms.HiddenInput)  # honeypot
+    website = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:
         model = Contact
@@ -47,7 +43,6 @@ class ContactForm(forms.ModelForm):
         return message
 
     def clean_website(self):
-        """Bots fill hidden fields. People do not."""
         if self.cleaned_data.get('website'):
             raise ValidationError('Something went wrong. Please try again.')
         return ''

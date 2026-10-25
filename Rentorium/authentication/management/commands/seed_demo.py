@@ -1,11 +1,3 @@
-"""
-Fills an empty database with believable demo data.
-
-    python manage.py seed_demo
-
-Everything it makes is deterministic, so the screenshots and the browser checks run
-look the same every time. Use --wipe to start from scratch.
-"""
 import random
 from authentication.demo import AGENT_PASSWORD, DEMO_PASSWORD
 from datetime import timedelta
@@ -29,8 +21,6 @@ from property.models import (
     PropertyView, RecentSearch, ResidentialProperty,
 )
 
-# The icon column is legacy; the site now draws an SVG chosen from the name
-# (see basic/templatetags/icons.py), so these stay blank.
 AMENITIES = [
     ('Lift', '', 'Building'), ('Generator', '', 'Building'),
     ('Parking', '', 'Building'), ('Security guard', '', 'Building'),
@@ -144,7 +134,6 @@ LAND = [
      'mutation papers.'),
 ]
 
-# which photographs go with which listing, from static/img/photos
 PHOTOS = {
     'residential': [
         ['gulshan-1', 'gulshan-2', 'gulshan-3', 'gulshan-4'],
@@ -213,7 +202,6 @@ class Command(BaseCommand):
             Contact.objects.all().delete()
             Faq.objects.all().delete()
 
-        # ---------------------------------------------------- amenities --
         amenities = {}
         for name, icon, group in AMENITIES:
             amenity, _ = Amenity.objects.get_or_create(
@@ -221,13 +209,11 @@ class Command(BaseCommand):
             amenities[name] = amenity
         self.stdout.write(f'  {len(amenities)} amenities')
 
-        # --------------------------------------------------------- FAQs --
         for i, (question, answer) in enumerate(FAQS):
             Faq.objects.get_or_create(question=question,
                                       defaults={'answer': answer, 'position': i})
         self.stdout.write(f'  {len(FAQS)} FAQs')
 
-        # -------------------------------------------------------- users --
         colours = ['#1D4E9E', '#A4552F', '#0B2545', '#6E5A7D', '#7A5A00', '#0E6E86']
         profiles = {}
 
@@ -274,15 +260,10 @@ class Command(BaseCommand):
 
         self.stdout.write(f'  {len(profiles)} profiles')
 
-        # ---------------------------------------------------- listings --
         owners = [profiles[e] for _, e, r, _, _ in PEOPLE if r == 'owner']
         photo_dir = Path(settings.BASE_DIR) / 'static' / 'img' / 'photos'
         listings = []
 
-        # Any file already sitting in media/pics makes Django rename the next
-        # upload with a random suffix, so a re-seed used to leave the database
-        # pointing at names that only exist on the machine that ran it. Clear
-        # the folder first and every seed produces the same filenames.
         pics_dir = Path(settings.MEDIA_ROOT) / 'pics'
         if pics_dir.exists():
             for old in pics_dir.glob('*'):
@@ -304,9 +285,6 @@ class Command(BaseCommand):
                         position=n,
                     )
 
-        # A short stand-in for the ownership paper. It lives outside
-        # MEDIA_ROOT like a real one, so the demo exercises the checked
-        # document view rather than a public /media/ URL.
         docs_dir = Path(settings.PRIVATE_MEDIA_ROOT) / 'property_documents'
         if docs_dir.exists():
             for old in docs_dir.glob('*'):
@@ -317,12 +295,6 @@ class Command(BaseCommand):
                         pass
 
         def attach_document(listing):
-            """A one page PDF that says what it is, written by hand.
-
-            Building it here rather than shipping a binary keeps the repository
-            text only, and gives the demo something that actually renders in
-            the viewer on the papers page.
-            """
             lines = [
                 ('DEED OF OWNERSHIP', 24, 700),
                 ('SAMPLE DOCUMENT - DEMONSTRATION DATA ONLY', 11, 668),
@@ -445,7 +417,6 @@ class Command(BaseCommand):
             )
             finish(listing, i, ['Water reserve', 'Gas line'], PHOTOS['land'][k])
 
-        # one still waiting, so the agent queue is not empty
         pending = ResidentialProperty(
             user=owners[0],
             Property_Name='Newly finished 2 bedroom in Banani DOHS',
@@ -468,7 +439,6 @@ class Command(BaseCommand):
         pending.amenities.set([amenities['Lift'], amenities['Generator']])
         attach_images(pending, PHOTOS['pending'])
 
-        # one that was sent back, so the owner view shows that state too
         rejected = ResidentialProperty(
             user=owners[1],
             Property_Name='Sublet room available in Mirpur 10',
@@ -491,11 +461,6 @@ class Command(BaseCommand):
         )
         self.stdout.write(f'  {len(listings)} live listings, 1 waiting, 1 sent back')
 
-        # ---------------------------------------------- the view history --
-        # view_count on its own left every chart on the site flat: the owner
-        # dashboard, the agent stats page and the per listing analytics all
-        # read PropertyView rows, not the counter. Seed the real rows and let
-        # the counter be their total, so the number and the graph agree.
         today = timezone.localdate()
         everyone = list(profiles.values())
         view_rows = []
@@ -503,7 +468,6 @@ class Command(BaseCommand):
             total = 0
             for back in range(29, -1, -1):
                 day = today - timedelta(days=back)
-                # busier in the last fortnight, and quieter at the weekend
                 base = 9 if back < 14 else 4
                 if day.weekday() in (4, 5):
                     base = max(1, base - 3)
@@ -520,7 +484,6 @@ class Command(BaseCommand):
         AllProperty.objects.bulk_update(listings, ['view_count'])
         self.stdout.write(f'  {len(view_rows)} views over the last 30 days')
 
-        # ------------------------------------------- reviews, saves, etc --
         renters = [profiles[e] for _, e, r, _, _ in PEOPLE if r == 'renter']
         for i, listing in enumerate(listings[:5]):
             for j, renter in enumerate(renters[:2]):
@@ -538,7 +501,6 @@ class Command(BaseCommand):
             Reviews.objects.get_or_create(
                 user=author, defaults={'rating': rating, 'comment': comment})
 
-        # ------------------------------------------------------ bookings --
         slots = [(1, 11), (2, 16), (3, 10), (5, 17)]
         for i, (days, hour) in enumerate(slots):
             listing = listings[i % len(listings)]
@@ -558,7 +520,6 @@ class Command(BaseCommand):
                 },
             )
 
-        # ----------------------------------------------------- messaging --
         for i in range(3):
             listing = listings[i]
             renter = renters[i % len(renters)]
@@ -578,7 +539,6 @@ class Command(BaseCommand):
             thread.last_message_at = now - timedelta(hours=3 * i + 1)
             thread.save(update_fields=['last_message_at'])
 
-        # ----------------------------------------------------- enquiries --
         Contact.objects.get_or_create(
             subject='Listing stuck in review',
             defaults={
@@ -598,9 +558,6 @@ class Command(BaseCommand):
             },
         )
 
-        # ------------------------------------------------ recent searches --
-        # So the suggestion box under the search field has something to show
-        # the moment a demo account signs in.
         searchers = [profiles['rafid@rentorium.test'],
                      profiles['tasnim@rentorium.test']]
         history = [
@@ -622,9 +579,6 @@ class Command(BaseCommand):
                     RecentSearch.objects.filter(pk=row.pk).update(
                         searched_at=now - timedelta(hours=3 + n * 14))
 
-        # ------------------------------------------------------- reports --
-        # One open report for the agent queue, one already dealt with, so the
-        # page shows both halves of the workflow.
         live_rows = list(AllProperty.objects.live().order_by('pk'))
         if len(live_rows) >= 2:
             open_report = PropertyReport.objects.create(
@@ -657,7 +611,6 @@ class Command(BaseCommand):
                 reason='Photos check out against the owner’s own copies.',
             )
 
-        # -------------------------------------------------- notifications --
         for profile in profiles.values():
             Notification.push(
                 profile, f'Welcome to {settings.SITE_NAME}',
@@ -666,10 +619,6 @@ class Command(BaseCommand):
                 '/account/edit-profile', Notification.Kind.SYSTEM,
             )
 
-        # ------------------------------------------------- realistic dates --
-        # created_at on reviews, decisions and enquiries is auto_now_add, so
-        # without this every one of them is stamped with the moment the seed
-        # ran. A page of reviews all written today reads as fake.
         for n, pk in enumerate(PropertyReview.objects.order_by('pk')
                                .values_list('pk', flat=True)):
             PropertyReview.objects.filter(pk=pk).update(

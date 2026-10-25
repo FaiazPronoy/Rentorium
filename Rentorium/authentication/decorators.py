@@ -1,10 +1,3 @@
-"""
-Guards used across the site.
-
-The first version repeated `if request.user.is_authenticated: ... else: redirect`
-in every single view, and forgot the ownership check in several of them. These
-decorators make the rule impossible to leave out.
-"""
 from functools import wraps
 
 from django.contrib import messages
@@ -20,12 +13,6 @@ def profile_of(request):
 
 
 def _suspended(request, profile):
-    """Ends the session of someone suspended while they were signed in.
-
-    Deactivating the account stops the next sign in, but it does not touch a
-    session that already exists, so without this a suspended person could
-    carry on posting until their cookie expired.
-    """
     from django.contrib.auth import logout
     logout(request)
     messages.error(
@@ -40,8 +27,6 @@ def _suspended(request, profile):
 
 
 def login_required_message(view):
-    """Sends anonymous visitors to sign in, and brings them back afterwards."""
-
     @wraps(view)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -59,8 +44,6 @@ def login_required_message(view):
 
 
 def agent_required(view):
-    """Only a verified agent gets in. Everyone else sees the not found page."""
-
     @wraps(view)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -78,8 +61,6 @@ def agent_required(view):
 
 
 def post_required(view):
-    """A state change must never happen on a GET."""
-
     @wraps(view)
     def wrapper(request, *args, **kwargs):
         if request.method != 'POST':

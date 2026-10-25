@@ -1,15 +1,3 @@
-"""
-One inline SVG icon set for the whole site.
-
-Emoji were doing this job before. They render differently on every operating
-system, they carry a colour we do not control, and half of them were only
-loosely related to what they labelled. These are drawn on the same 24 unit
-grid with the same stroke weight, they inherit `currentColor`, and they cost
-nothing extra to load because they are part of the HTML.
-
-Registered as a template builtin (see settings), so `{% icon "home" %}` works
-in any template without a load tag.
-"""
 from django import template
 from django.utils.safestring import mark_safe
 
@@ -17,7 +5,6 @@ register = template.Library()
 
 
 ICONS = {
-    # navigation and chrome
     'home': '<path d="M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>'
             '<path d="M9.5 21v-6.5h5V21"/>',
     'search': '<circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4-4"/>',
@@ -55,7 +42,6 @@ ICONS = {
     'logout': '<path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H15"/>'
               '<path d="m9.5 8-4 4 4 4"/><path d="M5.5 12h10"/>',
 
-    # people
     'user': '<circle cx="12" cy="8" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/>',
     'users': '<circle cx="9" cy="8" r="3.4"/><path d="M2.6 20a6.4 6.4 0 0 1 12.8 0"/>'
              '<path d="M16.2 5.2a3.4 3.4 0 0 1 0 5.6"/>'
@@ -63,7 +49,6 @@ ICONS = {
     'user-check': '<circle cx="10" cy="8" r="3.6"/><path d="M3 20a7 7 0 0 1 11.5-5.4"/>'
                   '<path d="m15.5 17.5 2 2 4-4"/>',
 
-    # property
     'building': '<rect x="4.5" y="3" width="15" height="18" rx="1.6"/>'
                 '<path d="M8.5 7h2M13.5 7h2M8.5 11h2M13.5 11h2M8.5 15h2M13.5 15h2"/>'
                 '<path d="M10 21v-2.5h4V21"/>',
@@ -82,7 +67,6 @@ ICONS = {
            '<path d="m10.6 12.5 8.2-8.2 2 2-1.6 1.6 1.6 1.6-2 2-1.6-1.6-1.7 1.7-1.7-1.7"/>',
     'tag': '<path d="M3.5 11.5V4h7.5l9.5 9.5-7.5 7.5z"/><circle cx="7.8" cy="7.8" r="1.4"/>',
 
-    # amenities
     'lift': '<rect x="5" y="3" width="14" height="18" rx="2"/>'
             '<path d="M9.4 9.6 12 6.6l2.6 3M9.4 14.4l2.6 3 2.6-3"/>',
     'power': '<path d="M13.2 3 5.5 14h5.5l-.9 7 7.7-11h-5.5z"/>',
@@ -113,7 +97,6 @@ ICONS = {
     'rooftop': '<path d="m3 12.5 9-7 9 7"/><path d="M6 12.5V20h12v-7.5"/>'
                '<path d="M9.5 20v-4.5h5V20"/>',
 
-    # actions and status
     'check': '<path d="m4.5 12.5 5 5 10-11"/>',
     'check-circle': '<circle cx="12" cy="12" r="9"/><path d="m8 12.2 2.6 2.6L16 9.4"/>',
     'plus': '<path d="M12 5v14M5 12h14"/>',
@@ -171,19 +154,14 @@ ICONS = {
 
 @register.simple_tag
 def icon(name, cls=''):
-    """`{% icon "home" %}` or `{% icon "home" "lg" %}`."""
     body = ICONS.get(name, ICONS['dot'])
     classes = 'ico-svg' + (' ' + cls if cls else '')
-    # data-icon lets the front end reuse a glyph the page already carries,
-    # instead of shipping a second copy of the set to JavaScript.
     return mark_safe(
         f'<svg class="{classes}" data-icon="{name}" viewBox="0 0 24 24" '
         f'aria-hidden="true" focusable="false">{body}</svg>'
     )
 
 
-# Amenity rows are typed in by hand in the admin, so the icon is chosen by
-# looking at the words in the name rather than by a fixed id.
 _AMENITY_WORDS = (
     ('cctv', 'cctv'), ('camera', 'cctv'),
     ('generator', 'power'), ('power', 'power'), ('solar', 'power'),
@@ -215,12 +193,7 @@ def amenity_icon(name):
     return icon('check')
 
 
-# The three property types, and the six notification kinds, each get one.
 _TYPE_ICON = {'residential': 'home', 'commercial': 'building', 'land': 'land'}
-_KIND_ICON = {
-    'booking': 'calendar', 'message': 'chat', 'approval': 'check-circle',
-    'review': 'star', 'alert': 'bell', 'system': 'info',
-}
 
 
 @register.filter
@@ -228,13 +201,6 @@ def type_icon(key):
     return icon(_TYPE_ICON.get(str(key), 'home'))
 
 
-@register.filter
-def kind_icon(key):
-    return icon(_KIND_ICON.get(str(key), 'info'))
-
-
-# A compact relative time. `timesince` gives "10 hours, 5 minutes", and the
-# templates were cutting that with truncatewords, which produced "10 …".
 from django.utils import timezone as _tz
 
 @register.filter

@@ -5,8 +5,6 @@ from authentication.models import UserProfile
 
 
 class Reviews(models.Model):
-    """A review of the platform itself, shown on the testimonial page."""
-
     user = models.ForeignKey(
         UserProfile, on_delete=models.CASCADE, related_name='site_reviews'
     )
@@ -33,8 +31,6 @@ class Reviews(models.Model):
 
 
 class Contact(models.Model):
-    """A message from the contact form."""
-
     class Status(models.TextChoices):
         NEW = 'new', 'New'
         ANSWERED = 'answered', 'Answered'
@@ -57,8 +53,6 @@ class Contact(models.Model):
 
 
 class Faq(models.Model):
-    """Editable FAQ, so the page is not hard coded into a template."""
-
     question = models.CharField(max_length=200)
     answer = models.TextField(max_length=2000)
     position = models.PositiveSmallIntegerField(default=0)

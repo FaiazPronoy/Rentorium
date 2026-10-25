@@ -45,7 +45,6 @@
 
   <div class="row" style="align-items:flex-start;gap:1.6rem">
 
-    <!-- ============ filters ============ -->
     <aside class="col filter-panel" id="filterPanel">
       <form class="card sticky-side" method="get" id="filterForm">
         {% if view_mode != 'grid' %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
@@ -127,7 +126,6 @@
       </form>
     </aside>
 
-    <!-- ============ results ============ -->
     <div class="col" style="flex:1 1 520px">
       {% if view_mode == 'map' %}
         <div class="mapwrap">

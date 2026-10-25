@@ -1,8 +1,3 @@
-"""The demo accounts, offered on the sign in page as keys on a rack.
-
-seed_demo creates them; the sign in page shows only the ones that exist in
-this database, so a fresh install with no demo data shows no keys.
-"""
 from django.contrib.auth.models import User
 
 DEMO_PASSWORD = 'Rentorium@2026'

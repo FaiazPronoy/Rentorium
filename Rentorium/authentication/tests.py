@@ -1,4 +1,3 @@
-"""Tests for signing up, signing in, profiles and the rate limiter."""
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -95,7 +94,7 @@ class SignInTests(TestCase):
                              {'username': 'faiaz@test.com', 'password': 'wrong'})
         r = self.client.post(reverse('signin'),
                              {'username': 'faiaz@test.com', 'password': PASSWORD})
-        self.assertEqual(r.status_code, 200)          # not redirected, so not signed in
+        self.assertEqual(r.status_code, 200)
         self.assertContains(r, 'Too many failed attempts')
 
     def test_the_next_parameter_cannot_send_you_to_another_site(self):
@@ -175,8 +174,6 @@ class ProfileTests(TestCase):
 
 
 class GuardTests(TestCase):
-    """Every page that needs a session should say so, not crash."""
-
     PROTECTED = [
         'dashboard', 'profile', 'edit_profile', 'change_password', 'notifications',
         'favourites', 'bookings', 'inbox', 'saved_searches', 'posted_properties',
@@ -196,8 +193,6 @@ class GuardTests(TestCase):
 
 
 class DashboardTests(TestCase):
-    """The owner dashboard and its 14 day view chart."""
-
     def setUp(self):
         from property.models import PropertyView
         from property.tests import make_listing, make_user
@@ -227,9 +222,6 @@ class DashboardTests(TestCase):
 
 
 class DemoKeyTests(TestCase):
-    """The sign in page hangs a key for each demo person, but only for the
-    ones that exist here, so a fresh install shows none."""
-
     def test_no_keys_on_an_empty_database(self):
         self.assertEqual(self.client.get(reverse('signin')).context['demo'], [])
 

@@ -10,7 +10,6 @@ urlpatterns = [
     path('edit-profile', views.edit_profile, name='edit_profile'),
     path('delete-account', views.delete_account, name='delete_account'),
 
-    # new in v2
     path('dashboard/', views.dashboard, name='dashboard'),
     path('change-password/', views.change_password, name='change_password'),
     path('become-owner/', views.become_owner, name='become_owner'),

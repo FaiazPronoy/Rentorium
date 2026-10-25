@@ -1,11 +1,4 @@
 {% load property_filters %}
-{% comment %}
-One property card. Expects `p`. Optional: `compare_ids`.
-
-The photographs are the card: swipe through them on a phone, or use the
-arrows on a laptop, without opening the listing. Underneath, in the order
-people read a listing: what and where, the rating, a few facts, the price.
-{% endcomment %}
 <article class="pcard">
   <div class="pcard-media" data-strip>
     {% with shots=p.images.all %}

@@ -1,4 +1,3 @@
-"""Tests for the property app."""
 from datetime import timedelta
 
 from django.conf import settings
@@ -72,7 +71,6 @@ class ModelTests(TestCase):
         self.assertEqual(listing.price_per_sqft, 30.0)
 
     def test_land_road_width_is_a_real_column(self):
-        """Road_size_in_sqft is a real column, not a bare field reference."""
         plot = LandProperty.objects.create(
             user=self.owner, Property_Name='A plot with a wide road',
             Property_type='land', Property_on='sale', Price=1000000,
@@ -121,15 +119,12 @@ class ModelTests(TestCase):
 
 
 class AccessControlTests(TestCase):
-    """Who is allowed to see and change what."""
-
     def setUp(self):
         self.owner_user, self.owner = make_user('owner@test.com', 'Owner', UserProfile.Role.OWNER)
         self.other_user, self.other = make_user('other@test.com', 'Somebody Else')
         self.agent_user, self.agent = make_user('agent@test.com', 'Agent', agent=True)
         self.listing = make_listing(self.owner, Property_Documents='property_documents/deed.pdf')
 
-    # ---- private documents ------------------------------------------
     def test_a_stranger_cannot_read_the_ownership_papers(self):
         self.client.login(username='other@test.com', password=PASSWORD)
         r = self.client.get(reverse('view_property_documents', args=[self.listing.pk]))
@@ -150,19 +145,12 @@ class AccessControlTests(TestCase):
         self.assertEqual(r.status_code, 302)
         self.assertIn('signin', r.url)
 
-    # ---- editing -----------------------------------------------------
     def test_a_stranger_cannot_open_the_edit_page(self):
         self.client.login(username='other@test.com', password=PASSWORD)
         r = self.client.get(reverse('update_property', args=[self.listing.pk]))
         self.assertEqual(r.status_code, 404)
 
     def test_the_edit_page_opens_for_a_listing_that_has_a_document(self):
-        """The ownership paper has no public URL by design.
-
-        Django's default file widget renders a link to `value.url`, so it
-        asked the private storage for one and the page returned a 500. The
-        form uses a plain file input for that field now.
-        """
         self.listing.Property_Documents.save(
             'deed.pdf', ContentFile(b'%PDF-1.4 test'), save=True)
         self.client.login(username='owner@test.com', password=PASSWORD)
@@ -171,7 +159,6 @@ class AccessControlTests(TestCase):
         self.assertIn('On record', r.content.decode())
 
     def test_a_new_listing_form_does_not_prefill_the_price_with_zero(self):
-        """`default=0` on the model showed a 0 the price check then rejected."""
         self.client.login(username='owner@test.com', password=PASSWORD)
         r = self.client.get(reverse('add_property_data', args=['residential']))
         self.assertEqual(r.status_code, 200)
@@ -185,7 +172,6 @@ class AccessControlTests(TestCase):
         self.listing.refresh_from_db()
         self.assertNotEqual(self.listing.Property_Name, 'I have taken this over')
 
-    # ---- deleting ----------------------------------------------------
     def test_a_stranger_cannot_delete_a_listing(self):
         self.client.login(username='other@test.com', password=PASSWORD)
         r = self.client.post(reverse('delete_property', args=[self.listing.pk]))
@@ -203,7 +189,6 @@ class AccessControlTests(TestCase):
         self.client.get(reverse('delete_property', args=[self.listing.pk]))
         self.assertTrue(AllProperty.objects.filter(pk=self.listing.pk).exists())
 
-    # ---- unapproved listings ------------------------------------------
     def test_a_pending_listing_is_hidden_from_the_public(self):
         pending = make_listing(self.owner, status=AllProperty.Status.PENDING)
         r = self.client.get(reverse('property_detail', args=[pending.pk]))
@@ -215,7 +200,6 @@ class AccessControlTests(TestCase):
         r = self.client.get(reverse('property_detail', args=[pending.pk]))
         self.assertEqual(r.status_code, 200)
 
-    # ---- messaging ----------------------------------------------------
     def test_a_stranger_cannot_read_someone_elses_conversation(self):
         thread = Conversation.objects.create(
             property=self.listing, renter=self.other, owner=self.owner)
@@ -224,7 +208,6 @@ class AccessControlTests(TestCase):
         r = self.client.get(reverse('conversation', args=[thread.pk]))
         self.assertEqual(r.status_code, 404)
 
-    # ---- agent only areas ----------------------------------------------
     def test_a_normal_user_cannot_open_the_agent_console(self):
         self.client.login(username='other@test.com', password=PASSWORD)
         r = self.client.get(reverse('agent_dashboard'))
@@ -513,8 +496,6 @@ class ViewCountTests(TestCase):
 
 
 class PrivateDocumentTests(TestCase):
-    """The papers are private: no URL reaches them, only the document view."""
-
     def setUp(self):
         _, self.owner = make_user('owner@test.com', 'Owner', UserProfile.Role.OWNER)
         _, self.stranger = make_user('nosy@test.com', 'Nosy Parker')
@@ -544,8 +525,6 @@ class PrivateDocumentTests(TestCase):
         self.assertEqual(r['X-Content-Type-Options'], 'nosniff')
 
 class PaginationTests(TestCase):
-    """Paging through a search must not repeat or lose a listing."""
-
     def setUp(self):
         _, self.owner = make_user('owner@test.com', 'Owner', UserProfile.Role.OWNER)
         for i in range(15):
@@ -563,8 +542,6 @@ class PaginationTests(TestCase):
         self.assertEqual(set(one) & set(two), set())
 
 class BookingLifecycleTests(TestCase):
-    """A visit can only move on from the status it is actually in."""
-
     def setUp(self):
         _, self.owner = make_user('owner@test.com', 'Owner', UserProfile.Role.OWNER)
         _, self.renter = make_user('renter@test.com', 'Renter')
@@ -602,8 +579,6 @@ class BookingLifecycleTests(TestCase):
 
 
 class SavedSearchTests(TestCase):
-    """Saving a search, listing the saved ones, and deleting them."""
-
     def setUp(self):
         _, self.owner = make_user('owner@test.com', 'Owner', UserProfile.Role.OWNER)
         self.user, self.me = make_user('me@test.com', 'Me')
@@ -618,7 +593,7 @@ class SavedSearchTests(TestCase):
         self.assertEqual(r.status_code, 302)
         row = SavedSearch.objects.get(profile=self.me)
         self.assertEqual(row.label, 'Cheap in Gulshan')
-        self.assertEqual(row.query_string, 'q=Gulshan')   # the '?' is stripped
+        self.assertEqual(row.query_string, 'q=Gulshan')
 
     def test_the_list_page_counts_real_matches_not_zero(self):
         SavedSearch.objects.create(profile=self.me, label='Gulshan',
@@ -647,8 +622,6 @@ class SavedSearchTests(TestCase):
 
 
 class SearchSuggestionTests(TestCase):
-    """The box under the search field: live suggestions and recent searches."""
-
     def setUp(self):
         _, self.owner = make_user('owner@test.com', 'Owner', UserProfile.Role.OWNER)
         _, self.me = make_user('me@test.com', 'Me')
@@ -813,8 +786,6 @@ class ReportListingTests(TestCase):
 
 
 class MapAndMoneyTests(TestCase):
-    """The map, the move in total and the home page neighbourhood tiles."""
-
     def setUp(self):
         _, self.owner = make_user('owner@example.com', 'Owner', UserProfile.Role.OWNER)
         self.flat = make_listing(self.owner, Price=40000, service_charge=3000,

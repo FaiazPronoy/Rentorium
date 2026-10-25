@@ -9,15 +9,6 @@ def format_field_name(value):
 
 
 @register.filter
-def add_class(field, css):
-    """Adds a CSS class to a form widget from inside a template."""
-    try:
-        return field.as_widget(attrs={**field.field.widget.attrs, 'class': css})
-    except AttributeError:
-        return field
-
-
-@register.filter
 def initials(name):
     parts = [p for p in str(name or '').split() if p]
     if not parts:

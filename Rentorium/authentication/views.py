@@ -29,7 +29,6 @@ def client_ip(request):
 
 
 def _safe_next(request, fallback='/'):
-    """Never redirect to another site, and never back to a sign in page."""
     target = request.POST.get('next') or request.GET.get('next') or ''
     if not target or not target.startswith('/') or target.startswith('//'):
         return fallback
@@ -37,8 +36,6 @@ def _safe_next(request, fallback='/'):
         return fallback
     return target
 
-
-# signup
 
 def signup(request):
     if request.user.is_authenticated:
@@ -55,7 +52,6 @@ def signup(request):
                     email=data['email'],
                     password=data['password'],
                 )
-                # the post_save signal has already made the profile
                 profile = user.UserProfile
                 profile.name = data['name']
                 profile.email = data['email']
@@ -79,8 +75,6 @@ def signup(request):
 
     return render(request, 'signup.html', {'form': form})
 
-
-# signin
 
 def signin(request):
     if request.user.is_authenticated:
@@ -116,14 +110,9 @@ def signin(request):
             LoginAttempt.objects.create(
                 username=username, ip=client_ip(request), successful=False
             )
-            # A suspended account is deactivated, so Django's own check fails
-            # with the same wording as a wrong password. Say what actually
-            # happened instead, or the person keeps retrying a good password.
             held = UserProfile.objects.filter(
                 user__username__iexact=username, is_suspended=True).first()
             if held:
-                # Drop the form's own "wrong email or password", which is not
-                # what happened and reads as a contradiction beside this.
                 form.errors.clear()
                 messages.error(
                     request,
@@ -161,8 +150,6 @@ def signout(request):
     return redirect(target)
 
 
-# profile
-
 @login_required_message
 def profile(request):
     me = profile_of(request)
@@ -185,7 +172,6 @@ def profile(request):
 
 
 def public_profile(request, pk):
-    """What other people see: listings and reputation, no private details."""
     from property.views import annotate_saved
 
     person = get_object_or_404(UserProfile, pk=pk)
@@ -265,19 +251,14 @@ def delete_account(request):
     return redirect('home')
 
 
-# dashboard
-
 @login_required_message
 def dashboard(request):
-    """One page that answers: what is happening with my account right now."""
     from property.models import AllProperty, Booking, Conversation
 
     me = profile_of(request)
     from django.db.models import Sum
 
     my_properties = me.properties.with_cards()
-    # separate calls: joining favourites in makes Sum count a property once
-    # per favourite, which inflated the view total on this page only
     view_total = me.properties.aggregate(n=Sum('view_count'))['n'] or 0
     save_total = me.properties.aggregate(n=Count('favourited_by'))['n'] or 0
 
@@ -300,7 +281,6 @@ def dashboard(request):
         Q(renter=me) | Q(owner=me)
     ).select_related('property', 'renter', 'owner')[:5]
 
-    # 14 day view chart across everything the user owns
     from property.models import PropertyView
     since = timezone.localdate() - timezone.timedelta(days=13)
     rows = (PropertyView.objects
@@ -310,7 +290,6 @@ def dashboard(request):
     chart = []
     for i in range(13, -1, -1):
         day = timezone.localdate() - timezone.timedelta(days=i)
-        # built from the date parts: strftime('%-d') is not portable to Windows
         chart.append({'label': f'{day.day}/{day.month}',
                       'value': by_day.get(day, 0)})
     chart_max = max([c['value'] for c in chart] + [1])
@@ -328,8 +307,6 @@ def dashboard(request):
         'active': 'dashboard',
     })
 
-
-# notifications
 
 @login_required_message
 def notifications(request):
@@ -365,8 +342,6 @@ def read_all_notifications(request):
     messages.success(request, 'All caught up.')
     return redirect('notifications')
 
-
-# password reset
 
 def password_reset_confirm(request, uidb64, token):
     try:

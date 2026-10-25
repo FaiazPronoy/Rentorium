@@ -1,4 +1,3 @@
-"""Tests for the agent console and the decision log."""
 from django.core.files.base import ContentFile
 from django.test import TestCase
 from django.urls import reverse
@@ -112,8 +111,6 @@ class AgentConsoleTests(TestCase):
 
 
 class AgentLogFilterTests(TestCase):
-    """Filtering the decision log."""
-
     def setUp(self):
         self.agent_user, self.agent = make_user('agent@test.com', 'Agent', agent=True)
         self.owner_user, self.owner = make_user('owner@test.com', 'Owner',
@@ -132,8 +129,6 @@ class AgentLogFilterTests(TestCase):
         self.assertEqual(len(r.context['rows']), 1)
 
 class EnquiryReplyTests(TestCase):
-    """Answering an enquiry from the console."""
-
     def setUp(self):
         make_user('agent@test.com', 'Agent', agent=True)
         self.enquiry = Contact.objects.create(
@@ -152,8 +147,6 @@ class EnquiryReplyTests(TestCase):
 
 
 class ReportQueueTests(TestCase):
-    """The queue of listings people have flagged, and what an agent does with it."""
-
     def setUp(self):
         self.agent_user, self.agent = make_user('agent@test.com', 'Agent', agent=True)
         self.owner_user, self.owner = make_user('owner@test.com', 'Owner',
@@ -352,12 +345,6 @@ class SuspensionTests(TestCase):
             self.client.login(username='owner@test.com', password=PASSWORD))
 
     def test_a_suspended_person_is_thrown_out_of_a_session_they_already_had(self):
-        """Deactivating the account ends the session at the next request.
-
-        Django's auth backend refuses to load an inactive user, so the
-        already-signed-in browser becomes anonymous rather than carrying on
-        until the cookie expires.
-        """
         self.client.logout()
         self.client.login(username='owner@test.com', password=PASSWORD)
         self.owner.suspend(by=self.agent, reason='Caught out.')
@@ -375,7 +362,6 @@ class SuspensionTests(TestCase):
         self.assertNotContains(r, 'Wrong email or password')
 
     def test_the_guard_also_catches_a_suspension_set_without_deactivating(self):
-        """A row edited straight in the admin, say."""
         self.client.logout()
         self.client.login(username='owner@test.com', password=PASSWORD)
         UserProfile.objects.filter(pk=self.owner.pk).update(

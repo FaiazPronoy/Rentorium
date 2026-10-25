@@ -9,14 +9,6 @@ from django.utils import timezone
 
 
 class UserProfile(models.Model):
-    """
-    Everything about a person that Django's own User model does not hold.
-
-    One profile per user, created automatically by a signal, so a user can
-    never exist without one. That single guarantee removes a whole class of
-    crashes the first version had.
-    """
-
     GENDER_CHOICES = [
         (1, 'Male'),
         (2, 'Female'),
@@ -42,14 +34,10 @@ class UserProfile(models.Model):
     profile_picture = models.ImageField(upload_to='profile_picture', null=True, blank=True)
 
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.RENTER)
-    is_agent = models.BooleanField(default=False)          # mirrors role
+    is_agent = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     avatar_color = models.CharField(max_length=7, default='#1D4E9E')
 
-    # --- moderation -------------------------------------------------------
-    # A suspended person keeps their account and their data; they simply
-    # cannot sign in or act until an agent lifts it. Nothing is deleted, so a
-    # mistake can be undone, and their listings come back with them.
     is_suspended = models.BooleanField(default=False)
     suspended_at = models.DateTimeField(null=True, blank=True)
     suspended_reason = models.CharField(max_length=200, blank=True, default='')
@@ -73,14 +61,12 @@ class UserProfile(models.Model):
         return self.name or self.email
 
     def save(self, *args, **kwargs):
-        # role and is_agent are two views of the same fact, so keep them in step
         if self.role == self.Role.AGENT:
             self.is_agent = True
         elif self.is_agent and self.role != self.Role.AGENT:
             self.role = self.Role.AGENT
         super().save(*args, **kwargs)
 
-    # helpers
     @property
     def initials(self):
         parts = [p for p in (self.name or self.email).split() if p]
@@ -103,7 +89,6 @@ class UserProfile(models.Model):
         return self.role == self.Role.OWNER or self.properties.exists()
 
     def suspend(self, by=None, reason=''):
-        """Lock the account and hide everything they have listed."""
         from property.models import AllProperty
         self.is_suspended = True
         self.suspended_at = timezone.now()
@@ -111,8 +96,6 @@ class UserProfile(models.Model):
         self.suspended_by = by
         self.save(update_fields=['is_suspended', 'suspended_at',
                                  'suspended_reason', 'suspended_by'])
-        # Their listings come off the site with them, but stay in the database
-        # so lifting the suspension puts everything back untouched.
         self.properties.filter(is_archived=False).update(is_archived=True)
         self.user.is_active = False
         self.user.save(update_fields=['is_active'])
@@ -138,9 +121,6 @@ class UserProfile(models.Model):
     def listing_count(self):
         return self.properties.count()
 
-    @property
-    def member_since(self):
-        return self.created_at
 
     def get_absolute_url(self):
         return reverse('public_profile', args=[self.pk])
@@ -156,11 +136,8 @@ class UserProfile(models.Model):
         return self.notifications.filter(is_read=False).count()
 
 
-# signals
-
 @receiver(post_save, sender=User)
 def ensure_profile(sender, instance, created, **kwargs):
-    """A user without a profile broke half of the first version. Not any more."""
     if created:
         UserProfile.objects.get_or_create(
             user=instance,
@@ -182,8 +159,6 @@ def delete_profile_picture(sender, instance, **kwargs):
 
 
 class Notification(models.Model):
-    """In app notifications: a booking request, a reply, an approval."""
-
     class Kind(models.TextChoices):
         BOOKING = 'booking', 'Booking'
         MESSAGE = 'message', 'Message'
@@ -211,7 +186,6 @@ class Notification(models.Model):
 
     @staticmethod
     def push(profile, title, body='', link='', kind=Kind.SYSTEM):
-        """Fire and forget. Never let a notification failure break a request."""
         if profile is None:
             return None
         try:
@@ -224,8 +198,6 @@ class Notification(models.Model):
 
 
 class LoginAttempt(models.Model):
-    """Sign in attempts, so brute force can be throttled and shown to the user."""
-
     username = models.CharField(max_length=150)
     ip = models.CharField(max_length=45, blank=True, default='')
     successful = models.BooleanField(default=False)

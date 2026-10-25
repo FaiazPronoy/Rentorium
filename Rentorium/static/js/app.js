@@ -1,10 +1,3 @@
-/*! Rentorium. Copyright 2024-2026 Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Jahirul Islam Zishan. All rights reserved. See LICENSE. */
-/* =====================================================================
-   Rentorium front end.
-   Plain JavaScript, no library, no build step. Everything here is an
-   enhancement: with scripting switched off every form still posts, every
-   link still navigates, and every filter still applies.
-   ===================================================================== */
 (function () {
   'use strict';
 
@@ -16,19 +9,12 @@
     return Array.prototype.slice.call((ctx || document).querySelectorAll(sel));
   }
 
-  /* ---------------------------------------------------------------- *
-     Theme
-   * ---------------------------------------------------------------- */
   window.toggleTheme = function () {
     var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    /* damp the transition for one frame so the whole page does not smear */
     root.setAttribute('data-theme', next);
     try { localStorage.setItem('rent-theme', next); } catch (e) {}
   };
 
-  /* ---------------------------------------------------------------- *
-     Navigation
-   * ---------------------------------------------------------------- */
   window.toggleNav = function () {
     var n = document.getElementById('navLinks');
     if (n) n.classList.toggle('open');
@@ -46,8 +32,6 @@
     window.addEventListener('scroll', check, { passive: true });
   }
 
-  /* A thin bar across the top while the next page loads. Browsers give no
-     feedback for a plain form post, which made the site feel unresponsive. */
   function wireProgress() {
     var bar = document.createElement('div');
     bar.id = 'navProgress';
@@ -85,9 +69,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Dropdown menus
-   * ---------------------------------------------------------------- */
   function wireMenus() {
     $$('.menu > button').forEach(function (btn) {
       btn.setAttribute('aria-expanded', 'false');
@@ -115,9 +96,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Modals
-   * ---------------------------------------------------------------- */
   var lastFocused = null;
 
   window.openModal = function (id) {
@@ -143,7 +121,6 @@
     $$('.modal').forEach(function (m) {
       m.addEventListener('click', function (e) { if (e.target === m) closeModal(m.id); });
     });
-    /* keep tab inside an open dialog */
     document.addEventListener('keydown', function (e) {
       var open = $('.modal.open');
       if (!open) return;
@@ -159,9 +136,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Confirm before a destructive action
-   * ---------------------------------------------------------------- */
   function wireConfirm() {
     $$('[data-confirm]').forEach(function (el) {
       var handler = function (e) {
@@ -172,9 +146,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Show / hide password
-   * ---------------------------------------------------------------- */
   var EYE = '<svg class="ico-svg on" viewBox="0 0 24 24" aria-hidden="true">' +
     '<path d="M2.6 12S6.2 5.6 12 5.6 21.4 12 21.4 12 17.8 18.4 12 18.4 2.6 12 2.6 12z"/>' +
     '<circle cx="12" cy="12" r="3.1"/></svg>' +
@@ -205,16 +176,12 @@
         btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
         btn.title = btn.getAttribute('aria-label');
         input.focus();
-        /* keep the caret at the end rather than jumping to the start */
         var v = input.value; input.value = ''; input.value = v;
       });
       wrap.appendChild(btn);
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Favourite and compare, without losing your place on the page
-   * ---------------------------------------------------------------- */
   function postForm(form) {
     return fetch(form.action, {
       method: 'POST',
@@ -281,9 +248,6 @@
     bar.classList.toggle('hide', !count);
   }
 
-  /* ---------------------------------------------------------------- *
-     Toasts
-   * ---------------------------------------------------------------- */
   function toastBox() {
     var box = $('.toasts');
     if (!box) {
@@ -318,9 +282,6 @@
     $$('.toasts .alert').forEach(dismissLater);
   }
 
-  /* ---------------------------------------------------------------- *
-     Photo lightbox
-   * ---------------------------------------------------------------- */
   var lb = { images: [], at: 0, el: null };
 
   function buildLightbox() {
@@ -396,9 +357,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Password strength
-   * ---------------------------------------------------------------- */
   function wireStrength() {
     $$('[data-strength]').forEach(function (input) {
       var meter = document.getElementById(input.dataset.strength);
@@ -418,11 +376,7 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Filters
-   * ---------------------------------------------------------------- */
   function wireFilters() {
-    /* only show the extra fields that belong to the chosen property type */
     var typeSelect = document.getElementById('id_property_type');
     function sync() {
       if (!typeSelect) return;
@@ -441,7 +395,6 @@
       });
     });
 
-    /* on a phone the filters live in a sheet, not above the results */
     var panel = document.getElementById('filterPanel');
     if (!panel) return;
     var backdrop = document.createElement('div');
@@ -466,9 +419,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Small conveniences
-   * ---------------------------------------------------------------- */
   function wireOnce() {
     $$('form[data-once]').forEach(function (f) {
       f.addEventListener('submit', function () {
@@ -539,16 +489,10 @@
     draw();
   }
 
-  /* ---------------------------------------------------------------- *
-     Reveal on scroll
-   * ---------------------------------------------------------------- */
   function wireReveal() {
     var targets = $$('.reveal');
     if (!targets.length) return;
 
-    /* Arm the hidden pre-state, and promise to disarm it. After this window
-       anything still unrevealed is simply shown, so a missed observer
-       callback can never leave a blank page. */
     root.classList.add('armed');
     var disarm = setTimeout(function () { root.classList.remove('armed'); }, 5000);
     if (reduced || !('IntersectionObserver' in window)) {
@@ -557,8 +501,6 @@
       root.classList.remove('armed');
       return;
     }
-    /* Belt and braces: if anything goes wrong with the observer, nothing on
-       the page should stay invisible. */
     setTimeout(function () {
       targets.forEach(function (el) {
         var box = el.getBoundingClientRect();
@@ -574,7 +516,6 @@
     }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
 
     targets.forEach(function (el, i) {
-      /* stagger anything that sits in the same grid */
       if (!el.style.getPropertyValue('--d')) {
         var within = el.parentNode ? Array.prototype.indexOf.call(el.parentNode.children, el) : i;
         el.style.setProperty('--d', Math.min(within, 7) * 55 + 'ms');
@@ -582,9 +523,6 @@
       io.observe(el);
     });
 
-    /* A second, cheaper sweep on scroll. Nothing that has been scrolled past
-       may stay invisible, whatever the observer did or did not deliver: a
-       fast flick, a jump to an anchor, a restored scroll position. */
     var pending = false;
     function sweep() {
       pending = false;
@@ -613,9 +551,6 @@
     window.addEventListener('resize', onScroll, { passive: true });
   }
 
-  /* ---------------------------------------------------------------- *
-     Hero stage: photographs crossfade, each drifting while it shows.
-   * ---------------------------------------------------------------- */
   function wireStage() {
     $$('.stage').forEach(function (stage) {
       var slides = $$('figure', stage);
@@ -645,7 +580,6 @@
         slides[i].classList.remove('on');
         i = n;
         slides[i].classList.add('on');
-        /* restart the drift on the picture that is now showing */
         var img = $('img', slides[i]);
         if (img) { img.style.animation = 'none'; void img.offsetWidth; img.style.animation = ''; }
         pips.forEach(function (b, k) {
@@ -678,9 +612,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Quotation carousel: one card at a time on a phone, three on a desk.
-   * ---------------------------------------------------------------- */
   function wireSays() {
     $$('.says').forEach(function (box) {
       var track = $('.says-track', box);
@@ -729,14 +660,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Search suggestions.
-
-     Every `input[data-suggest]` gets a panel underneath it: the person's own
-     recent searches while the box is empty, then real areas and listings as
-     they type. It is an enhancement over a plain text input: the form still
-     submits whatever was typed, so with scripting off nothing is lost.
-   * ---------------------------------------------------------------- */
   function wireSuggest() {
     var boxes = $$('input[data-suggest]');
     if (!boxes.length) return;
@@ -746,7 +669,6 @@
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
       });
     }
-    /* mark the typed part inside a suggestion, without trusting either string */
     function mark(label, term) {
       var safe = esc(label);
       if (!term) return safe;
@@ -760,7 +682,6 @@
       recent: 'history', area: 'pin', listing: 'building', search: 'search'
     };
     var SPRITE = {};
-    /* borrow the icons the server already rendered on this page */
     $$('svg.ico-svg').forEach(function (svg) {
       var key = svg.getAttribute('data-icon');
       if (key && !SPRITE[key]) SPRITE[key] = svg.outerHTML;
@@ -859,7 +780,6 @@
           .then(function (r) { return r.ok ? r.json() : null; })
           .then(function (data) {
             if (!data) return;
-            /* a slow answer for something they have since retyped is stale */
             if (input.value.trim() !== term) return;
             cache[term] = data;
             draw(data);
@@ -872,7 +792,6 @@
         if (term === lastTerm) return;
         lastTerm = term;
         clearTimeout(timer);
-        /* one letter is not enough to be worth a round trip */
         if (term.length === 1) { close(); return; }
         timer = setTimeout(ask, 180);
       }
@@ -893,7 +812,6 @@
           e.preventDefault(); links[at].click();
         }
       });
-      /* a click inside the panel must land before the blur closes it */
       panel.addEventListener('mousedown', function (e) { e.preventDefault(); });
       input.addEventListener('blur', function () { setTimeout(close, 120); });
       document.addEventListener('click', function (e) {
@@ -902,9 +820,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     Bulk selection on the agent approval queue
-   * ---------------------------------------------------------------- */
   function wireBulk() {
     var bar = $('[data-bulk-bar]');
     if (!bar) return;
@@ -965,9 +880,6 @@
     refresh();
   }
 
-  /* ---------------------------------------------------------------- *
-     Back to the top
-   * ---------------------------------------------------------------- */
   function wireToTop() {
     var b = document.getElementById('toTop');
     if (!b) return;
@@ -987,7 +899,6 @@
     check();
   }
 
-  /* auto-tag the obvious blocks so templates stay clean */
   function markReveal() {
     $$('main section, main .pcard, main .pcard-hero, main .cat, main .cat-tile, ' +
        'main .stat, main .reason, ' +
@@ -997,9 +908,6 @@
       });
   }
 
-  /* ---------------------------------------------------------------- *
-     Counters: the headline numbers roll up the first time you see them
-   * ---------------------------------------------------------------- */
   function wireCounters() {
     var nodes = $$('[data-count]');
     if (!nodes.length) return;
@@ -1012,7 +920,6 @@
       function frame(now) {
         if (started === null) started = now;
         var t = Math.min(1, (now - started) / ms);
-        /* ease out, so it slows into the real figure */
         var eased = 1 - Math.pow(1 - t, 3);
         el.textContent = Math.round(target * eased);
         if (t < 1) requestAnimationFrame(frame);
@@ -1032,10 +939,6 @@
     nodes.forEach(function (n) { io.observe(n); });
   }
 
-  /* ---------------------------------------------------------------- *
-     Photographs fade in once they have actually decoded, so a slow
-     connection shows a settled layout rather than images snapping in.
-   * ---------------------------------------------------------------- */
   function wireImageFade() {
     $$('.pcard-media img, .cat-tile img, .pcard-hero img, .gallery img, .photo-tile img')
       .forEach(function (img) {
@@ -1047,12 +950,6 @@
       });
   }
 
-  /* ---------------------------------------------------------------- *
-     Go
-   * ---------------------------------------------------------------- */
-  /* ---------------------------------------------------------------- *
-     Money, the way it is said here: 42,000 and 1.2 lakh
-   * ---------------------------------------------------------------- */
   function taka(n) {
     n = Math.round(n);
     if (n >= 10000000) return (n / 10000000).toFixed(2).replace(/\.?0+$/, '') + ' crore';
@@ -1060,9 +957,6 @@
     return n.toLocaleString('en-IN');
   }
 
-  /* ---------------------------------------------------------------- *
-     Photo strips on the cards: swipe on a phone, arrows on a laptop
-   * ---------------------------------------------------------------- */
   function wireStrips() {
     $$('[data-strip]').forEach(function (media) {
       var strip = $('.pc-strip', media);
@@ -1083,9 +977,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- *
-     What can I afford: a third of the income, rounded to the thousand
-   * ---------------------------------------------------------------- */
   function wireAfford() {
     var box = $('[data-afford]');
     if (!box) return;
@@ -1105,9 +996,6 @@
     update();
   }
 
-  /* ---------------------------------------------------------------- *
-     EMI on a sale listing, the standard reducing balance formula
-   * ---------------------------------------------------------------- */
   function wireEmi() {
     var box = $('[data-emi]');
     if (!box) return;
@@ -1127,9 +1015,6 @@
     update();
   }
 
-  /* ---------------------------------------------------------------- *
-     Maps. Leaflet loads after this file, so these wait for the page.
-   * ---------------------------------------------------------------- */
   function tiles(map) {
     window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,

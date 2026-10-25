@@ -1,24 +1,4 @@
 #!/usr/bin/env python3
-"""
-Browser checks for Rentorium, in a real browser through Playwright.
-
-  1. pages     every page a visitor, a renter, an owner and the agent can
-               reach answers 200 with no console error
-  2. contrast  every piece of text against WCAG AA, light and dark
-  3. phone     nothing scrolls sideways at 390 px
-  4. flows     each key on the rack signs in as its person, the password
-               eye works, the header search and the rail both filter
-
-Start the site first on a database filled by seed_demo:
-
-  cd Rentorium
-  python manage.py seed_demo
-  python manage.py runserver 127.0.0.1:8020
-  python ../tools/browser_checks.py
-
-Uses the Edge that ships with Windows; set RT_BROWSER=chrome for Chrome.
-Screenshots go to tools/shots (ignored by git).
-"""
 import os
 import sys
 
@@ -60,13 +40,12 @@ CONTRAST_JS = r"""
   const root = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
   const hex = h => ({r: parseInt(h.slice(1, 3), 16), g: parseInt(h.slice(3, 5), 16), b: parseInt(h.slice(5, 7), 16), a: 1});
   const page = /^#[0-9a-f]{6}$/i.test(root) ? hex(root) : {r: 255, g: 255, b: 255, a: 1};
-  // a gradient band counts as its darkest and lightest stops, and both must pass
   const stops = img => [...img.matchAll(/rgba?\([^)]+\)/g)].map(m => parse(m[0])).filter(c => c && c.a >= .9);
   const background = el => {
     const stack = [];
     for (let e = el; e; e = e.parentElement) {
       const cs = getComputedStyle(e);
-      if (cs.backgroundImage.includes('url(') && e.tagName !== 'BODY') return null;  // text on a photograph
+      if (cs.backgroundImage.includes('url(') && e.tagName !== 'BODY') return null;
       if (cs.backgroundImage.includes('gradient') && e.tagName !== 'BODY') {
         const solid = stops(cs.backgroundImage);
         if (solid.length) return solid.reduce((a, c) => lum(c) > lum(a) ? c : a);
@@ -89,7 +68,6 @@ CONTRAST_JS = r"""
     if (parseFloat(cs.opacity) === 0) continue;
     const size = parseFloat(cs.fontSize), weight = parseInt(cs.fontWeight, 10);
     const need = (size >= 24 || (size >= 18.66 && weight >= 700)) ? 3 : 4.5;
-    // gradient text: each colour in the gradient has to pass on its own
     const clipped = (cs.backgroundClip || cs.webkitBackgroundClip || '').includes('text');
     const bg = background(clipped ? el.parentElement : el);
     if (!bg) continue;
@@ -124,7 +102,6 @@ def visit(page, urls, theme, who, statuses, fails, errors_seen):
         page.wait_for_load_state("networkidle")
         page.wait_for_timeout(250)
         statuses.append((who + url, response.status))
-        # anything that reveals on scroll is shown straight away for the check
         page.evaluate("document.documentElement.classList.remove('armed');"
                       "document.querySelectorAll('.reveal').forEach(e => e.classList.add('in'))")
         page.wait_for_timeout(700)
@@ -209,7 +186,6 @@ def main():
               tags and all(t.strip() == "To rent" for t in tags), tags[:4])
         check("and marks itself as the one in use", "on" in (page.locator(".rail a", has_text="To rent").get_attribute("class") or ""))
 
-        # the arrows on a card move through its photos
         page.goto(BASE + "/property/browse")
         page.wait_for_load_state("networkidle")
         card = page.locator(".pcard").first
@@ -219,7 +195,6 @@ def main():
         moved = card.locator(".pc-strip").evaluate("s => s.scrollLeft > 0")
         check("the arrow on a card shows its next photo", moved)
 
-        # the map puts one pin on it for every listing that matches
         total = page.locator(".plist .pcard").count()
         page.goto(BASE + "/property/browse?view=map")
         page.wait_for_load_state("networkidle")
@@ -230,7 +205,6 @@ def main():
             pins = 0
         check("the map shows a pin for every listing", pins >= total > 0, (pins, total))
 
-        # the rent helper follows the slider and links to the right budget
         page.goto(BASE + "/")
         page.wait_for_load_state("networkidle")
         page.evaluate("""() => { const r = document.querySelector('[data-afford] input[type=range]');
@@ -238,7 +212,6 @@ def main():
         href = page.locator("[data-afford-link]").get_attribute("href") or ""
         check("the rent helper suggests a third of the income", "max_price=50000" in href, href)
 
-        # a sale listing works out a monthly instalment
         page.goto(BASE + "/property/browse?property_on=sale")
         page.wait_for_load_state("networkidle")
         page.locator(".pcard-title").first.click()

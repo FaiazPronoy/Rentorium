@@ -12,6 +12,5 @@ urlpatterns = [
     path('page-not-found', views.notFound, name='PageNotFound'),
     path('contact/', views.contact, name='contact'),
 
-    # new in v2
     path('testimonial/delete/', views.delete_testimonial, name='delete_testimonial'),
 ]

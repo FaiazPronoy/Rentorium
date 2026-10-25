@@ -18,16 +18,7 @@ SHARED_FIELDS = [
 ]
 
 class PrivateFileInput(forms.FileInput):
-    """A file box for a document that has no public URL.
-
-    The default for a FileField is ClearableFileInput, which renders
-    "Currently: <a href="{{ value.url }}">" for a file that is already saved.
-    Ownership papers live outside MEDIA_ROOT and their storage refuses to
-    produce a URL, so that widget raised ValueError and the edit page of every
-    listing that had a document returned a 500. A plain file input never asks
-    for the URL; the name of the file on record goes in the help text below,
-    and the only way to open it stays the permission-checked document view.
-    """
+    pass
 
 
 SHARED_WIDGETS = {
@@ -44,8 +35,6 @@ SHARED_WIDGETS = {
 
 
 class BasePropertyForm(forms.ModelForm):
-    """Validation every listing shares, whatever its type."""
-
     class Meta:
         widgets = SHARED_WIDGETS
 
@@ -62,10 +51,6 @@ class BasePropertyForm(forms.ModelForm):
         if 'available_from' in self.fields and not self.instance.pk:
             self.fields['available_from'].initial = timezone.localdate()
 
-        # These carry `default=0` on the model, so a brand new form arrived
-        # showing a 0 in every money box: a filled-in field that the price
-        # check then rejects. Start them empty with a hint instead, and let
-        # the two optional ones fall back to 0 on save.
         if not self.instance.pk:
             for name, hint in (('Price', 'e.g. 45000'),
                                ('service_charge', '0 if there is none'),
@@ -77,8 +62,6 @@ class BasePropertyForm(forms.ModelForm):
             if name in self.fields:
                 self.fields[name].required = False
 
-        # Say which paper is already on record, since the box itself cannot
-        # link to it.
         doc = getattr(self.instance, 'Property_Documents', None)
         if 'Property_Documents' in self.fields and doc:
             self.fields['Property_Documents'].help_text = (
@@ -178,7 +161,6 @@ class LandPropertyForm(BasePropertyForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # land has no furnishing
         self.fields.pop('furnishing', None)
 
 
@@ -196,13 +178,10 @@ class PropertyTypeForm(forms.Form):
 
 
 class MultiFileInput(forms.ClearableFileInput):
-    """Django 5 refuses `multiple` on the stock widget, so allow it here."""
     allow_multiple_selected = True
 
 
 class MultiImageField(forms.FileField):
-    """Returns a list of files rather than only the last one."""
-
     widget = MultiFileInput
 
     def clean(self, data, initial=None):
@@ -216,8 +195,6 @@ class MultiImageField(forms.FileField):
 
 
 class PropertyImageForm(forms.Form):
-    """Several gallery images at once."""
-
     images = MultiImageField(
         widget=MultiFileInput(attrs={'multiple': True, 'accept': 'image/*'}),
         required=False, label='Add photos',
@@ -235,8 +212,6 @@ class PropertyImageForm(forms.Form):
         return files
 
 
-# filters
-
 ORDERINGS = [
     ('', 'Most relevant'),
     ('newest', 'Newest first'),
@@ -253,7 +228,6 @@ class PropertyFilterForm(forms.Form):
         required=False, label='Search',
         widget=forms.TextInput(attrs={
             'placeholder': 'Title, area, landmark or description',
-            # picked up by the suggestion panel in static/js/app.js
             'data-suggest': '/property/suggest/',
         }),
     )
@@ -307,14 +281,6 @@ class PropertyFilterForm(forms.Form):
 
     @property
     def active_count(self):
-        """
-        How many filters the user actually set, for the 'clear' button.
-
-        The amenity field cleans to an empty queryset when nothing is ticked,
-        and an empty queryset is not equal to [], so the old membership test
-        counted it as a live filter on every visit and the page always claimed
-        the results were filtered.
-        """
         if not self.is_bound or not self.is_valid():
             return 0
         skip = {'ordering'}
@@ -322,7 +288,7 @@ class PropertyFilterForm(forms.Form):
         def is_set(value):
             if value is None or value is False or value == '':
                 return False
-            if hasattr(value, 'exists'):            # a queryset
+            if hasattr(value, 'exists'):
                 return value.exists()
             if isinstance(value, (list, tuple, set, dict)):
                 return bool(value)
@@ -339,8 +305,6 @@ class SavedSearchForm(forms.ModelForm):
         widgets = {'label': forms.TextInput(
             attrs={'placeholder': 'Three bed flats in Dhanmondi under 40k'})}
 
-
-# reviews
 
 class PropertyReviewForm(forms.ModelForm):
     class Meta:
@@ -360,8 +324,6 @@ class PropertyReviewForm(forms.ModelForm):
         return comment
 
 
-# bookings
-
 class BookingForm(forms.ModelForm):
     class Meta:
         model = Booking
@@ -377,9 +339,6 @@ class BookingForm(forms.ModelForm):
         self.property = kwargs.pop('property', None)
         self.renter = kwargs.pop('renter', None)
         super().__init__(*args, **kwargs)
-        # The three month window is enforced in clean_visit_date; mirroring it
-        # onto the widget means the date picker itself will not offer a day the
-        # server is going to refuse.
         self.fields['visit_date'].widget.attrs['min'] = timezone.localdate().isoformat()
         self.fields['visit_date'].widget.attrs['max'] = (
             timezone.localdate() + timedelta(days=90)).isoformat()
@@ -422,8 +381,6 @@ class BookingForm(forms.ModelForm):
                 raise ValidationError('You have already asked for that slot.')
         return cleaned
 
-
-# messaging
 
 class MessageForm(forms.ModelForm):
     class Meta:

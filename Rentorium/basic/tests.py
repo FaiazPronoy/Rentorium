@@ -1,4 +1,3 @@
-"""Tests for the public pages, the contact form and site reviews."""
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse

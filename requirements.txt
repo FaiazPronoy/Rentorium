@@ -1,10 +1,2 @@
-# Rentorium v2 needs very little.
-#
-# The versions are ranges, not pins, on purpose: Pillow ships compiled
-# wheels per Python version, and a hard pin on an older Pillow makes pip
-# try to build it from source on a newer Python, which needs a C compiler
-# and fails. A range lets pip pick the wheel that matches the Python in
-# use. Tested on 5.0.2 / 10.2.0 and on 5.2.x / 12.x - 122 tests pass on
-# both.
 Django>=5.0.2,<5.3
 pillow>=10.2

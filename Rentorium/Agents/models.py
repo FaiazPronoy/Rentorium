@@ -7,14 +7,6 @@ from property.models import AllProperty
 
 
 class AgentAction(models.Model):
-    """
-    Every moderation decision an agent makes, kept forever.
-
-    The first version overwrote a single text column with the agent's name and
-    lost the history. Now an owner can be told exactly who decided what, when,
-    and why, and a wrong decision can be traced.
-    """
-
     class Action(models.TextChoices):
         APPROVED = 'approved', 'Approved'
         REJECTED = 'rejected', 'Rejected'
@@ -30,15 +22,11 @@ class AgentAction(models.Model):
     agent = models.ForeignKey(
         UserProfile, on_delete=models.SET_NULL, null=True, related_name='agent_actions'
     )
-    # Null for a decision that is about a person rather than a listing: a
-    # suspension, for instance. `subject` below names them.
     property = models.ForeignKey(
         AllProperty, on_delete=models.CASCADE, related_name='agent_actions',
         null=True, blank=True,
     )
     action = models.CharField(max_length=12, choices=Action.choices)
-    # A moderation entry that is not about one listing (a suspension, say)
-    # names the person instead.
     subject = models.ForeignKey(
         UserProfile, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='actions_against',
@@ -59,7 +47,6 @@ class AgentAction(models.Model):
 
     @computed
     def target(self):
-        """Whatever this decision was about, for the log."""
         return self.property or self.subject or 'a removed record'
 
     @computed

@@ -1,15 +1,3 @@
-"""Where a listing goes on the map.
-
-Listings are entered by area, not by coordinates: owners know their
-neighbourhood, they do not know their latitude. So each area has a centre,
-and each listing is placed a short, fixed distance from it, worked out from
-its id. The same listing lands in the same spot every time, and two listings
-in one area do not sit on top of each other.
-
-The pin shows the neighbourhood, never the building. The exact address is
-the owner's to share once a viewing is agreed.
-"""
-
 import hashlib
 
 AREA_CENTRES = {
@@ -34,11 +22,10 @@ CITY_CENTRES = {
     'Rajshahi': (24.3745, 88.6042),
 }
 
-SPREAD = 0.006        # about 600 m either way
+SPREAD = 0.006
 
 
 def place(listing):
-    """(lat, lng) for a listing, near the middle of its area."""
     lat, lng = AREA_CENTRES.get(listing.Area) or CITY_CENTRES.get(listing.City, CITY_CENTRES['Dhaka'])
     digest = hashlib.md5(str(listing.pk).encode()).digest()
     dx = (digest[0] / 255 - 0.5) * 2 * SPREAD

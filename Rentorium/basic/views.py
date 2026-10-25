@@ -14,14 +14,9 @@ from .forms import ContactForm, ReviewForm
 from .models import Faq, Reviews
 
 
-# home
-
 def home(request):
     live = AllProperty.objects.live()
 
-    # The home page lays these out as one large card and four small ones, so
-    # it wants exactly five. Take the featured listings first and top the row
-    # up with the newest ones rather than leaving holes in the grid.
     WANTED = 5
     featured = list(live.filter(is_featured=True).with_cards()
                     .order_by('-approved_at', '-created_at')[:WANTED])
@@ -33,7 +28,6 @@ def home(request):
     context = {
         'featured': featured,
         'newest': live.with_cards().order_by('-created_at')[:6],
-        # The carousel shows three at a time, so give it enough to turn.
         'top_review': Reviews.objects.filter(is_published=True)
                                      .select_related('user')[:9],
         'counts': {
@@ -55,7 +49,6 @@ def home(request):
 
 
 def _area_tiles(live):
-    """The busiest neighbourhoods, each with a photo and its lowest rent."""
     tiles = []
     rows = (live.values('Area').annotate(n=Count('id'))
                 .order_by('-n', 'Area')[:6])
@@ -72,8 +65,6 @@ def _area_tiles(live):
         })
     return tiles
 
-
-# flat pages
 
 def about(request):
     live = AllProperty.objects.live()
@@ -112,8 +103,6 @@ def handler404(request, exception=None):
 def handler500(request):
     return render(request, '500.html', status=500)
 
-
-# testimonial
 
 def testimonial(request):
     me = profile_of(request)
@@ -178,8 +167,6 @@ def delete_testimonial(request):
     return redirect('testimonial')
 
 
-# contact
-
 def contact(request):
     me = profile_of(request)
     initial = {}
@@ -203,7 +190,6 @@ def contact(request):
 
 
 def _send_contact_mail(enquiry):
-    """Never let a mail failure lose the message: it is already in the database."""
     support = settings.SUPPORT_EMAIL or settings.DEFAULT_FROM_EMAIL
     body = (
         f'From: {enquiry.name} <{enquiry.email}>\n'

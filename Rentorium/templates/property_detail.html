@@ -11,7 +11,6 @@
 {% block body %}
 <main class="wrap section">
 
-  <!-- status banner, only ever seen by the owner or an agent -->
   {% if not listing.is_live %}
     <div class="alert {% if listing.status == 'rejected' %}alert-error{% else %}alert-warn{% endif %}"
          style="margin-bottom:1.2rem">
@@ -59,7 +58,6 @@
     </div>
   </div>
 
-  <!-- ================= gallery ================= -->
   {% if photos %}
     <div class="gallery g{{ photos|length }}" style="margin-bottom:1.8rem"
          data-gallery="{{ photos_json }}">
@@ -88,7 +86,6 @@
 
   <div class="row" style="align-items:flex-start;gap:1.6rem">
 
-    <!-- ================= left ================= -->
     <div class="col" style="flex:1 1 520px">
 
       <div class="card" style="margin-bottom:1.3rem">
@@ -177,7 +174,6 @@
           The owner shares the exact address once your viewing is confirmed.</p>
       </div>
 
-      <!-- reviews -->
       <div class="card" style="margin-bottom:1.3rem">
         <div class="between" style="margin-bottom:1rem">
           <div class="card-title mb0">
@@ -237,7 +233,6 @@
       {% endif %}
     </div>
 
-    <!-- ================= right ================= -->
     <aside class="col" style="flex:0 0 336px;max-width:100%">
       <div class="detail-rail sticky-side">
 
@@ -372,7 +367,6 @@
   </div>
 </main>
 
-<!-- ================= modals ================= -->
 {% if is_logged_in and not is_owner %}
   <div class="modal" id="bookModal">
     <div class="modal-box">
