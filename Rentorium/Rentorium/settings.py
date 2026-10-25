@@ -1,3 +1,10 @@
+"""
+Django settings for Rentorium.
+
+Secrets are read from the environment, so nothing sensitive is ever committed.
+DEBUG is off unless .env turns it on, so a server that misses a setting stays
+safe. Copy .env.example to .env for local work; it turns DEBUG on.
+"""
 import os
 from pathlib import Path
 
@@ -15,6 +22,7 @@ if _env_file.exists():
 
 
 def env(key, default=None):
+    """Environment first, then .env, then the default."""
     return os.environ.get(key, DOTENV.get(key, default))
 
 
@@ -22,21 +30,30 @@ def env_bool(key, default=False):
     return str(env(key, str(default))).strip().lower() in ('1', 'true', 'yes', 'on')
 
 
+# security
 SECRET_KEY = env('DJANGO_SECRET_KEY', 'dev-only-key-change-me-before-deploying')
 DEBUG = env_bool('DJANGO_DEBUG', False)
 ALLOWED_HOSTS = [h for h in env('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',') if h]
 
+# Behind a host that terminates TLS for us (PythonAnywhere, Render and the
+# like), Django sees plain HTTP unless it is told which header carries the
+# real scheme. Without this, `request.is_secure()` is False, the secure
+# cookies below are set but never sent back, and sign in silently fails.
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+# Django checks the Origin of every POST over HTTPS against this list.
 _public_hosts = [h for h in ALLOWED_HOSTS
                  if h not in ('localhost', '127.0.0.1', 'testserver')]
 CSRF_TRUSTED_ORIGINS = [f'https://{h}' for h in _public_hosts]
 
 if not DEBUG:
+    # a live site on the development key would sign everyone's session with
+    # a string that is in this repository, so refuse to start instead
     if SECRET_KEY.startswith('dev-only-key') or len(SECRET_KEY) < 40:
         from django.core.exceptions import ImproperlyConfigured
         raise ImproperlyConfigured(
             'Set DJANGO_SECRET_KEY to a long random value before turning DEBUG off.')
+    # hosts that already force HTTPS at the proxy can switch this off
     SECURE_SSL_REDIRECT = env_bool('DJANGO_SSL_REDIRECT', True)
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
@@ -52,6 +69,7 @@ CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
 SESSION_SAVE_EVERY_REQUEST = True
 
+# apps
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -99,6 +117,7 @@ TEMPLATES = [
     },
 ]
 
+# database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -107,6 +126,7 @@ DATABASES = {
     }
 }
 
+# auth
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
@@ -119,11 +139,13 @@ LOGIN_URL = 'signin'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+# i18n/tz
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Dhaka'
 USE_I18N = True
 USE_TZ = True
 
+# static
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'static_root'
@@ -133,6 +155,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 def _asset_version():
+    """
+    A stamp appended to the stylesheet and script URLs.
+
+    Without it a browser that has already cached app.css keeps serving the old
+    one after an update, which looks exactly like "the change did not work".
+    Taking the newest modification time means it changes by itself whenever
+    either file is edited, and stays stable otherwise.
+    """
     stamps = []
     for rel in ('css/app.css', 'js/app.js'):
         f = BASE_DIR / 'static' / rel
@@ -143,14 +173,19 @@ def _asset_version():
 
 ASSET_VERSION = _asset_version()
 
+# Ownership papers live here, deliberately outside MEDIA_ROOT, so no web
+# server ever maps a URL to them. See property/storage.py.
 PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
-DATA_UPLOAD_MAX_MEMORY_SIZE = 15 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024      # 5 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 15 * 1024 * 1024     # 15 MB
 DATA_UPLOAD_MAX_NUMBER_FILES = 20
 
+# email
+# With no SMTP settings configured, mail is printed to the console, which is
+# what you want while developing.
 if env('EMAIL_HOST_USER'):
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = env('EMAIL_HOST', 'smtp.gmail.com')
@@ -165,6 +200,7 @@ else:
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 SUPPORT_EMAIL = env('SUPPORT_EMAIL', EMAIL_HOST_USER)
 
+# app config
 SITE_NAME = 'Rentorium'
 SITE_LEGAL_NAME = 'Rentorium'
 SITE_TAGLINE = 'Property in Bangladesh, without the guesswork.'

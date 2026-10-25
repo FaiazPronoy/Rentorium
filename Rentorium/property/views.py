@@ -32,6 +32,11 @@ from .templatetags.property_filters import money
 
 
 def safe_back(request, fallback):
+    """
+    Go back where the user came from, but only if that is somewhere on this
+    site. A raw Referer header is attacker controlled, so it can point at
+    anywhere at all.
+    """
     referer = request.META.get('HTTP_REFERER', '')
     if referer:
         parsed = urlparse(referer)
@@ -42,7 +47,17 @@ def safe_back(request, fallback):
     return redirect(fallback)
 
 
+# the search
 def apply_filters(request, queryset):
+    """
+    Turns the query string into a filtered, ordered queryset.
+
+    Everything goes through the form first, so a value that is not one of the
+    allowed choices simply does not filter anything, and no raw input ever
+    reaches the ORM as a field name.
+    """
+    # bound even when the query string is empty, so the ordering below is
+    # applied on every page
     form = PropertyFilterForm(request.GET)
     if not form.is_valid():
         return queryset.with_cards().order_by('-is_featured', '-created_at'), form
@@ -51,6 +66,7 @@ def apply_filters(request, queryset):
 
 
 def _apply_cleaned(queryset, d):
+    """The filtering half, split out so a saved search can re-run it."""
     if d.get('q'):
         term = d['q']
         queryset = queryset.filter(
@@ -95,12 +111,14 @@ def _apply_cleaned(queryset, d):
         queryset = queryset.filter(landproperty__Land_type=d['land_type'])
 
     for amenity in d.get('amenities') or []:
+        # AND, not OR: every ticked amenity must be present
         queryset = queryset.filter(amenities=amenity)
 
     return queryset.distinct()
 
 
 def _order(queryset, d):
+    """The ordering half."""
     queryset = queryset.with_cards()
     ordering = {
         'newest': '-created_at',
@@ -138,6 +156,7 @@ def query_without_page(request):
 
 
 def annotate_saved(page, profile):
+    """Marks which of the listings on this page the viewer has already saved."""
     if profile is None:
         return page
     saved = set(
@@ -150,6 +169,7 @@ def annotate_saved(page, profile):
     return page
 
 
+# browsing
 def property_list(request):
     profile = profile_of(request)
     base = AllProperty.objects.live().select_related('user')
@@ -157,8 +177,13 @@ def property_list(request):
 
     total = results.count()
 
+    # Remember what they searched for, but only the first page of a real
+    # search: paging through the same results should not re-record it, and an
+    # empty box is not a search.
     term = (request.GET.get('q') or '').strip()
     if term and profile and request.GET.get('page') in (None, '', '1'):
+        # query_without_page() is built for appending to a URL, so it starts
+        # with '&'; a saved search needs it as a bare query string.
         RecentSearch.remember(
             profile, term, query_without_page(request).lstrip('&'), total)
 
@@ -169,6 +194,8 @@ def property_list(request):
     if view_mode not in ('list', 'map'):
         view_mode = 'grid'
 
+    # The map shows every match, not one page of them: a map with pins
+    # missing because they fell on page three would be misleading.
     map_points = []
     if view_mode == 'map':
         for p in results.with_cards()[:300]:
@@ -241,6 +268,7 @@ def property_detail(request, pk, slug=None):
 
     can_review = bool(profile and profile != listing.user and not my_review)
 
+    # every photo, in gallery order, for the tiles and the lightbox
     photos = [i.image.url for i in listing.images.all() if i.image]
     if not photos and listing.Property_Pictures:
         photos = [listing.Property_Pictures.url]
@@ -249,6 +277,8 @@ def property_detail(request, pk, slug=None):
     price = float(listing.Price)
     move_in = None
     if listing.is_rental:
+        # what the first visit to the owner costs: the advance, and the first
+        # month with its service charge
         move_in = {
             'advance': price * listing.security_deposit_months,
             'first_month': listing.monthly_total,
@@ -288,6 +318,7 @@ def property_detail(request, pk, slug=None):
 
 
 def _detail_facts(listing, specific):
+    """A tidy list of label and value pairs for whichever type this is."""
     facts = [
         ('Listed for', listing.get_Property_on_display()),
         ('Type', listing.get_Property_type_display()),
@@ -337,6 +368,7 @@ def _detail_facts(listing, specific):
     return facts
 
 
+# listing
 @login_required_message
 def add_property(request):
     if request.method == 'POST':
@@ -435,6 +467,7 @@ def update_property(request, property_id):
         if form.is_valid() and image_form.is_valid():
             with transaction.atomic():
                 updated = form.save(commit=False)
+                # an edit sends it back to the queue, unless an agent made it
                 if not me.is_agent:
                     updated.status = AllProperty.Status.PENDING
                     updated.needs_approval = True
@@ -549,6 +582,7 @@ def change_status(request, property_id):
     return redirect('posted_properties')
 
 
+# images
 @login_required_message
 def manage_images(request, property_id):
     listing = get_object_or_404(AllProperty, pk=property_id)
@@ -610,9 +644,16 @@ def make_cover(request, image_id):
     return redirect('manage_images', property_id=listing.pk)
 
 
+# documents
 @login_required_message
-@xframe_options_sameorigin
+@xframe_options_sameorigin   # the papers page previews it in an iframe
 def property_document_file(request, property_id):
+    """
+    Sends the file itself, after checking who is asking.
+
+    It lives outside MEDIA_ROOT (see property/storage.py), so this view is the
+    only way to reach it.
+    """
     listing = get_object_or_404(AllProperty, pk=property_id)
     if not listing.can_documents_be_seen_by(profile_of(request)):
         raise Http404('Private.')
@@ -634,6 +675,7 @@ def property_document_file(request, property_id):
 
 @login_required_message
 def view_property_documents(request, property_id):
+    """The papers page. Only the owner and an agent can open it."""
     listing = get_object_or_404(AllProperty, pk=property_id)
     me = profile_of(request)
 
@@ -654,6 +696,7 @@ def view_property_documents(request, property_id):
     })
 
 
+# favourites
 @login_required_message
 def favourites(request):
     me = profile_of(request)
@@ -664,7 +707,7 @@ def favourites(request):
                                 'property__landproperty')
                 .prefetch_related('property__images'))
     for row in rows:
-        row.property.is_saved = True
+        row.property.is_saved = True      # by definition, it is on this page
     return render(request, 'favourites.html', {
         'favourites': rows,
         'compare_ids': request.session.get('compare', []),
@@ -701,9 +744,12 @@ def toggle_favourite(request, property_id):
     return safe_back(request, listing.get_absolute_url())
 
 
+# compare
 @post_required
 def toggle_compare(request, property_id):
     listing = get_object_or_404(AllProperty, pk=property_id)
+    # A listing waiting for approval is not public, and the comparison page
+    # rendered its price, size and amenities to anyone who asked.
     if not listing.can_be_seen_by(profile_of(request)):
         raise Http404('Not available.')
     ids = request.session.get('compare', [])
@@ -737,6 +783,7 @@ def compare(request):
         if p.can_be_seen_by(profile)
     ]
     listings.sort(key=lambda p: ids.index(p.pk))
+    # drop anything that has since been unpublished, so the bar stays honest
     if len(listings) != len(ids):
         request.session['compare'] = [p.pk for p in listings]
 
@@ -773,6 +820,7 @@ def clear_compare(request):
     return safe_back(request, reverse('property_list'))
 
 
+# reviews
 @login_required_message
 @post_required
 def write_review(request, property_id):
@@ -816,6 +864,7 @@ def delete_review(request, review_id):
     return redirect('property_detail', pk=listing_id)
 
 
+# bookings
 @login_required_message
 def book_property(request, property_id):
     listing = get_object_or_404(AllProperty.objects.select_related('user'), pk=property_id)
@@ -869,6 +918,9 @@ def book_property(request, property_id):
 def bookings(request):
     me = profile_of(request)
 
+    # An accepted visit whose date has passed is finished, whether or not
+    # anyone remembered to press the button. Leaving them "accepted" for ever
+    # made the list unreadable after a few weeks.
     Booking.objects.filter(
         Q(owner=me) | Q(renter=me),
         status=Booking.Status.ACCEPTED,
@@ -907,6 +959,9 @@ def booking_action(request, booking_id, action):
     if not (is_owner or is_renter):
         raise Http404('Not yours.')
 
+    # Checking who is asking is not enough: without this, a declined or
+    # cancelled visit could be brought back to life by POSTing to the accept
+    # endpoint directly, and the renter would be told it was confirmed.
     allowed_from = {
         'accept':   {Booking.Status.PENDING},
         'decline':  {Booking.Status.PENDING},
@@ -971,6 +1026,7 @@ def booking_action(request, booking_id, action):
     return redirect('bookings')
 
 
+# messaging
 @login_required_message
 def inbox(request):
     me = profile_of(request)
@@ -1062,7 +1118,9 @@ def conversation(request, conversation_id):
     })
 
 
+# saved searches
 def run_saved_search(search):
+    """Re-runs one saved search. Returns (total matches, matches since last look)."""
     params = QueryDict(search.query_string)
     form = PropertyFilterForm(params)
     results = AllProperty.objects.live()
@@ -1077,6 +1135,11 @@ def run_saved_search(search):
 
 @login_required_message
 def saved_searches(request):
+    """
+    Each saved search is re-run, so both counts on the page are real: how many
+    match now, and how many of those appeared since the last time this page was
+    opened. Looking at the page is what marks them as seen.
+    """
     me = profile_of(request)
     rows = []
     for search in me.saved_searches.all():
@@ -1085,6 +1148,7 @@ def saved_searches(request):
             'search': search, 'matches': matches, 'new': fresh, 'params': params,
         })
 
+    # they have now seen them
     if rows:
         me.saved_searches.all().update(last_checked=timezone.now())
 
@@ -1123,10 +1187,19 @@ def delete_saved_search(request, search_id):
     return redirect('saved_searches')
 
 
+# search suggestions
 SUGGEST_LIMIT = 8
 
 
 def search_suggest(request):
+    """
+    What the box under the search field offers.
+
+    With nothing typed it answers with the person's own last few searches;
+    once they start typing it answers with places and listings that actually
+    exist, so a suggestion never leads to an empty results page. Read only,
+    so it needs no CSRF token and no sign in.
+    """
     term = ' '.join((request.GET.get('q') or '').split())[:60]
     profile = profile_of(request)
     live = AllProperty.objects.live()
@@ -1147,6 +1220,7 @@ def search_suggest(request):
         return JsonResponse({'term': term, 'groups': [
             {'title': 'Recent searches', 'items': out}] if out else []})
 
+    # areas and cities, ranked by how much there is to see there
     places = (live.filter(Q(Area__icontains=term) | Q(City__icontains=term))
               .values('Area', 'City').annotate(n=Count('id')).order_by('-n')[:4])
     place_items = [{
@@ -1190,9 +1264,11 @@ def clear_recent_searches(request):
     return safe_back(request, reverse('property_list'))
 
 
+# reporting a listing
 @login_required_message
 @post_required
 def report_property(request, property_id):
+    """Anyone signed in can flag a listing. It lands in the agent queue."""
     listing = get_object_or_404(AllProperty, pk=property_id)
     me = profile_of(request)
 
@@ -1212,6 +1288,7 @@ def report_property(request, property_id):
                 property=listing, reporter=me, reason=reason, detail=detail,
             )
     except IntegrityError:
+        # the unique constraint, so they have one open already
         messages.info(request, 'You have already reported this listing. '
                                'An agent is looking at it.')
         return safe_back(request, listing.get_absolute_url())
@@ -1220,6 +1297,7 @@ def report_property(request, property_id):
     return safe_back(request, listing.get_absolute_url())
 
 
+# analytics
 @login_required_message
 def property_analytics(request, property_id):
     listing = get_object_or_404(AllProperty, pk=property_id)

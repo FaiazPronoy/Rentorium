@@ -1,3 +1,14 @@
+/*! Rentorium. Copyright 2024-2026 Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Jahirul Islam Zishan. All rights reserved. See LICENSE. */
+/* =====================================================================
+   Rentorium
+   Dhaka at golden hour: a warm peach page, a tangerine to berry sunset for
+   the things you press, a deep plum for the evening bands, mint for
+   anything checked and verified, and sunshine yellow for ratings. The
+   photographs still do most of the talking. Hand written, no framework.
+   Two themes, one set of tokens.
+   ===================================================================== */
+
+/* 1. Tokens ------------------------------------------------------------ */
 :root{
   color-scheme:light;
 

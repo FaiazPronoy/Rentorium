@@ -22,6 +22,7 @@ from .models import AgentAction
 
 
 def _send_reply(enquiry):
+    """Emails an agent's answer back to whoever wrote in."""
     if not enquiry.reply or not enquiry.email:
         return False
     body = (
@@ -41,15 +42,19 @@ def _send_reply(enquiry):
 
 
 def as_pk(raw):
+    """An id from a query string, or None if it is not a usable one."""
     try:
         value = int(raw)
     except (TypeError, ValueError):
         return None
+    # a huge number is not a missing row, it overflows the id column
     return value if 0 < value < 10 ** 12 else None
 
 
+# dashboard
 @agent_required
 def agent_dashboard(request):
+    """The approval queue, plus everything an agent needs to decide quickly."""
     pending = (AllProperty.objects
                .filter(status=AllProperty.Status.PENDING)
                .select_related('user')
@@ -90,6 +95,7 @@ def agent_dashboard(request):
     })
 
 
+# the decisions
 def _decide(request, listing, action, status, reason=''):
     me = profile_of(request)
     listing.status = status
@@ -97,6 +103,7 @@ def _decide(request, listing, action, status, reason=''):
         'Cancel' if status == AllProperty.Status.REJECTED else listing.Approval_by_Agent
     )
     if status == AllProperty.Status.PENDING:
+        # back in the queue, so it must not still read as approved by someone
         listing.Approval_by_Agent = None
     listing.rejection_reason = reason if status == AllProperty.Status.REJECTED else ''
     listing.save()
@@ -145,6 +152,7 @@ def reject_property(request, property_id):
 @agent_required
 @post_required
 def cancel_approval(request, property_id):
+    """Pulls a live listing back into the approval queue."""
     listing = get_object_or_404(AllProperty, pk=property_id)
     reason = (request.POST.get('reason') or 'Sent back for another look').strip()[:200]
     _decide(request, listing, AgentAction.Action.REVERTED,
@@ -201,6 +209,7 @@ def toggle_feature(request, property_id):
     return safe_back(request, reverse('agent_dashboard'))
 
 
+# stats
 @agent_required
 def agent_stats(request):
     live = AllProperty.objects.live()
@@ -230,6 +239,7 @@ def agent_stats(request):
         chart.append({'label': day.strftime('%d/%m'), 'value': by_day.get(day, 0)})
     chart_max = max([c['value'] for c in chart] + [1])
 
+    # walk back a calendar month at a time, not 30 days
     signup_rows = []
     month_start = timezone.localdate().replace(day=1)
     months = []
@@ -353,6 +363,8 @@ def agent_enquiries(request):
         enquiry.reply = (request.POST.get('reply') or '').strip()[:4000]
         enquiry.status = Contact.Status.ANSWERED
         enquiry.save(update_fields=['reply', 'status'])
+        # Writing the reply into the database and calling it answered was the
+        # whole of it before: the person who wrote in never heard back.
         sent = _send_reply(enquiry)
         messages.success(
             request,
@@ -373,12 +385,20 @@ def agent_enquiries(request):
     })
 
 
+# bulk actions
 MAX_BULK = 50
 
 
 @agent_required
 @post_required
 def bulk_decide(request):
+    """Approve or send back several listings at once.
+
+    The queue often fills with a dozen listings from the same estate, and
+    deciding them one page load at a time is what made agents batch their
+    work. Everything still goes through `_decide`, so each one is logged and
+    each owner is still told individually.
+    """
     ids = request.POST.getlist('picked')
     action = request.POST.get('bulk_action')
     reason = (request.POST.get('bulk_reason') or '').strip()[:200]
@@ -402,6 +422,8 @@ def bulk_decide(request):
         messages.error(request, 'Pick approve or send back.')
         return redirect('agent_dashboard')
 
+    # Only ever act on what is actually still waiting: a listing another agent
+    # decided while this page was open must not be silently overruled.
     rows = list(AllProperty.objects.filter(
         pk__in=picked, status=AllProperty.Status.PENDING))
     for listing in rows:
@@ -417,8 +439,10 @@ def bulk_decide(request):
     return redirect('agent_dashboard')
 
 
+# reports
 @agent_required
 def agent_reports(request):
+    """The queue of listings people have flagged."""
     rows = (PropertyReport.objects
             .select_related('property', 'property__user', 'reporter', 'handled_by'))
 
@@ -455,6 +479,7 @@ def agent_reports(request):
 @agent_required
 @post_required
 def resolve_report(request, report_id):
+    """Uphold a report (which pulls the listing) or dismiss it."""
     report = get_object_or_404(
         PropertyReport.objects.select_related('property'), pk=report_id)
     if report.status != PropertyReport.Status.OPEN:
@@ -480,10 +505,13 @@ def resolve_report(request, report_id):
     )
 
     if uphold:
+        # An upheld report takes the listing off the site and tells the owner
+        # what to fix, using the same path as a normal rejection.
         if report.property.status != AllProperty.Status.REJECTED:
             _decide(request, report.property, AgentAction.Action.REJECTED,
                     AllProperty.Status.REJECTED,
                     outcome or f'Reported: {report.get_reason_display().lower()}')
+        # Every other open report on the same listing is now settled too.
         PropertyReport.objects.filter(
             property=report.property, status=PropertyReport.Status.OPEN
         ).update(status=PropertyReport.Status.UPHELD, handled_by=me,
@@ -507,6 +535,7 @@ def resolve_report(request, report_id):
     return safe_back(request, reverse('agent_reports'))
 
 
+# accounts
 @agent_required
 @post_required
 def suspend_user(request, profile_id):
@@ -575,10 +604,14 @@ def lift_suspension(request, profile_id):
     return safe_back(request, reverse('agent_users'))
 
 
+# csv export
 def _csv(name, header, rows):
+    """A download, streamed straight out of the queryset."""
     stamp = timezone.localdate().isoformat()
     response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="rentorium-{name}-{stamp}.csv"'
+    # Excel opens a UTF-8 file as Latin-1 unless it sees the byte order mark,
+    # which turns every Bengali name and every ৳ into mojibake.
     response.write('﻿')
     writer = csv.writer(response)
     writer.writerow(header)

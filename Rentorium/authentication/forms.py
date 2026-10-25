@@ -12,6 +12,7 @@ SPECIAL = set('$@#%*^!&?.-_')
 
 
 def check_password_strength(password):
+    """One place for the password rules, used by signup and by change password."""
     errors = []
     if len(password) < 8:
         errors.append('Use at least 8 characters.')
@@ -137,6 +138,7 @@ class EditProfileForm(forms.ModelForm):
             (UserProfile.Role.OWNER, 'Property owner'),
         ]
         if self.instance and self.instance.is_agent:
+            # an agent cannot demote themselves through this form
             self.fields['role'].disabled = True
             self.fields['role'].choices = [(UserProfile.Role.AGENT, 'Agent')]
 

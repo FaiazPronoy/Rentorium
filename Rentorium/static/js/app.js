@@ -1,3 +1,10 @@
+/*! Rentorium. Copyright 2024-2026 Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Jahirul Islam Zishan. All rights reserved. See LICENSE. */
+/* =====================================================================
+   Rentorium front end.
+   Plain JavaScript, no library, no build step. Everything here is an
+   enhancement: with scripting switched off every form still posts, every
+   link still navigates, and every filter still applies.
+   ===================================================================== */
 (function () {
   'use strict';
 
