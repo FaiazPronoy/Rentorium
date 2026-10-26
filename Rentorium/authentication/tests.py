@@ -49,6 +49,12 @@ class SignUpTests(TestCase):
         self.client.post(reverse('signup'), self.payload(confirm_password='Different@2026'))
         self.assertEqual(User.objects.count(), 0)
 
+    def test_a_failed_try_does_not_follow_you_to_the_sign_in_page(self):
+        self.client.post(reverse('signup'), self.payload(confirm_password='Different@2026'))
+        r = self.client.post(reverse('signup'), self.payload(), follow=True)
+        self.assertContains(r, 'Account created')
+        self.assertNotContains(r, 'Please fix the highlighted fields')
+
     def test_a_duplicate_email_is_refused(self):
         self.client.post(reverse('signup'), self.payload())
         self.client.post(reverse('signup'), self.payload(nid='9999999999'))

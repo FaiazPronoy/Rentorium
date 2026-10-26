@@ -78,7 +78,6 @@ def signup(request):
             )
             messages.success(request, 'Account created. Please sign in.')
             return redirect('signin')
-        messages.error(request, 'Please fix the highlighted fields.')
     else:
         form = SignUpForm()
 
