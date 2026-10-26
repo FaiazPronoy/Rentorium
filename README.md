@@ -10,7 +10,7 @@ while an agent checks every listing before it goes live.
 |---|---|
 | **Course** | CSE471: System Analysis and Design, BRAC University |
 | **Type** | Group project |
-| **Made by** | Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Jahirul Islam Zishan |
+| **Made by** | Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Md. Jahirul Islam Zishan |
 | **Live demo** | https://faiazpronoy.pythonanywhere.com |
 | **Versions** | [v1.0, the first version, and v2.0, the rebuild](../../releases) |
 | **History** | Built in Summer 2024 for the course. Rebuilt and published here in October 2026. |
@@ -165,12 +165,12 @@ model, gave each member a part of the site, and reviewed and merged their work.
 - **Sinthia Khandoker** (সিনথিয়া খন্দকার)
   - Viewing bookings and the owner dashboard
   - Reviews, saved properties and the compare page
-- **Jahirul Islam Zishan** (জহিরুল ইসলাম জিশান)
+- **Md. Jahirul Islam Zishan** (মোঃ জহিরুল ইসলাম জিশান)
   - Messages and notifications
   - The home, about and contact pages
 
 ## Licence
 
-Copyright 2024-2026 Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Jahirul Islam Zishan. All rights reserved.
+Copyright 2024-2026 Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Md. Jahirul Islam Zishan. All rights reserved.
 You may read the code and run it to try it out. You may not copy it, hand it in
 as your own work, or publish it. See [LICENSE](LICENSE).
