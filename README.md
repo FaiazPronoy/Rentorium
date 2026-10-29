@@ -157,15 +157,15 @@ Every photo is CC0 (free to use), from [StockSnap](https://stocksnap.io) and
 Faiaz led the team: he turned the course's system analysis into the data
 model, gave each member a part of the site, and reviewed and merged their work.
 
-- **Faiaz Abrar Zaman Pronoy** (ফাইয়াজ আবরার জামান প্রনয়), lead developer
+- **Faiaz Abrar Zaman Pronoy**, lead developer
   - The data model and the listing workflow from draft to live
   - Search, filters and sort orders, and the map view
   - The agent's approval queue, ownership paper checks and decision log
   - Who can see and change what, the test suite and the live deploy
-- **Sinthia Khandoker** (সিনথিয়া খন্দকার)
+- **Sinthia Khandoker**
   - Viewing bookings and the owner dashboard
   - Reviews, saved properties and the compare page
-- **Md. Jahirul Islam Zishan** (মোঃ জহিরুল ইসলাম জিশান)
+- **Md. Jahirul Islam Zishan**
   - Messages and notifications
   - The home, about and contact pages
 
