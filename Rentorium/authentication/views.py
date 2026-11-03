@@ -137,11 +137,10 @@ def signin(request):
                 form.errors.clear()
                 messages.error(
                     request,
-                    'This account is suspended. {}Write to {} if you think that '
-                    'is a mistake.'.format(
+                    'This account is suspended. {}Use the contact page if you think '
+                    'that is a mistake.'.format(
                         f'Reason given: {held.suspended_reason} '
                         if held.suspended_reason else '',
-                        settings.SITE_EMAIL,
                     ),
                 )
                 return render(request, 'signin.html', {

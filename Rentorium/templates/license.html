@@ -34,8 +34,8 @@
       <span class="v">{{ SITE_LEGAL_NAME }}</span></div>
     <div class="kv"><span class="k">Registered office</span>
       <span class="v">{{ SITE_ADDRESS }}</span></div>
-    <div class="kv"><span class="k">Email</span><span class="v">{{ SITE_EMAIL }}</span></div>
-    <div class="kv"><span class="k">Telephone</span><span class="v">{{ SITE_PHONE }}</span></div>
+    {% if SITE_EMAIL %}<div class="kv"><span class="k">Email</span><span class="v">{{ SITE_EMAIL }}</span></div>{% endif %}
+    {% if SITE_PHONE %}<div class="kv"><span class="k">Telephone</span><span class="v">{{ SITE_PHONE }}</span></div>{% endif %}
 
     <h3 style="margin-top:1.4rem">Photography</h3>
     <p class="small muted mb0">Photographs on a listing are supplied by the owner of

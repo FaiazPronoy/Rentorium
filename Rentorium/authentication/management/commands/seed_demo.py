@@ -60,12 +60,12 @@ FAQS = [
 ]
 
 PEOPLE = [
-    ('Faiaz Abrar', 'faiaz@rentorium.test', 'owner', '01711111111', True),
-    ('Nabila Rahman', 'nabila@rentorium.test', 'owner', '01822222222', True),
-    ('Rafid Hasan', 'rafid@rentorium.test', 'renter', '01911111111', False),
-    ('Tasnim Jahan', 'tasnim@rentorium.test', 'renter', '01611111111', False),
-    ('Arif Chowdhury', 'arif@rentorium.test', 'owner', '01511111111', False),
-    ('Sadia Islam', 'sadia@rentorium.test', 'renter', '01311111111', False),
+    ('Shahana Parveen', 'shahana@rentorium.test', 'owner', '01711111111', True),
+    ('Mostafa Kamal', 'mostafa@rentorium.test', 'owner', '01822222222', True),
+    ('Rakibul Alam', 'rakib@rentorium.test', 'renter', '01911111111', False),
+    ('Tasneem Ferdous', 'tasneem@rentorium.test', 'renter', '01611111111', False),
+    ('Habibur Rahim', 'habib@rentorium.test', 'owner', '01511111111', False),
+    ('Lamia Chowdhury', 'lamia@rentorium.test', 'renter', '01311111111', False),
 ]
 
 RESIDENTIAL = [
@@ -138,7 +138,7 @@ PHOTOS = {
     'residential': [
         ['gulshan-1', 'gulshan-2', 'gulshan-3', 'gulshan-4'],
         ['dhanmondi-1', 'dhanmondi-2', 'dhanmondi-3', 'dhanmondi-4'],
-        ['duplex-1', 'extra-4', 'duplex-3', 'duplex-4'],
+        ['duplex-2', 'extra-4', 'duplex-3', 'duplex-4'],
         ['studio-1', 'studio-2', 'studio-3', 'studio-4'],
         ['uttara-1', 'uttara-2', 'uttara-3', 'uttara-4'],
         ['mirpur-1', 'mirpur-2', 'mirpur-3', 'mirpur-4'],
@@ -148,10 +148,8 @@ PHOTOS = {
         ['shop-1', 'shop-2', 'shop-3'],
         ['warehouse-1', 'warehouse-2'],
     ],
-    'land': [
-        ['plot-1', 'plot-2', 'plot-3'],
-        ['cityplot-1', 'cityplot-2', 'cityplot-3'],
-    ],
+    # no photos for the plots yet, the cards show a plain placeholder
+    'land': [[], []],
     'pending': ['extra-1', 'extra-2', 'extra-3'],
 }
 
@@ -224,7 +222,7 @@ class Command(BaseCommand):
             agent_user.set_password(AGENT_PASSWORD)
             agent_user.save()
         agent = agent_user.UserProfile
-        agent.name = 'Tahmid Karim'
+        agent.name = 'Masud Parvez'
         agent.email = 'agent@rentorium.test'
         agent.role = UserProfile.Role.AGENT
         agent.is_agent = True
@@ -485,13 +483,16 @@ class Command(BaseCommand):
         self.stdout.write(f'  {len(view_rows)} views over the last 30 days')
 
         renters = [profiles[e] for _, e, r, _, _ in PEOPLE if r == 'renter']
-        for i, listing in enumerate(listings[:5]):
-            for j, renter in enumerate(renters[:2]):
-                rating, title, comment = REVIEWS[(i + j) % len(REVIEWS)]
+        # some places have a few reviews, some have none and show as New
+        review_counts = [3, 1, 2, 0, 2, 1, 0, 3]
+        for i, listing in enumerate(listings[:len(review_counts)]):
+            for j, renter in enumerate(renters[:review_counts[i]]):
+                rating, title, comment = REVIEWS[(i * 2 + j) % len(REVIEWS)]
                 PropertyReview.objects.get_or_create(
                     property=listing, author=renter,
                     defaults={'rating': rating, 'title': title, 'comment': comment},
                 )
+        for i, listing in enumerate(listings[:5]):
             for renter in renters:
                 if (i + len(renter.name)) % 2 == 0:
                     Favourite.objects.get_or_create(profile=renter, property=listing)
@@ -558,8 +559,8 @@ class Command(BaseCommand):
             },
         )
 
-        searchers = [profiles['rafid@rentorium.test'],
-                     profiles['tasnim@rentorium.test']]
+        searchers = [profiles['rakib@rentorium.test'],
+                     profiles['tasneem@rentorium.test']]
         history = [
             ('gulshan', 'q=gulshan'),
             ('3 bedroom', 'q=3+bedroom&property_type=residential'),
@@ -583,7 +584,7 @@ class Command(BaseCommand):
         if len(live_rows) >= 2:
             open_report = PropertyReport.objects.create(
                 property=live_rows[1],
-                reporter=profiles['rafid@rentorium.test'],
+                reporter=profiles['rakib@rentorium.test'],
                 reason=PropertyReport.Reason.TAKEN,
                 detail='I called the number on Tuesday and the owner said it was '
                        'let two weeks ago. It is still showing as available.',
@@ -593,7 +594,7 @@ class Command(BaseCommand):
 
             closed = PropertyReport.objects.create(
                 property=live_rows[0],
-                reporter=profiles['tasnim@rentorium.test'],
+                reporter=profiles['tasneem@rentorium.test'],
                 reason=PropertyReport.Reason.WRONG,
                 detail='The floor plan in the third photo does not look like the '
                        'same flat as the first two.',
@@ -648,6 +649,6 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('\nDemo data ready.\n'))
         self.stdout.write('  Agent      agent@rentorium.test / Agent@2026')
-        self.stdout.write('  Owner      faiaz@rentorium.test / Rentorium@2026')
-        self.stdout.write('  Renter     rafid@rentorium.test / Rentorium@2026')
+        self.stdout.write('  Owner      shahana@rentorium.test / Rentorium@2026')
+        self.stdout.write('  Renter     rakib@rentorium.test / Rentorium@2026')
         self.stdout.write('  Django admin: run manage.py createsuperuser to make your own login')

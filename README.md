@@ -77,8 +77,8 @@ The sign in page has a one-tap key for each person.
 | Role | Email | Password |
 |---|---|---|
 | Agent | `agent@rentorium.test` | `Agent@2026` |
-| Owner | `faiaz@rentorium.test` | `Rentorium@2026` |
-| Renter | `rafid@rentorium.test` | `Rentorium@2026` |
+| Owner | `shahana@rentorium.test` | `Rentorium@2026` |
+| Renter | `rakib@rentorium.test` | `Rentorium@2026` |
 
 Two-step sign in stays off on the demo accounts, so they always open.
 

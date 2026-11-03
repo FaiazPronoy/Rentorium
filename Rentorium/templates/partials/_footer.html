@@ -5,13 +5,10 @@
         <a class="brand" href="{% url 'home' %}">
           <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 4l8.5 6.5V20a1 1 0 0 1-1 1H15v-6h-6v6H4.5a1 1 0 0 1-1-1z"/></svg>{{ SITE_NAME }}
         </a>
-        <p class="tiny muted" style="max-width:34ch">
-          {{ SITE_TAGLINE }} Every listing is checked by a member of our team before
-          it goes live.
-        </p>
+        <p class="tiny muted" style="max-width:34ch">{{ SITE_TAGLINE }}</p>
         <div class="social" style="margin-top:1.1rem">
-          <a href="mailto:{{ SITE_EMAIL }}" title="Email us" aria-label="Email us">{% icon "mail" %}</a>
-          <a href="tel:{{ SITE_PHONE|cut:' ' }}" title="Call us" aria-label="Call us">{% icon "phone" %}</a>
+          {% if SITE_EMAIL %}<a href="mailto:{{ SITE_EMAIL }}" title="Email us" aria-label="Email us">{% icon "mail" %}</a>{% endif %}
+          {% if SITE_PHONE %}<a href="tel:{{ SITE_PHONE|cut:' ' }}" title="Call us" aria-label="Call us">{% icon "phone" %}</a>{% endif %}
           <a href="{% url 'contact' %}" title="Contact" aria-label="Contact">{% icon "chat" %}</a>
         </div>
       </div>
@@ -44,7 +41,7 @@
       </div>
     </div>
     <div class="bottom">
-      <span>&copy; {% now "Y" %} {{ SITE_NAME }}. Every listing here is demo data.</span>
+      <span>&copy; {% now "Y" %} {{ SITE_NAME }}. A student project. The listings are sample data.</span>
       <span>Made in Dhaka by Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Md. Jahirul Islam Zishan</span>
     </div>
   </div>

@@ -4,8 +4,8 @@ DEMO_PASSWORD = 'Rentorium@2026'
 AGENT_PASSWORD = 'Agent@2026'
 
 KEYS = [
-    ('Renter', 'rafid@rentorium.test', DEMO_PASSWORD),
-    ('Owner', 'faiaz@rentorium.test', DEMO_PASSWORD),
+    ('Renter', 'rakib@rentorium.test', DEMO_PASSWORD),
+    ('Owner', 'shahana@rentorium.test', DEMO_PASSWORD),
     ('Agent', 'agent@rentorium.test', AGENT_PASSWORD),
 ]
 

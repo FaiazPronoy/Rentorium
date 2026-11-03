@@ -26,12 +26,12 @@
     <div class="col" style="flex:1 1 260px">
       <div class="card" style="margin-bottom:1.2rem">
         <div class="card-title">Other ways to reach us</div>
-        <div class="entry"><span class="ico">{% icon "mail" %}</span>
+        {% if SITE_EMAIL %}<div class="entry"><span class="ico">{% icon "mail" %}</span>
           <span class="body"><span class="t">{{ SITE_EMAIL }}</span>
-            <span class="s">We reply within one working day</span></span></div>
-        <div class="entry"><span class="ico">{% icon "phone" %}</span>
+            <span class="s">We reply within one working day</span></span></div>{% endif %}
+        {% if SITE_PHONE %}<div class="entry"><span class="ico">{% icon "phone" %}</span>
           <span class="body"><span class="t">{{ SITE_PHONE }}</span>
-            <span class="s">{{ SITE_HOURS }}</span></span></div>
+            <span class="s">{{ SITE_HOURS }}</span></span></div>{% endif %}
         <div class="entry"><span class="ico">{% icon "building" %}</span>
           <span class="body"><span class="t">{{ SITE_ADDRESS }}</span>
             <span class="s">Bangladesh</span></span></div>

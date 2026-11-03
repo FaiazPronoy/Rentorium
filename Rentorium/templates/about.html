@@ -8,7 +8,6 @@
     <div class="hero-photo" style="min-height:420px">
       <div class="hero-media"><img src="{% static 'img/photos/about.jpg' %}" alt=""></div>
       <div class="hero-body">
-        <div class="eyebrow">About {{ SITE_NAME }}</div>
         <h1>About Rentorium</h1>
         <p>Rentorium is a platform to rent or buy homes, offices and land in Bangladesh.
            Owners list their property, an agent checks it, and people can search, book a
@@ -34,7 +33,6 @@
    <div class="wrap">
   <div class="section-head">
     <div>
-      <div class="eyebrow">Features</div>
       <h2 class="mb0">How Rentorium works</h2>
     </div>
   </div>
@@ -86,16 +84,20 @@
           <span class="body"><span class="t">{{ SITE_ADDRESS }}</span>
             <span class="s">{{ SITE_HOURS }}</span></span>
         </div>
+        {% if SITE_EMAIL %}
         <div class="entry">
           <span class="ico">{% icon "mail" %}</span>
           <span class="body"><span class="t">{{ SITE_EMAIL }}</span>
             <span class="s">We reply within one working day</span></span>
         </div>
+        {% endif %}
+        {% if SITE_PHONE %}
         <div class="entry">
           <span class="ico">{% icon "phone" %}</span>
           <span class="body"><span class="t">{{ SITE_PHONE }}</span>
             <span class="s">{{ SITE_HOURS }}</span></span>
         </div>
+        {% endif %}
       </div>
     </div>
   </div>

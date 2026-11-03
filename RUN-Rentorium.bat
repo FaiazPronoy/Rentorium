@@ -124,9 +124,9 @@ echo [4/4] Starting the server ...
 echo.
 echo   Open  http://127.0.0.1:8000/
 echo.
-echo   Owner    faiaz@rentorium.test  /  Rentorium@2026
+echo   Owner    shahana@rentorium.test  /  Rentorium@2026
 echo   Agent    agent@rentorium.test  /  Agent@2026
-echo   Renter   rafid@rentorium.test  /  Rentorium@2026
+echo   Renter   rakib@rentorium.test  /  Rentorium@2026
 echo.
 echo   Press Ctrl+C in this window to stop.
 echo.

@@ -53,7 +53,7 @@ class SignUpForm(forms.ModelForm):
         model = UserProfile
         fields = ['name', 'email', 'contact_no', 'nid']
         widgets = {
-            'name': forms.TextInput(attrs={'placeholder': 'Faiaz Abrar'}),
+            'name': forms.TextInput(attrs={'placeholder': 'Your full name'}),
             'email': forms.EmailInput(attrs={'placeholder': 'you@example.com'}),
             'contact_no': forms.TextInput(attrs={'placeholder': '01XXXXXXXXX'}),
             'nid': forms.TextInput(attrs={'placeholder': '10, 13 or 17 digits'}),

@@ -237,14 +237,14 @@ class DemoKeyTests(TestCase):
 
     def test_a_key_signs_in_as_that_person(self):
         from authentication.demo import DEMO_PASSWORD
-        user = User.objects.create_user(username='rafid@rentorium.test',
-                                        email='rafid@rentorium.test', password=DEMO_PASSWORD)
+        user = User.objects.create_user(username='rakib@rentorium.test',
+                                        email='rakib@rentorium.test', password=DEMO_PASSWORD)
         profile = user.UserProfile
-        profile.name = 'Rafid Hasan'
+        profile.name = 'Rakibul Alam'
         profile.save()
 
         keys = self.client.get(reverse('signin')).context['demo']
-        self.assertEqual([(k['role'], k['name']) for k in keys], [('Renter', 'Rafid')])
+        self.assertEqual([(k['role'], k['name']) for k in keys], [('Renter', 'Rakibul')])
 
         r = self.client.post(reverse('signin'),
                              {'username': keys[0]['email'], 'password': keys[0]['password']})
@@ -252,7 +252,7 @@ class DemoKeyTests(TestCase):
 
     def test_a_suspended_demo_person_gets_no_key(self):
         from authentication.demo import DEMO_PASSWORD
-        User.objects.create_user(username='faiaz@rentorium.test', email='faiaz@rentorium.test',
+        User.objects.create_user(username='shahana@rentorium.test', email='shahana@rentorium.test',
                                  password=DEMO_PASSWORD, is_active=False)
         self.assertEqual(self.client.get(reverse('signin')).context['demo'], [])
 
@@ -352,7 +352,7 @@ class TwoStepTests(TestCase):
         self.assertFalse(self.user.UserProfile.two_step)
 
     def test_demo_accounts_cannot_turn_it_on(self):
-        demo = User.objects.create_user(username='rafid@rentorium.test', email='rafid@rentorium.test',
+        demo = User.objects.create_user(username='rakib@rentorium.test', email='rakib@rentorium.test',
                                         password=PASSWORD)
         self.client.force_login(demo)
         self.client.post(reverse('two_step_on'))
