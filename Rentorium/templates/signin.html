@@ -1,14 +1,14 @@
 {% extends 'auth_base.html' %}
 {% block title %}Sign in{% endblock %}
 {% block aside %}
-    <blockquote>The right place is out there. Let's go and find it.</blockquote>
-    <p>Your saved places, viewings and messages are right where you left them.</p>
+    <blockquote>Homes, offices and land to rent or buy.</blockquote>
+    <p>Every listing is checked by an agent before it goes live.</p>
 {% endblock %}
 {% block card %}
 <div class="auth-card">
     <div class="auth-logo">
       <h1>Welcome <em>back</em></h1>
-      <p>Sign in to pick up where you left off.</p>
+      <p>Sign in to your account.</p>
     </div>
 
     {% if messages %}
@@ -41,7 +41,7 @@
 
     {% if demo %}
       <div class="keyrack">
-        <p class="keyrack-title">Just looking? Try it as one of these</p>
+        <p class="keyrack-title">Demo accounts</p>
         <div class="keys">
           {% for d in demo %}
             <form method="post" action="{% url 'signin' %}">

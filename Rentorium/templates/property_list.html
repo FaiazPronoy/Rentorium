@@ -17,7 +17,7 @@
         <span>Browse</span>
       </nav>
       <div class="eyebrow">{% icon "shield-check" %} Every one checked by a person</div>
-      <h1 class="mb0">{% if filter_form.active_count %}Places that fit what you want{% else %}Find your next place{% endif %}</h1>
+      <h1 class="mb0">{% if filter_form.active_count %}Search results{% else %}Browse properties{% endif %}</h1>
       <p class="muted mb0">{{ total }} place{{ total|pluralize }}
         {% if filter_form.active_count %}match your filters{% else %}live right now{% endif %}.
         Swipe the photos on any card, or open the map to see what is near you.</p>
@@ -145,9 +145,9 @@
       {% else %}
         <div class="card empty">
           <div class="big">{% icon "search" %}</div>
-          <h3>Nothing quite fits, yet</h3>
-          <p class="muted">Try a slightly wider budget, or drop a filter or two. New places go
-            live every week, so saving this search is worth it too.</p>
+          <h3>No matching properties</h3>
+          <p class="muted">Try a wider budget or fewer filters. You can also save this
+            search.</p>
           <a class="btn btn-primary" href="{% url 'property_list' %}">Clear all filters</a>
         </div>
       {% endif %}

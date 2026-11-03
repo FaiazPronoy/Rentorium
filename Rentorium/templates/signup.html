@@ -3,14 +3,14 @@
 {% block title %}Create an account{% endblock %}
 {% block photo %}{% static 'img/photos/owners.jpg' %}{% endblock %}
 {% block aside %}
-    <blockquote>No brokers. No fake photos. No wasted Fridays.</blockquote>
-    <p>Every listing here was checked by a real person before it went live.</p>
+    <blockquote>Homes, offices and land to rent or buy.</blockquote>
+    <p>Every listing is checked by an agent before it goes live.</p>
 {% endblock %}
 {% block card %}
 <div class="auth-card auth-wide">
     <div class="auth-logo">
-      <h1>Join <em>free</em></h1>
-      <p>One minute, and you can save places, book viewings or list your own.</p>
+      <h1>Create an account</h1>
+      <p>Save places, book viewings or list your own property.</p>
     </div>
 
     {% if form.errors %}
@@ -23,7 +23,7 @@
       {% csrf_token %}
 
       <fieldset>
-        <legend>What brings you here?</legend>
+        <legend>Account type</legend>
         <div class="check-row">
           {% for radio in form.role %}
             <label>{{ radio.tag }} <span>{{ radio.choice_label }}</span></label>

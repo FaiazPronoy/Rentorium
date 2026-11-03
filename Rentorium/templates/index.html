@@ -10,7 +10,7 @@
     <div class="hero3">
       <div>
         <span class="chip-live"><b>{{ counts.total }}</b> places checked and live right now</span>
-        <h1>Find a place that feels like <em>home.</em></h1>
+        <h1>Find a place to rent or buy</h1>
         <p class="lede">Flats, offices and plots across Bangladesh, and every single one
           has been checked by a real person against its ownership papers. Browse,
           book a viewing, and talk to the owner without a single broker in the middle.</p>
@@ -63,7 +63,7 @@
         <figure class="c2"><img src="{% static 'img/photos/gulshan-3.jpg' %}" alt=""></figure>
         <figure class="c3"><img src="{% static 'img/photos/tile-homes.jpg' %}" alt=""></figure>
         <div class="float f1"><span class="ico">{% icon "shield-check" %}</span>
-          <span>Papers checked<small>by a person, not a bot</small></span></div>
+          <span>Papers checked<small>by our team</small></span></div>
         <div class="float f2"><span class="ico">{% icon "calendar" %}</span>
           <span>Viewing confirmed<small>Saturday, 11:00 am</small></span></div>
       </div>
@@ -93,7 +93,7 @@
         <img src="{% static 'img/photos/tile-homes.jpg' %}" alt="" loading="lazy">
         <span class="pill">{{ counts.residential }} home{{ counts.residential|pluralize }}</span>
         <h3>A home</h3>
-        <p>Studios for one, flats for a family, duplexes for the whole clan.</p>
+        <p>Flats, houses and duplexes.</p>
         <span class="go">See homes {% icon "arrow-right" %}</span>
       </a>
       <a class="door" href="{% url 'property_list' %}?property_type=commercial">
@@ -116,8 +116,8 @@
   <section class="wrap">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Handpicked this week</div>
-        <h2 class="mb0">Places people <em>can't stop saving</em></h2>
+        <div class="eyebrow">Featured</div>
+        <h2 class="mb0">Featured listings</h2>
       </div>
       <a class="btn btn-ghost btn-sm" href="{% url 'property_list' %}">
         See all {{ counts.total }} {% icon "arrow-right" %}</a>
@@ -130,9 +130,8 @@
     {% else %}
       <div class="card empty">
         <div class="big">{% icon "building" %}</div>
-        <h3>Nothing live just yet</h3>
-        <p class="muted">The first places are being checked right now. Come back soon, or
-          be the first to list yours.</p>
+        <h3>No listings yet</h3>
+        <p class="muted">No properties are live at the moment.</p>
         <a class="btn btn-primary" href="{% url 'add_property' %}">List a property</a>
       </div>
     {% endif %}
@@ -143,7 +142,7 @@
       <div class="section-head">
         <div>
           <div class="eyebrow">Explore by neighbourhood</div>
-          <h2 class="mb0">Where do you want to wake up?</h2>
+          <h2 class="mb0">Browse by area</h2>
         </div>
         <a class="btn btn-ghost btn-sm" href="{% url 'property_list' %}?view=map">
           {% icon "map" %} Open the map</a>
@@ -166,7 +165,7 @@
   <section class="wrap">
     <div class="afford" data-afford data-list="{% url 'property_list' %}">
       <div>
-        <div class="eyebrow">{% icon "wallet" %} A quick sanity check</div>
+        <div class="eyebrow">{% icon "wallet" %} Rent calculator</div>
         <h2>How much rent can you comfortably pay?</h2>
         <p class="muted">A common rule of thumb says rent should stay around a third of what
           your household brings home. Slide to your monthly income and we will show you
@@ -179,7 +178,7 @@
       <div class="out">
         <div class="k">A comfortable rent for you</div>
         <div class="v" data-afford-rent>{{ CURRENCY_SIGN }} 40,000</div>
-        <p>That leaves room for bills, school fees and the odd dinner out.</p>
+        <p>About a third of your monthly income.</p>
         <a class="btn" data-afford-link href="{% url 'property_list' %}?property_on=rent&max_price=40000">
           Show me places in my budget {% icon "arrow-right" %}</a>
       </div>
@@ -191,7 +190,7 @@
       <div class="section-head">
         <div>
           <div class="eyebrow">How it works</div>
-          <h2 class="mb0">From "this looks nice" to keys in hand</h2>
+          <h2 class="mb0">Three steps</h2>
         </div>
       </div>
       <div class="how">
@@ -203,15 +202,15 @@
         </div>
         <div>
           <span class="num">2</span>
-          <h3>Book a viewing in one tap</h3>
-          <p>Pick a day and a time. The owner confirms, and nobody else can take the same
-            slot. No chasing, no ten phone calls.</p>
+          <h3>Book a viewing</h3>
+          <p>Pick a day and a time. The owner confirms it, and nobody else can take the
+            same slot.</p>
         </div>
         <div>
           <span class="num">3</span>
-          <h3>Meet, check, move in</h3>
-          <p>Every listing has already had its papers checked by our team, so you walk in
-            knowing the place is real and the owner is who they say.</p>
+          <h3>Visit and move in</h3>
+          <p>Every listing has had its ownership papers checked by an agent before it
+            went live.</p>
         </div>
       </div>
     </div>
@@ -221,7 +220,7 @@
     <section class="wrap">
       <div class="section-head">
         <div>
-          <div class="eyebrow">Fresh on the market</div>
+          <div class="eyebrow">New</div>
           <h2 class="mb0">Just listed</h2>
         </div>
         <a class="btn btn-ghost btn-sm" href="{% url 'property_list' %}?ordering=newest">
@@ -237,8 +236,8 @@
     <section class="wrap">
       <div class="section-head">
         <div>
-          <div class="eyebrow">In their own words</div>
-          <h2 class="mb0">People who found their place here</h2>
+          <div class="eyebrow">Reviews</div>
+          <h2 class="mb0">What users say</h2>
         </div>
         <a class="btn btn-ghost btn-sm" href="{% url 'testimonial' %}">
           Read every review {% icon "arrow-right" %}</a>
@@ -277,11 +276,10 @@
     <div class="wrap">
       <div class="between" style="gap:2rem">
         <div style="max-width:54ch">
-          <div class="eyebrow">Got a place to let or sell?</div>
-          <h2 style="margin-bottom:.5rem">Put it in front of people who are <em>actually looking</em></h2>
-          <p style="margin:0">Listing is free and there is no commission, ever. Add a few
-            photos, upload the papers, and one of our team checks it within a day. Then the
-            enquiries come to you.</p>
+          <div class="eyebrow">For owners</div>
+          <h2 style="margin-bottom:.5rem">List your property</h2>
+          <p style="margin:0">Listing is free. Add photos and the ownership paper, and an
+            agent checks the listing before it goes live.</p>
         </div>
         <div class="btn-group">
           <a class="btn btn-primary btn-lg" href="{% url 'add_property' %}">
