@@ -1,132 +1,108 @@
 {% extends 'base.html' %}
 {% load static property_filters %}
 {% block title %}{{ SITE_NAME }} | Homes, Offices and Land to Rent or Buy{% endblock %}
-{% block description %}Find a flat, an office or a plot in Dhaka and beyond. Every listing is checked by a real person before it goes live. Book a viewing and talk to the owner, all in one place.{% endblock %}
+{% block description %}Find a flat, an office or a plot in Dhaka and beyond. Book a viewing and talk to the owner, all in one place.{% endblock %}
 
 {% block body %}
 <main>
 
-  <section class="wrap">
-    <div class="hero3">
-      <div>
-        <span class="chip-live"><b>{{ counts.total }}</b> places checked and live right now</span>
-        <h1>Find a place to rent or buy</h1>
-        <p class="lede">Flats, offices and plots across Bangladesh, and every single one
-          has been checked by a real person against its ownership papers. Browse,
-          book a viewing, and talk to the owner without a single broker in the middle.</p>
+  <section class="wrap home-hero">
+    <h1>Find a place to rent or buy</h1>
+    <p class="lede">Flats, offices and plots in Bangladesh. Book a viewing and talk to the owner directly.</p>
 
-        <form method="get" action="{% url 'property_list' %}">
-          <div class="seg">
-            <label><input type="radio" name="property_on" value="rent" checked>
-              <span>Rent</span></label>
-            <label><input type="radio" name="property_on" value="sale">
-              <span>Buy</span></label>
-            <label><input type="radio" name="property_on" value="">
-              <span>Both</span></label>
+    <form method="get" action="{% url 'property_list' %}" class="homesearch">
+      <div class="seg" role="radiogroup" aria-label="Rent or buy">
+        <label><input type="radio" name="property_on" value="rent" checked>
+          <span>Rent</span></label>
+        <label><input type="radio" name="property_on" value="sale">
+          <span>Buy</span></label>
+      </div>
+
+      <button type="button" class="findbar-open" data-find-open aria-controls="findSheet" aria-expanded="false">
+        {% icon "search" %}
+        <span><b>Where are you looking?</b><small>Area, type and budget</small></span>
+      </button>
+
+      <div class="findsheet" id="findSheet">
+        <div class="findsheet-head">
+          <h2 class="mb0">Search</h2>
+          <button type="button" class="x" data-find-close aria-label="Close search">{% icon "close" %}</button>
+        </div>
+        <div class="findbar">
+          <div class="cell cell-wide">
+            <label for="q">Where</label>
+            <input id="q" name="q" placeholder="Gulshan, Dhanmondi, Uttara" autocomplete="off"
+                   data-suggest="{% url 'search_suggest' %}">
           </div>
-
-          <div class="findbar">
-            <div class="cell cell-wide">
-              <label for="q">Where</label>
-              <input id="q" name="q" placeholder="Gulshan, Dhanmondi, Uttara…"
-                     data-suggest="{% url 'search_suggest' %}">
-            </div>
-            <div class="cell">
-              <label for="hero_type">What</label>
-              <select id="hero_type" name="property_type">
-                <option value="">Anything</option>
-                <option value="residential">A home</option>
-                <option value="commercial">Office or shop</option>
-                <option value="land">Land</option>
-              </select>
-            </div>
-            <div class="cell">
-              <label for="hero_max">Max budget</label>
-              <input id="hero_max" name="max_price" type="number" min="0" step="1000"
-                     placeholder="No limit">
-            </div>
-            <button class="btn go" type="submit" aria-label="Search">
-              {% icon "search" %}</button>
+          <div class="cell">
+            <label for="hero_type">Property type</label>
+            <select id="hero_type" name="property_type">
+              <option value="">Any type</option>
+              <option value="residential">Home</option>
+              <option value="commercial">Office or shop</option>
+              <option value="land">Land</option>
+            </select>
           </div>
-        </form>
-
-        <div class="quicklinks">
-          <span>People are looking in</span>
-          {% for a in areas|slice:":3" %}
-            <a href="{% url 'property_list' %}?area={{ a.Area|urlencode }}">{{ a.Area }}</a>
-          {% endfor %}
+          <div class="cell">
+            <label for="hero_max">Max budget ({{ CURRENCY_SIGN }})</label>
+            <input id="hero_max" name="max_price" type="number" min="0" step="1000"
+                   inputmode="numeric" placeholder="No limit">
+          </div>
+          <button class="btn go" type="submit" aria-label="Search">
+            {% icon "search" %}<span class="go-label">Search</span></button>
         </div>
       </div>
+    </form>
 
-      <div class="collage" aria-hidden="true">
-        <figure class="c1"><img src="{% static 'img/photos/hero-2.jpg' %}" alt="" loading="eager"></figure>
-        <figure class="c2"><img src="{% static 'img/photos/gulshan-3.jpg' %}" alt=""></figure>
-        <figure class="c3"><img src="{% static 'img/photos/tile-homes.jpg' %}" alt=""></figure>
-        <div class="float f1"><span class="ico">{% icon "shield-check" %}</span>
-          <span>Papers checked<small>by our team</small></span></div>
-        <div class="float f2"><span class="ico">{% icon "calendar" %}</span>
-          <span>Viewing confirmed<small>Saturday, 11:00 am</small></span></div>
+    {% if areas %}
+      <div class="quicklinks">
+        <span>Popular:</span>
+        {% for a in areas|slice:":4" %}
+          <a href="{% url 'property_list' %}?area={{ a.Area|urlencode }}">{{ a.Area }}</a>
+        {% endfor %}
       </div>
-    </div>
-
-    <div class="trustrow">
-      <div><span class="ico">{% icon "home" %}</span>
-        <span><span class="n" data-count="{{ counts.total }}">{{ counts.total }}</span><br><span class="l">live listings</span></span></div>
-      <div><span class="ico">{% icon "key" %}</span>
-        <span><span class="n" data-count="{{ counts.rent }}">{{ counts.rent }}</span><br><span class="l">ready to rent</span></span></div>
-      <div><span class="ico">{% icon "tag" %}</span>
-        <span><span class="n" data-count="{{ counts.sale }}">{{ counts.sale }}</span><br><span class="l">up for sale</span></span></div>
-      <div><span class="ico">{% icon "pin" %}</span>
-        <span><span class="n" data-count="{{ counts.areas }}">{{ counts.areas }}</span><br><span class="l">neighbourhoods</span></span></div>
-    </div>
+    {% endif %}
   </section>
 
   <section class="wrap">
-    <div class="section-head">
-      <div>
-        <div class="eyebrow">Start here</div>
-        <h2 class="mb0">What are you looking for?</h2>
-      </div>
-    </div>
-    <div class="doors">
-      <a class="door" href="{% url 'property_list' %}?property_type=residential">
-        <img src="{% static 'img/photos/tile-homes.jpg' %}" alt="" loading="lazy">
-        <span class="pill">{{ counts.residential }} home{{ counts.residential|pluralize }}</span>
-        <h3>A home</h3>
-        <p>Flats, houses and duplexes.</p>
-        <span class="go">See homes {% icon "arrow-right" %}</span>
-      </a>
-      <a class="door" href="{% url 'property_list' %}?property_type=commercial">
-        <img src="{% static 'img/photos/tile-work.jpg' %}" alt="" loading="lazy">
-        <span class="pill">{{ counts.commercial }} space{{ counts.commercial|pluralize }}</span>
-        <h3>A place to work</h3>
-        <p>Offices, shopfronts and warehouses.</p>
-        <span class="go">See spaces {% icon "arrow-right" %}</span>
-      </a>
-      <a class="door" href="{% url 'property_list' %}?property_type=land">
-        <img src="{% static 'img/photos/tile-land.jpg' %}" alt="" loading="lazy">
-        <span class="pill">{{ counts.land }} plot{{ counts.land|pluralize }}</span>
-        <h3>Land</h3>
-        <p>Plots with clean papers, ready to build on.</p>
-        <span class="go">See plots {% icon "arrow-right" %}</span>
-      </a>
-    </div>
+    <nav class="kinds" aria-label="Browse by type">
+      <a href="{% url 'property_list' %}?property_type=residential">
+        <span class="ico">{% icon "home" %}</span>
+        <span><b>Homes</b><small>{{ counts.residential }} flat{{ counts.residential|pluralize }} and houses</small></span></a>
+      <a href="{% url 'property_list' %}?property_type=commercial">
+        <span class="ico">{% icon "building" %}</span>
+        <span><b>Offices and shops</b><small>{{ counts.commercial }} space{{ counts.commercial|pluralize }}</small></span></a>
+      <a href="{% url 'property_list' %}?property_type=land">
+        <span class="ico">{% icon "map" %}</span>
+        <span><b>Land</b><small>{{ counts.land }} plot{{ counts.land|pluralize }}</small></span></a>
+    </nav>
   </section>
 
-  <section class="wrap">
+  <section class="wrap home-block">
     <div class="section-head">
-      <div>
-        <div class="eyebrow">Featured</div>
-        <h2 class="mb0">Featured listings</h2>
-      </div>
+      <h2 class="mb0">Explore properties</h2>
       <a class="btn btn-ghost btn-sm" href="{% url 'property_list' %}">
-        See all {{ counts.total }} {% icon "arrow-right" %}</a>
+        See all listings {% icon "arrow-right" %}</a>
     </div>
 
-    {% if featured %}
-      <div class="plist plist-4">
-        {% for p in featured|slice:":4" %}{% include 'partials/_property_card.html' %}{% endfor %}
+    {% if tabs.featured %}
+      <div class="tabs" role="tablist" aria-label="Listings" data-tabs>
+        {% for key, label, items in tab_list %}
+          {% if items %}
+            <button type="button" role="tab" id="tab-{{ key }}" aria-controls="panel-{{ key }}"
+                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                    {% if not forloop.first %}tabindex="-1"{% endif %}>{{ label }}</button>
+          {% endif %}
+        {% endfor %}
       </div>
+      {% for key, label, items in tab_list %}
+        {% if items %}
+          <div class="plist plist-4" role="tabpanel" id="panel-{{ key }}" aria-labelledby="tab-{{ key }}"
+               {% if not forloop.first %}hidden{% endif %}>
+            {% for p in items %}{% include 'partials/_property_card.html' %}{% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
     {% else %}
       <div class="card empty">
         <div class="big">{% icon "building" %}</div>
@@ -138,109 +114,50 @@
   </section>
 
   {% if area_tiles %}
-    <section class="wrap">
+    <section class="wrap home-block">
       <div class="section-head">
-        <div>
-          <div class="eyebrow">Explore by neighbourhood</div>
-          <h2 class="mb0">Browse by area</h2>
-        </div>
+        <h2 class="mb0">Browse by area</h2>
         <a class="btn btn-ghost btn-sm" href="{% url 'property_list' %}?view=map">
           {% icon "map" %} Open the map</a>
       </div>
       <div class="areas">
         {% for a in area_tiles %}
           <a class="area-tile" href="{% url 'property_list' %}?area={{ a.name|urlencode }}">
-            {% if a.img %}<img src="{{ a.img }}" alt="" loading="lazy">{% endif %}
-            <h3>{{ a.name }}</h3>
-            <div class="meta">
-              <span>{{ a.n }} place{{ a.n|pluralize }}</span>
-              {% if a.from_rent %}<span>rent from <b>{{ CURRENCY_SIGN }}&nbsp;{{ a.from_rent|money }}</b></span>{% endif %}
-            </div>
+            <span class="nm">{{ a.name }}</span>
+            <span class="meta">{{ a.n }} place{{ a.n|pluralize }}{% if a.from_rent %}, rent from {{ CURRENCY_SIGN }}&nbsp;{{ a.from_rent|money }}{% endif %}</span>
+            {% icon "arrow-right" %}
           </a>
         {% endfor %}
       </div>
     </section>
   {% endif %}
 
-  <section class="wrap">
+  <section class="wrap home-block">
     <div class="afford" data-afford data-list="{% url 'property_list' %}">
       <div>
-        <div class="eyebrow">{% icon "wallet" %} Rent calculator</div>
-        <h2>How much rent can you comfortably pay?</h2>
-        <p class="muted">A common rule of thumb says rent should stay around a third of what
-          your household brings home. Slide to your monthly income and we will show you
-          what fits.</p>
+        <h2>How much rent can you pay?</h2>
+        <p class="muted">A common rule is to keep rent near a third of your household income.
+          Move the slider to your monthly income.</p>
         <label class="small muted" for="affordIncome">Household income each month</label>
         <div class="income" data-afford-income>{{ CURRENCY_SIGN }} 1,20,000</div>
-        <input id="affordIncome" type="range" min="20000" max="500000" step="5000" value="120000"
-               aria-label="Household income each month">
+        <input id="affordIncome" type="range" min="20000" max="500000" step="5000" value="120000">
       </div>
       <div class="out">
-        <div class="k">A comfortable rent for you</div>
+        <div class="k">Rent that fits</div>
         <div class="v" data-afford-rent>{{ CURRENCY_SIGN }} 40,000</div>
         <p>About a third of your monthly income.</p>
-        <a class="btn" data-afford-link href="{% url 'property_list' %}?property_on=rent&max_price=40000">
-          Show me places in my budget {% icon "arrow-right" %}</a>
+        <a class="btn btn-primary" data-afford-link href="{% url 'property_list' %}?property_on=rent&max_price=40000">
+          Show places in this budget {% icon "arrow-right" %}</a>
       </div>
     </div>
   </section>
-
-  <section class="band band-tint">
-    <div class="wrap">
-      <div class="section-head">
-        <div>
-          <div class="eyebrow">How it works</div>
-          <h2 class="mb0">Three steps</h2>
-        </div>
-      </div>
-      <div class="how">
-        <div>
-          <span class="num">1</span>
-          <h3>Find a place you like</h3>
-          <p>Filter by area, budget, bedrooms, even a lift or a generator. Or open the
-            map and see what is near your office.</p>
-        </div>
-        <div>
-          <span class="num">2</span>
-          <h3>Book a viewing</h3>
-          <p>Pick a day and a time. The owner confirms it, and nobody else can take the
-            same slot.</p>
-        </div>
-        <div>
-          <span class="num">3</span>
-          <h3>Visit and move in</h3>
-          <p>Every listing has had its ownership papers checked by an agent before it
-            went live.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  {% if newest %}
-    <section class="wrap">
-      <div class="section-head">
-        <div>
-          <div class="eyebrow">New</div>
-          <h2 class="mb0">Just listed</h2>
-        </div>
-        <a class="btn btn-ghost btn-sm" href="{% url 'property_list' %}?ordering=newest">
-          See what's new {% icon "arrow-right" %}</a>
-      </div>
-      <div class="plist plist-4">
-        {% for p in newest|slice:":4" %}{% include 'partials/_property_card.html' %}{% endfor %}
-      </div>
-    </section>
-  {% endif %}
 
   {% if top_review %}
-    <section class="wrap">
+    <section class="wrap home-block">
       <div class="section-head">
-        <div>
-          <div class="eyebrow">Reviews</div>
-          <h2 class="mb0">What users say</h2>
-        </div>
+        <h2 class="mb0">What people say</h2>
         <a class="btn btn-ghost btn-sm" href="{% url 'testimonial' %}">
-          Read every review {% icon "arrow-right" %}</a>
+          Read all reviews {% icon "arrow-right" %}</a>
       </div>
       <div class="says">
         <div class="says-track">
@@ -276,15 +193,14 @@
     <div class="wrap">
       <div class="between" style="gap:2rem">
         <div style="max-width:54ch">
-          <div class="eyebrow">For owners</div>
           <h2 style="margin-bottom:.5rem">List your property</h2>
           <p style="margin:0">Listing is free. Add photos and the ownership paper, and an
             agent checks the listing before it goes live.</p>
         </div>
         <div class="btn-group">
           <a class="btn btn-primary btn-lg" href="{% url 'add_property' %}">
-            {% icon "plus" %} List your property free</a>
-          <a class="btn btn-ghost btn-lg" href="{% url 'faqs' %}">Questions? Read the FAQ</a>
+            {% icon "plus" %} List a property</a>
+          <a class="btn btn-ghost btn-lg" href="{% url 'faqs' %}">Read the FAQ</a>
         </div>
       </div>
     </div>

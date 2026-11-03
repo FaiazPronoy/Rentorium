@@ -30,6 +30,15 @@ def money(value):
 
 
 @register.filter
+def wa_number(phone):
+    """01711482093 -> 8801711482093, the form wa.me links want."""
+    digits = ''.join(ch for ch in str(phone or '') if ch.isdigit())
+    if digits.startswith('0'):
+        digits = '880' + digits[1:]
+    return digits
+
+
+@register.filter
 def stars(rating):
     try:
         value = round(float(rating or 0))

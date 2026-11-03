@@ -44,6 +44,17 @@
         {% if listing.negotiable %}<span class="badge badge-info">Negotiable</span>{% endif %}
         {% if listing.user.is_verified %}
           <span class="badge badge-ok">{% icon "shield-check" %} Verified owner</span>{% endif %}
+        {% if listing.papers_checked %}
+          <details class="checked-pop">
+            <summary class="badge badge-ok">{% icon "check" %} Papers checked</summary>
+            <div class="pop">
+              <p class="small mb0">An agent compared the ownership paper with the listing
+                details before it went live.</p>
+              <div class="kv"><span class="k">Checked by</span><span class="v">{{ listing.Approval_by_Agent|default:"Rentorium agent" }}</span></div>
+              <div class="kv"><span class="k">Approved on</span><span class="v">{{ listing.approved_at|date:"j F Y" }}</span></div>
+            </div>
+          </details>
+        {% endif %}
       </div>
       <h1 class="mb0">{{ listing.Property_Name }}</h1>
       <p class="muted mb0" style="display:flex;align-items:center;gap:.4rem;margin-top:.3rem">
@@ -100,7 +111,7 @@
       {% if listing.Property_Description %}
         <div class="card" style="margin-bottom:1.3rem">
           <div class="card-title">About this place</div>
-          <p class="prose-one" style="white-space:pre-line;margin-bottom:0;font-size:1.02rem;text-align:justify;hyphens:auto">{{ listing.Property_Description }}</p>
+          <p class="prose-one" style="white-space:pre-line;margin-bottom:0;font-size:1.02rem">{{ listing.Property_Description }}</p>
         </div>
       {% endif %}
 
@@ -278,6 +289,14 @@
               {% icon "calendar" %} Book a viewing</button>
             <button class="btn btn-ghost btn-block" style="margin-top:.5rem"
                     onclick="openModal('askModal')">{% icon "chat" %} Message the owner</button>
+            {% if listing.user.contact_no %}
+              <div class="btn-group" style="margin-top:.5rem">
+                <a class="btn btn-ghost btn-sm" style="flex:1" href="tel:{{ listing.user.contact_no }}">
+                  {% icon "phone" %} Call</a>
+                <a class="btn btn-ghost btn-sm" style="flex:1" target="_blank" rel="noopener"
+                   href="https://wa.me/{{ listing.user.contact_no|wa_number }}">{% icon "chat" %} WhatsApp</a>
+              </div>
+            {% endif %}
             <div class="btn-group" style="margin-top:.5rem">
               <form method="post" action="{% url 'toggle_favourite' listing.pk %}"
                     style="flex:1" data-fav>

@@ -16,11 +16,9 @@
         <span class="sep">/</span>
         <span>Browse</span>
       </nav>
-      <div class="eyebrow">{% icon "shield-check" %} Every one checked by a person</div>
       <h1 class="mb0">{% if filter_form.active_count %}Search results{% else %}Browse properties{% endif %}</h1>
       <p class="muted mb0">{{ total }} place{{ total|pluralize }}
-        {% if filter_form.active_count %}match your filters{% else %}live right now{% endif %}.
-        Swipe the photos on any card, or open the map to see what is near you.</p>
+        {% if filter_form.active_count %}match your filters{% else %}live right now{% endif %}.</p>
     </div>
   </div>
 
@@ -135,6 +133,16 @@
         </div>
         <p class="tiny muted" style="margin-top:.7rem">Pins show the neighbourhood, not the
           building. Owners share the exact address once a viewing is agreed.</p>
+        {% if map_list %}
+          <ul class="maplist" data-maplist>
+            {% for m in map_list %}
+              <li><button type="button" data-pin="{{ m.id }}">
+                <span class="t">{{ m.title }}</span>
+                <span class="s">{{ m.area }}, {{ m.price }} {{ m.unit }}</span>
+              </button></li>
+            {% endfor %}
+          </ul>
+        {% endif %}
       {% elif filtered_properties %}
         <div class="plist {% if view_mode == 'list' %}as-list{% endif %}">
           {% for p in filtered_properties %}

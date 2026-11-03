@@ -124,6 +124,8 @@ def main():
             for who, urls, key in (("visitor", VISITOR, None), ("renter", RENTER, "Renter"),
                                    ("owner", OWNER, "Owner"), ("agent", AGENT, "Agent")):
                 ctx = browser.new_context(viewport={"width": 1366, "height": 900}, color_scheme=theme)
+                # light is the default now, dark only when picked with the toggle
+                ctx.add_init_script("localStorage.setItem('rent-theme', '%s')" % theme)
                 page = ctx.new_page()
                 page.on("pageerror", lambda e: errors.append(str(e)))
                 page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
@@ -171,7 +173,7 @@ def main():
         page.locator("button[aria-label='Show password']").first.click()
         check("the eye shows the password", page.locator("#id_password").get_attribute("type") == "text")
 
-        page.goto(BASE + "/")
+        page.goto(BASE + "/about")
         page.fill("#navSearch", "Gulshan")
         page.press("#navSearch", "Enter")
         page.wait_for_load_state("networkidle")

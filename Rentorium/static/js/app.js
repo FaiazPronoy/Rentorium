@@ -1003,6 +1003,60 @@
     update();
   }
 
+  // home page tabs (Featured, Newest, For rent, For sale)
+  function wireTabs() {
+    $$('[data-tabs]').forEach(function (list) {
+      var tabs = $$('[role=tab]', list);
+      function show(tab) {
+        tabs.forEach(function (t) {
+          var on = t === tab;
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+          t.tabIndex = on ? 0 : -1;
+          document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+        });
+      }
+      tabs.forEach(function (tab, i) {
+        tab.addEventListener('click', function () { show(tab); });
+        tab.addEventListener('keydown', function (e) {
+          var next = null;
+          if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+          if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+          if (next) { e.preventDefault(); show(next); next.focus(); }
+        });
+      });
+    });
+  }
+
+  // on phones the home search folds into one button that opens a sheet
+  function wireFindSheet() {
+    var open = $('[data-find-open]');
+    var sheet = $('#findSheet');
+    if (!open || !sheet) return;
+    var scrim = null;
+    function close() {
+      sheet.classList.remove('open');
+      open.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      if (scrim) { scrim.remove(); scrim = null; }
+      open.focus();
+    }
+    open.addEventListener('click', function () {
+      sheet.classList.add('open');
+      open.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      scrim = document.createElement('div');
+      scrim.className = 'find-scrim';
+      scrim.addEventListener('click', close);
+      document.body.appendChild(scrim);
+      var first = $('input, select', sheet);
+      if (first) first.focus();
+    });
+    $('[data-find-close]', sheet).addEventListener('click', close);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && sheet.classList.contains('open')) close();
+    });
+  }
+
   function wireEmi() {
     var box = $('[data-emi]');
     if (!box) return;
@@ -1039,6 +1093,16 @@
     if (el && L) {
       var points = JSON.parse(el.getAttribute('data-points') || '[]');
       var map = L.map(el, { scrollWheelZoom: false });
+      var markers = {};
+      var pick = function (id) {
+        $$('[data-pin]').forEach(function (b) {
+          b.classList.toggle('on', b.getAttribute('data-pin') === String(id));
+        });
+        Object.keys(markers).forEach(function (k) {
+          var pin = markers[k].getElement() && markers[k].getElement().querySelector('.map-pin');
+          if (pin) pin.classList.toggle('on', k === String(id));
+        });
+      };
       tiles(map);
       var bounds = [];
       points.forEach(function (p) {
@@ -1050,8 +1114,17 @@
           (p.img ? '<img src="' + escapeHtml(p.img) + '" alt="">' : '') +
           '<span><b>' + escapeHtml(p.title) + '</b><span>' + escapeHtml(p.area) + '</span>' +
           '<em>' + escapeHtml(p.price) + ' ' + escapeHtml(p.unit) + '</em></span></a>';
-        L.marker([p.lat, p.lng], { icon: icon }).addTo(map).bindPopup(pop);
+        var marker = L.marker([p.lat, p.lng], { icon: icon }).addTo(map).bindPopup(pop);
+        markers[p.id] = marker;
+        marker.on('popupopen', function () { pick(p.id); });
         bounds.push([p.lat, p.lng]);
+      });
+      // the list under the map and the pins point at each other
+      $$('[data-pin]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var m = markers[b.getAttribute('data-pin')];
+          if (m) { map.panTo(m.getLatLng()); m.openPopup(); }
+        });
       });
       if (bounds.length) map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 });
       else map.setView([23.8103, 90.4125], 12);
@@ -1063,7 +1136,7 @@
       var ll = [Number(mini.getAttribute('data-lat')), Number(mini.getAttribute('data-lng'))];
       var m = L.map(mini, { scrollWheelZoom: false }).setView(ll, 14);
       tiles(m);
-      L.circle(ll, { radius: 650, color: '#C8341B', weight: 2, fillColor: '#FF7A45', fillOpacity: .18 }).addTo(m);
+      L.circle(ll, { radius: 650, color: '#B83C16', weight: 2, fillColor: '#B83C16', fillOpacity: .14 }).addTo(m);
     } else if (mini) {
       mini.innerHTML = '<div class="map-fallback">The map could not load right now.</div>';
     }
@@ -1075,6 +1148,7 @@
     wireFilters(); wireOnce(); wireToasts(); wirePreview(); wireThread();
     wirePriceHint(); wireGallery(); wireCounters(); wireImageFade(); wireStage(); wireSays(); wireToTop();
     wireSuggest(); wireBulk(); wireStrips(); wireAfford(); wireEmi();
+    wireTabs(); wireFindSheet();
     markReveal(); wireReveal();
     if (document.getElementById('map') || document.getElementById('miniMap')) {
       if (document.readyState === 'complete') wireMaps();

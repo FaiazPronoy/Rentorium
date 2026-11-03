@@ -17,7 +17,7 @@ from .models import Faq, Reviews
 def home(request):
     live = AllProperty.objects.live()
 
-    WANTED = 5
+    WANTED = 4
     featured = list(live.filter(is_featured=True).with_cards()
                     .order_by('-approved_at', '-created_at')[:WANTED])
     if len(featured) < WANTED:
@@ -25,19 +25,28 @@ def home(request):
         featured += list(live.exclude(pk__in=seen).with_cards()
                          .order_by('-created_at')[:WANTED - len(featured)])
 
-    context = {
+    cards = live.with_cards()
+    tabs = {
         'featured': featured,
-        'newest': live.with_cards().order_by('-created_at')[:6],
+        'newest': list(cards.order_by('-created_at')[:WANTED]),
+        'rent': list(cards.filter(Property_on='rent').order_by('-created_at')[:WANTED]),
+        'sale': list(cards.filter(Property_on='sale').order_by('-created_at')[:WANTED]),
+    }
+
+    context = {
+        'tabs': tabs,
+        'tab_list': [
+            ('featured', 'Featured', tabs['featured']),
+            ('newest', 'Newest', tabs['newest']),
+            ('rent', 'For rent', tabs['rent']),
+            ('sale', 'For sale', tabs['sale']),
+        ],
         'top_review': Reviews.objects.filter(is_published=True)
                                      .select_related('user')[:9],
         'counts': {
-            'total': live.count(),
-            'rent': live.filter(Property_on='rent').count(),
-            'sale': live.filter(Property_on='sale').count(),
             'residential': live.filter(Property_type='residential').count(),
             'commercial': live.filter(Property_type='commercial').count(),
             'land': live.filter(Property_type='land').count(),
-            'areas': live.values('Area').distinct().count(),
         },
         'areas': (live.values('Area')
                       .annotate(n=Count('id'))
@@ -55,13 +64,10 @@ def _area_tiles(live):
     for row in rows:
         here = live.filter(Area=row['Area'])
         cheapest_rent = here.filter(Property_on='rent').aggregate(v=Min('Price'))['v']
-        sample = here.prefetch_related('images').order_by('-is_featured', '-created_at').first()
-        cover = sample.cover_image if sample else None
         tiles.append({
             'name': row['Area'],
             'n': row['n'],
             'from_rent': cheapest_rent,
-            'img': cover.url if cover else '',
         })
     return tiles
 

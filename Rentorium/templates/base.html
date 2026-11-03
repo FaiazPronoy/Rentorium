@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#FFF6EF" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#140A17" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FFFFFF">
 <title>{% block title %}{{ SITE_NAME }} | Homes, Offices and Land to Rent or Buy{% endblock %}</title>
 <meta name="author" content="Faiaz Abrar Zaman Pronoy, Sinthia Khandoker and Md. Jahirul Islam Zishan">
 <meta name="description" content="{% block description %}{{ SITE_TAGLINE }}{% endblock %}">
@@ -15,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@500..800&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+      href="https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,400..700;1,400&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@600&text=%E0%A7%B3&display=swap">
 <link rel="stylesheet" href="{% static 'css/app.css' %}?v={{ ASSET_VERSION }}">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23D23A1C'/><path d='M7 14.5 16 7.5l9 7V24a1 1 0 0 1-1 1h-5v-6h-6v6H8a1 1 0 0 1-1-1z' fill='none' stroke='white' stroke-width='2.2' stroke-linejoin='round'/></svg>">
@@ -24,8 +23,7 @@
 (function(){var r=document.documentElement;
  r.classList.add('js');
  try{var t=localStorage.getItem('rent-theme');
- if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
- r.setAttribute('data-theme',t);}catch(e){}})();
+ r.setAttribute('data-theme',t==='dark'?'dark':'light');}catch(e){}})();
 </script>
 {% block head %}{% endblock %}
 </head>

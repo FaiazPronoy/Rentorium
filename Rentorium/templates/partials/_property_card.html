@@ -27,6 +27,7 @@
       <span class="badge {% if p.Property_on == 'rent' %}badge-rent{% else %}badge-sale{% endif %}">
         {% if p.Property_on == 'rent' %}To rent{% else %}For sale{% endif %}</span>
       {% if p.status == 'rented' %}<span class="badge badge-fail">Taken</span>{% endif %}
+      {% if p.papers_checked %}<span class="badge badge-icon" title="Papers checked by an agent">{% icon "shield-check" %}<span class="sr">Papers checked</span></span>{% endif %}
     </span>
   </div>
 
@@ -54,7 +55,8 @@
   <div class="pcard-body">
     <div class="between" style="gap:.6rem;flex-wrap:nowrap">
       <a class="pcard-title" href="{{ p.get_absolute_url }}">{{ p.Property_Name }}</a>
-      {% if p.rating %}<span class="rating-pill">{% icon "star" %} {{ p.rating }}</span>{% endif %}
+      {% if p.rating %}<span class="rating-pill" title="{{ p.rating_count }} review{{ p.rating_count|pluralize }}">{% icon "star" %} {{ p.rating }}</span>
+      {% else %}<span class="rating-pill is-new">New</span>{% endif %}
     </div>
     <div class="pcard-loc">{% icon "pin" %} {{ p.Area }}, {{ p.City }}{% if p.landmark %} &middot; {{ p.landmark }}{% endif %}</div>
     <div class="pcard-facts">
@@ -62,6 +64,7 @@
         <span><b>{{ value }}</b>&nbsp;{{ label }}</span>
       {% endfor %}
     </div>
-    <div class="pcard-price">{{ CURRENCY_SIGN }}&nbsp;{{ p.Price|money }}<small>{{ p.price_label }}</small></div>
+    <div class="pcard-price">{{ CURRENCY_SIGN }}&nbsp;{{ p.Price|money }}<small>{{ p.price_label }}</small>
+      {% if p.price_per_sqft and p.Property_on == 'sale' %}<span class="per">{{ CURRENCY_SIGN }}&nbsp;{{ p.price_per_sqft|floatformat:"0g" }}/sq ft</span>{% endif %}</div>
   </div>
 </article>

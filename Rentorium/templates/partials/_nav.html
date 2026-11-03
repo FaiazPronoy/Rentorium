@@ -4,12 +4,14 @@
       <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 4l8.5 6.5V20a1 1 0 0 1-1 1H15v-6h-6v6H4.5a1 1 0 0 1-1-1z"/></svg>{{ SITE_NAME }}
     </a>
 
+    {% if active != 'home' %}
     <form class="nav-search" method="get" action="{% url 'property_list' %}" role="search">
       {% icon "search" %}
       <label class="sr-only" for="navSearch">Search listings</label>
       <input id="navSearch" type="search" name="q" placeholder="Where do you want to live?"
              value="{{ request.GET.q|default:'' }}" autocomplete="off">
     </form>
+    {% else %}<span class="nav-search" aria-hidden="true"></span>{% endif %}
 
     <button class="nav-toggle" onclick="toggleNav()" aria-label="Open the menu"
             aria-controls="navLinks">{% icon "menu" %}</button>
@@ -96,6 +98,5 @@
     <a href="{% url 'property_type' %}" class="{% if active == 'types' %}on{% endif %}">{% icon "sliders" %}All categories</a>
     <a href="{% url 'compare' %}" class="{% if active == 'compare' %}on{% endif %}">{% icon "compare" %}Compare{% if compare_count %} ({{ compare_count }}){% endif %}</a>
     {% endwith %}
-    <span class="rail-note">{% icon "shield-check" %} Every listing checked by a person</span>
   </div>
 </div>

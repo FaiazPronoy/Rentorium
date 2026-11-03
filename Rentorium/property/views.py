@@ -202,7 +202,7 @@ def property_list(request):
             lat, lng = place(p)
             cover = p.cover_image
             map_points.append({
-                'lat': lat, 'lng': lng, 'title': p.Property_Name,
+                'id': p.pk, 'lat': lat, 'lng': lng, 'title': p.Property_Name,
                 'url': p.get_absolute_url(), 'area': p.Area,
                 'price': f'{settings.CURRENCY_SIGN} {money(p.Price)}',
                 'unit': p.price_label, 'on': p.Property_on,
@@ -216,6 +216,7 @@ def property_list(request):
         'querystring': query_without_page(request),
         'view_mode': view_mode,
         'map_points': json.dumps(map_points),
+        'map_list': map_points,
         'compare_ids': request.session.get('compare', []),
         'active': 'browse',
     })

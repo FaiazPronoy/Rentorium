@@ -273,6 +273,11 @@ The subtype row for this listing, or None."""
         return None
 
     @property
+    def papers_checked(self):
+        # approved by an agent and there is an ownership paper on file
+        return self.is_live and bool(self.Property_Documents) and self.approved_at is not None
+
+    @property
     def monthly_total(self):
         return float(self.Price) + float(self.service_charge)
 
