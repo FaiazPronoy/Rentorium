@@ -7,8 +7,13 @@
 <main>
 
   <section class="wrap home-hero">
-    <h1>Find a place to rent or buy</h1>
-    <p class="lede">Flats, offices and plots in Bangladesh. Book a viewing and talk to the owner directly.</p>
+    <div class="hero-shot">
+      <img src="{% static 'img/photos/gulshan-1.jpg' %}" alt="" fetchpriority="high">
+      <div class="hero-copy">
+        <h1>Find a place to rent or buy</h1>
+        <p class="lede">Flats, offices and plots in Bangladesh. Book a viewing and talk to the owner directly.</p>
+      </div>
+    </div>
 
     <form method="get" action="{% url 'property_list' %}" class="homesearch">
       <div class="seg" role="radiogroup" aria-label="Rent or buy">
