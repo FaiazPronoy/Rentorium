@@ -146,9 +146,11 @@ tools/             browser checks
 
 ## Photos
 
-Every photo is CC0 (free to use), from [StockSnap](https://stocksnap.io) and
-[rawpixel](https://www.rawpixel.com/category/53/public-domain), found through
-[Openverse](https://openverse.org).
+Every photo is CC0 (free to use), from [StockSnap](https://stocksnap.io),
+[rawpixel](https://www.rawpixel.com/category/53/public-domain) and
+[Wikimedia Commons](https://commons.wikimedia.org), found through
+[Openverse](https://openverse.org). The two Motijheel photos are
+"Motijheel Commercial Area 1" and "2" on Wikimedia Commons.
 
 ---
 

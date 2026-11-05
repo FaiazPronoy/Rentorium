@@ -58,7 +58,7 @@
       {% if p.rating %}<span class="rating-pill" title="{{ p.rating_count }} review{{ p.rating_count|pluralize }}">{% icon "star" %} {{ p.rating }}</span>
       {% else %}<span class="rating-pill is-new">New</span>{% endif %}
     </div>
-    <div class="pcard-loc">{% icon "pin" %} {{ p.Area }}, {{ p.City }}{% if p.landmark %} &middot; {{ p.landmark }}{% endif %}</div>
+    <div class="pcard-loc">{% icon "pin" %} {{ p.Area }}, {{ p.City }}{% if p.landmark %}, {{ p.landmark }}{% endif %}</div>
     <div class="pcard-facts">
       {% for value, label in p.headline_facts|slice:':3' %}
         <span><b>{{ value }}</b>&nbsp;{{ label }}</span>

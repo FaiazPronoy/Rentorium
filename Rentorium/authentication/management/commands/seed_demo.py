@@ -148,8 +148,7 @@ PHOTOS = {
         ['shop-1', 'shop-2', 'shop-3'],
         ['warehouse-1', 'warehouse-2'],
     ],
-    # no photos for the plots yet, the cards show a plain placeholder
-    'land': [[], []],
+    'land': [['plot-1'], ['cityplot-1', 'cityplot-2']],
     'pending': ['extra-1', 'extra-2', 'extra-3'],
 }
 
